@@ -48,7 +48,7 @@ export function SignupForm({
               <Field className="mt-2">
                 <Button
                   type="button"
-                  className="h-11 w-full rounded-full shadow-sm transition-all duration-200 hover:shadow-md"
+                  className="h-11 w-full rounded-full shadow-sm transition-all duration-200 hover:shadow-sm"
                 >
                   Send OTP Code
                 </Button>

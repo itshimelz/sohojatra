@@ -40,7 +40,7 @@ export default function MarketingPage() {
               href="/login"
               className={cn(
                 buttonVariants(),
-                "rounded-full shadow-sm transition-all duration-200 hover:shadow-md"
+                "rounded-full shadow-sm transition-all duration-200 hover:shadow-sm"
               )}
             >
               Log in
@@ -71,7 +71,7 @@ export default function MarketingPage() {
                 href="/login"
                 className={cn(
                   buttonVariants({ size: "lg" }),
-                  "group h-12 w-full rounded-full px-8 font-semibold shadow-md transition-all duration-200 hover:shadow-lg active:scale-95 sm:w-auto"
+                  "group h-12 w-full rounded-full px-8 font-semibold shadow-sm transition-all duration-200 hover:shadow-sm active:scale-95 sm:w-auto"
                 )}
               >
                 Report a Concern
@@ -108,7 +108,7 @@ export default function MarketingPage() {
 
             <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
               {/* Feature 1 */}
-              <div className="group relative flex flex-col rounded-3xl border border-border/50 bg-background/50 p-6 transition-all duration-300 hover:border-primary/20 hover:bg-background hover:shadow-lg sm:p-8">
+              <div className="group relative flex flex-col rounded-3xl border border-border/50 bg-background/50 p-6 transition-all duration-300 hover:border-primary/20 hover:bg-background hover:shadow-sm sm:p-8">
                 <div className="mb-4 inline-flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
                   <MapPinLine className="size-6" weight="duotone" />
                 </div>
@@ -122,7 +122,7 @@ export default function MarketingPage() {
               </div>
 
               {/* Feature 2 */}
-              <div className="group relative flex flex-col rounded-3xl border border-border/50 bg-background/50 p-6 transition-all duration-300 hover:border-primary/20 hover:bg-background hover:shadow-lg sm:p-8">
+              <div className="group relative flex flex-col rounded-3xl border border-border/50 bg-background/50 p-6 transition-all duration-300 hover:border-primary/20 hover:bg-background hover:shadow-sm sm:p-8">
                 <div className="mb-4 inline-flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
                   <ThumbsUp className="size-6" weight="duotone" />
                 </div>
@@ -137,7 +137,7 @@ export default function MarketingPage() {
               </div>
 
               {/* Feature 3 */}
-              <div className="group relative flex flex-col rounded-3xl border border-border/50 bg-background/50 p-6 transition-all duration-300 hover:border-primary/20 hover:bg-background hover:shadow-lg sm:col-span-2 sm:p-8 lg:col-span-1">
+              <div className="group relative flex flex-col rounded-3xl border border-border/50 bg-background/50 p-6 transition-all duration-300 hover:border-primary/20 hover:bg-background hover:shadow-sm sm:col-span-2 sm:p-8 lg:col-span-1">
                 <div className="mb-4 inline-flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
                   <CheckCircle className="size-6" weight="duotone" />
                 </div>

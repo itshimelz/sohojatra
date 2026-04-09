@@ -1,6 +1,6 @@
-# Next.js template
+# Sohojatra
 
-This is a Next.js template with shadcn/ui.
+Sohojatra is a Next.js app built with shadcn/ui.
 
 ## Adding components
 
