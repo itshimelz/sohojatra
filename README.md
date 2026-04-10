@@ -1,21 +1,38 @@
 # Sohojatra
 
-Sohojatra is a Next.js app built with shadcn/ui.
+*Together, We decide*
 
-## Adding components
+**Sohojatra** is a forward-thinking digital platform designed to address the evolving needs of **smart governance, community engagement**, and **public accountability** in urban Bangladesh. It acts as a dynamic platform where governmental agencies, national and international organizations, universities, professionals, and expert groups can collaborate on solutions to urban problems.
 
-To add components to your app, run the following command:
+## Objective
+Enable Dhaka citizens to report, prioritize, and track urban concerns in Bangla and English, so officials can respond transparently within 72 hours of submission.
+
+**Primary User for MVP**: Citizens. (Government officials will join in Phase 2 once volume and workflows are validated).
+
+
+## Tech Stack
+* **Frontend**: Next.js 16 + Tailwind CSS + shadcn/ui + Framer Motion
+* **Backend**: Node.js + Prisma ORM
+* **Database & Auth**: Supabase PostgreSQL & Better Auth
+* **Integrations**: OpenStreetMap via Leaflet, Supabase SMTP for emails.
+
+## Getting Started
+
+First, install dependencies:
 
 ```bash
-npx shadcn@latest add button
+npm install
 ```
 
-This will place the ui components in the `components` directory.
+Then, run the development server:
 
-## Using components
-
-To use the components in your app, import them as follows:
-
-```tsx
-import { Button } from "@/components/ui/button";
+```bash
+npm run dev
 ```
+
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+
+## Team
+- [Md Shahadat Hossain](mailto:mdsahadathossainemon@gmail.com)
+- [Ahmad Jamil](mailto:ahmadjamilwork2001@gmail.com)
+- [Rahat Hossain Himel](mailto:himelhasan1215@gmail.com)

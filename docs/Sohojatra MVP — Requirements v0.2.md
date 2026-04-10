@@ -31,7 +31,7 @@ Enable Dhaka citizens to report, prioritize, and track urban concerns in Bangla 
 | 1. Citizen Concern Submission | A logged-in citizen can submit title, description, category, attach ≤3 photos and GPS pin, receive a tracking ID, and see initial status "Submitted" | Video upload, anonymous posts, edit after submit |
 | 2. Live Process Tracking | Citizen can view their submission timeline with status changes: Submitted → Under Review → Resolved/Rejected, with timestamp and official note | Multi-official workflow, SLA timers, public map |
 | 3. Bilingual UI | All user-facing strings, forms, emails, and errors render in Bangla and English via i18n files, with language toggle persisting | Auto-translation, RTL, other languages |
-| 4. Basic Authentication | User can sign up/login with phone OTP using Supabase Auth; session persists; rate-limit 5 OTPs/hour | NID verification, gov document login, social login |
+| 4. Basic Authentication | User can sign up/login with phone OTP using Better Auth; session persists; rate-limit 5 OTPs/hour | NID verification, gov document login, social login |
 | 5. Concern Sorting & Upvoting | Citizens can upvote concerns once; list view sorts by upvotes and recency; spam protection via auth | Comment threading, downvotes, expert rating algorithm |
 
 ### Explicitly out of scope for MVP
@@ -53,12 +53,12 @@ Enable Dhaka citizens to report, prioritize, and track urban concerns in Bangla 
 | -------- | ------------------------------------------------- | ------------------------------------------------------ |
 | Frontend | Next.js 16 + Tailwind + shadcn/ui + Framer Motion | SSR for SEO, mobile-first components, fast iteration   |
 | Backend  | Node.js + Prisma ORM                              | Team expertise, type-safe DB access                    |
-| Database | Supabase PostgreSQL                               | Row Level Security, JSONB for i18n, rapid auth         |
-| Auth     | Supabase Auth (Phone OTP)                         | MVP verification without NID; defer gov doc to Phase 2 |
+| Database | Supabase PostgreSQL                               | Row Level Security, JSONB for i18n, Better Auth adapter |
+| Auth     | Better Auth (Phone OTP)                           | MVP verification without NID; framework-agnostic auth  |
 
 ### Deployment target
 - [x] Vercel (frontend)
-- [x] Supabase Cloud (DB/Auth/Storage)
+- [x] Supabase Cloud (DB/Storage)
 
 **Notes:** Check data residency. For MVP, use Supabase Singapore region (closest). For production gov rollout, migrate to Bangladesh-hosted Postgres. Never expose service_role key; scan.env before deploy.
 ### Mandatory integrations for MVP

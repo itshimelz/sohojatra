@@ -1,8 +1,8 @@
-"use client"
-
 import Link from "next/link"
-import { buttonVariants } from "@/components/ui/button"
+import { buttonVariants } from "@/components/ui/button-variants"
 import { cn } from "@/lib/utils"
+import { LanguageSwitcher } from "@/components/language-switcher"
+import { getDictionary, getLocale } from "@/lib/i18n/server"
 import {
   MapPinLine,
   ThumbsUp,
@@ -10,23 +10,79 @@ import {
   Megaphone,
   CaretRight,
   ShieldCheck,
-} from "@phosphor-icons/react"
+  ClockCounterClockwise,
+  UsersThree,
+  MagnifyingGlass,
+  Camera,
+  PencilSimpleLine,
+  ChartLineUp,
+  RoadHorizon,
+  Lightbulb,
+  Drop,
+  Trash,
+  ShieldWarning,
+  Tree,
+  Question,
+} from "@phosphor-icons/react/dist/ssr"
+import { FaqAccordion } from "@/components/faq-accordion"
 
-export default function MarketingPage() {
+export default async function MarketingPage() {
+  const locale = await getLocale()
+  const t = await getDictionary(locale)
+
+  const categoryIcons = [
+    { icon: RoadHorizon, label: t.categories.c1 },
+    { icon: Lightbulb, label: t.categories.c2 },
+    { icon: Drop, label: t.categories.c3 },
+    { icon: Trash, label: t.categories.c4 },
+    { icon: ShieldWarning, label: t.categories.c5 },
+    { icon: Tree, label: t.categories.c6 },
+  ]
+
+  const faqs = [
+    { q: t.faq.q1, a: t.faq.a1 },
+    { q: t.faq.q2, a: t.faq.a2 },
+    { q: t.faq.q3, a: t.faq.a3 },
+    { q: t.faq.q4, a: t.faq.a4 },
+    { q: t.faq.q5, a: t.faq.a5 },
+  ]
+
+  const steps = [
+    {
+      icon: Camera,
+      label: t.howItWorks.step1Label,
+      title: t.howItWorks.step1Title,
+      desc: t.howItWorks.step1Desc,
+    },
+    {
+      icon: PencilSimpleLine,
+      label: t.howItWorks.step2Label,
+      title: t.howItWorks.step2Title,
+      desc: t.howItWorks.step2Desc,
+    },
+    {
+      icon: ChartLineUp,
+      label: t.howItWorks.step3Label,
+      title: t.howItWorks.step3Title,
+      desc: t.howItWorks.step3Desc,
+    },
+  ]
+
   return (
-    <div className="flex min-h-svh flex-col bg-background text-foreground selection:bg-primary/20">
+    <div className="flex flex-1 flex-col bg-background text-foreground selection:bg-primary/20">
       {/* Navbar */}
       <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
           <div className="flex items-center gap-2">
-            <div className="flex size-8 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
+            <div className="flex size-8 items-center justify-center rounded-xl bg-primary text-primary-foreground">
               <Megaphone weight="fill" className="size-5" />
             </div>
             <span className="text-xl font-bold tracking-tight text-foreground">
               Sohojatra
             </span>
           </div>
-          <nav className="flex items-center gap-3 sm:gap-4">
+          <nav className="flex items-center gap-2 sm:gap-4">
+            <LanguageSwitcher currentLocale={locale} />
             <Link
               href="/concerns"
               className={cn(
@@ -34,16 +90,16 @@ export default function MarketingPage() {
                 "hidden text-muted-foreground transition-colors duration-200 hover:text-foreground sm:inline-flex"
               )}
             >
-              Browse Concerns
+              {t.nav.browseConcerns}
             </Link>
             <Link
               href="/login"
               className={cn(
                 buttonVariants(),
-                "rounded-full shadow-sm transition-all duration-200 hover:shadow-sm"
+                "rounded-full transition-all duration-200"
               )}
             >
-              Log in
+              {t.nav.login}
             </Link>
           </nav>
         </div>
@@ -56,25 +112,24 @@ export default function MarketingPage() {
           <div className="mx-auto max-w-4xl text-center">
             <div className="mx-auto mb-6 inline-flex items-center rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-sm text-primary ring-1 ring-primary/10">
               <ShieldCheck className="mr-1.5 size-4" weight="bold" />
-              <span>For the citizens of Dhaka</span>
+              <span>{t.hero.badge}</span>
             </div>
             <h1 className="mb-6 text-4xl font-extrabold tracking-tight text-balance text-foreground sm:text-5xl lg:text-7xl">
-              Together, <span className="text-primary">We Decide.</span>
+              {t.hero.title}{" "}
+              <span className="text-primary">{t.hero.titleHighlight}</span>
             </h1>
             <p className="mx-auto mb-10 max-w-2xl text-lg leading-relaxed text-balance text-muted-foreground sm:text-xl">
-              Report local issues, track their progress in real-time, and upvote
-              what matters most to your community. A transparent path to a
-              better city.
+              {t.hero.description}
             </p>
             <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
               <Link
                 href="/login"
                 className={cn(
                   buttonVariants({ size: "lg" }),
-                  "group h-12 w-full rounded-full px-8 font-semibold shadow-sm transition-all duration-200 hover:shadow-sm active:scale-95 sm:w-auto"
+                  "group h-12 w-full rounded-full px-8 font-semibold transition-all duration-200 sm:w-auto"
                 )}
               >
-                Report a Concern
+                {t.hero.reportConcern}
                 <CaretRight
                   weight="bold"
                   className="ml-2 size-4 transition-transform group-hover:translate-x-1"
@@ -87,8 +142,52 @@ export default function MarketingPage() {
                   "h-12 w-full rounded-full border-border/50 bg-background px-8 font-semibold transition-all duration-200 hover:border-border hover:bg-muted/50 sm:w-auto"
                 )}
               >
-                View Local Issues
+                {t.hero.viewIssues}
               </Link>
+            </div>
+          </div>
+        </section>
+
+        {/* Impact / Stats Section */}
+        <section className="border-y border-border/40 bg-muted/10 py-12">
+          <div className="mx-auto max-w-6xl px-4 sm:px-6">
+            <div className="grid grid-cols-1 gap-8 divide-y divide-border/50 text-center sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+              <div className="flex flex-col items-center justify-center pt-8 sm:pt-0">
+                <ClockCounterClockwise
+                  className="mb-3 size-8 text-primary"
+                  weight="duotone"
+                />
+                <h3 className="text-3xl font-bold tracking-tight text-foreground">
+                  72 Hours
+                </h3>
+                <p className="mt-2 text-sm text-balance text-muted-foreground">
+                  {t.stats.targetUpdate}
+                </p>
+              </div>
+              <div className="flex flex-col items-center justify-center pt-8 sm:pt-0">
+                <MagnifyingGlass
+                  className="mb-3 size-8 text-primary"
+                  weight="duotone"
+                />
+                <h3 className="text-3xl font-bold tracking-tight text-foreground">
+                  100%
+                </h3>
+                <p className="mt-2 text-sm text-balance text-muted-foreground">
+                  {t.stats.tracking}
+                </p>
+              </div>
+              <div className="flex flex-col items-center justify-center pt-8 sm:pt-0">
+                <UsersThree
+                  className="mb-3 size-8 text-primary"
+                  weight="duotone"
+                />
+                <h3 className="text-3xl font-bold tracking-tight text-foreground">
+                  5,000+
+                </h3>
+                <p className="mt-2 text-sm text-balance text-muted-foreground">
+                  {t.stats.activeCitizens}
+                </p>
+              </div>
             </div>
           </div>
         </section>
@@ -98,75 +197,238 @@ export default function MarketingPage() {
           <div className="mx-auto max-w-6xl px-4 sm:px-6">
             <div className="mx-auto mb-12 max-w-2xl text-center">
               <h2 className="mb-4 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-                How Sohojatra Works
+                {t.features.title}
               </h2>
               <p className="text-lg text-muted-foreground">
-                We make it easy to voice your concerns and ensure they are heard
-                by the right authorities.
+                {t.features.subtitle}
               </p>
             </div>
 
             <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-              {/* Feature 1 */}
               <div className="group relative flex flex-col rounded-3xl border border-border/50 bg-background/50 p-6 transition-all duration-300 hover:border-primary/20 hover:bg-background hover:shadow-sm sm:p-8">
                 <div className="mb-4 inline-flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
                   <MapPinLine className="size-6" weight="duotone" />
                 </div>
                 <h3 className="mb-2 text-xl font-semibold text-foreground">
-                  Pinpoint Issues
+                  {t.features.f1Title}
                 </h3>
                 <p className="leading-relaxed text-muted-foreground">
-                  Easily snap a photo and drop a GPS pin to report problems like
-                  broken streetlights, potholes, or waste management issues.
+                  {t.features.f1Desc}
                 </p>
               </div>
 
-              {/* Feature 2 */}
               <div className="group relative flex flex-col rounded-3xl border border-border/50 bg-background/50 p-6 transition-all duration-300 hover:border-primary/20 hover:bg-background hover:shadow-sm sm:p-8">
                 <div className="mb-4 inline-flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
                   <ThumbsUp className="size-6" weight="duotone" />
                 </div>
                 <h3 className="mb-2 text-xl font-semibold text-foreground">
-                  Prioritize Together
+                  {t.features.f2Title}
                 </h3>
                 <p className="leading-relaxed text-muted-foreground">
-                  Browse concerns reported by others and upvote the ones that
-                  impact you. The community decides what needs immediate
-                  attention.
+                  {t.features.f2Desc}
                 </p>
               </div>
 
-              {/* Feature 3 */}
               <div className="group relative flex flex-col rounded-3xl border border-border/50 bg-background/50 p-6 transition-all duration-300 hover:border-primary/20 hover:bg-background hover:shadow-sm sm:col-span-2 sm:p-8 lg:col-span-1">
                 <div className="mb-4 inline-flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
                   <CheckCircle className="size-6" weight="duotone" />
                 </div>
                 <h3 className="mb-2 text-xl font-semibold text-foreground">
-                  Live Process Tracking
+                  {t.features.f3Title}
                 </h3>
                 <p className="leading-relaxed text-muted-foreground">
-                  No more guessing. Track the exact status of your reported
-                  issue—from submission to review and final resolution—with
-                  official updates.
+                  {t.features.f3Desc}
                 </p>
               </div>
             </div>
           </div>
         </section>
-      </main>
 
-      {/* Footer */}
-      <footer className="border-t border-border/40 py-10">
-        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-4 sm:flex-row sm:px-6">
-          <div className="flex items-center gap-2 text-foreground/80 transition-colors duration-200 hover:text-foreground">
-            <Megaphone weight="fill" className="size-5 text-primary" />
-            <span className="text-lg font-bold tracking-tight">Sohojatra</span>
+        {/* How It Works — Step-by-Step */}
+        <section className="bg-background py-16 sm:py-24">
+          <div className="mx-auto max-w-6xl px-4 sm:px-6">
+            <div className="mx-auto mb-14 max-w-2xl text-center">
+              <h2 className="mb-4 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+                {t.howItWorks.title}
+              </h2>
+              <p className="text-lg text-muted-foreground">
+                {t.howItWorks.subtitle}
+              </p>
+            </div>
+
+            <div className="relative grid gap-10 sm:grid-cols-3 sm:gap-6">
+              {/* Connector line (desktop only) */}
+              <div className="pointer-events-none absolute top-12 right-[16.7%] left-[16.7%] hidden h-px bg-border/60 sm:block" />
+
+              {steps.map((step, i) => {
+                const Icon = step.icon
+                return (
+                  <div key={i} className="relative flex flex-col items-center text-center">
+                    <div className="relative z-10 mb-5 flex size-24 items-center justify-center rounded-full border-2 border-border/50 bg-background transition-colors duration-300 hover:border-primary/30">
+                      <div className="flex size-16 items-center justify-center rounded-full bg-primary/10 text-primary">
+                        <Icon className="size-7" weight="duotone" />
+                      </div>
+                    </div>
+                    <span className="mb-2 rounded-full bg-primary/10 px-3 py-0.5 text-xs font-semibold tracking-wider text-primary uppercase">
+                      {step.label}
+                    </span>
+                    <h3 className="mb-2 text-lg font-semibold text-foreground">
+                      {step.title}
+                    </h3>
+                    <p className="max-w-xs text-sm leading-relaxed text-muted-foreground">
+                      {step.desc}
+                    </p>
+                  </div>
+                )
+              })}
+            </div>
           </div>
-          <p className="text-center text-sm text-muted-foreground sm:text-left">
-            &copy; {new Date().getFullYear()} Sohojatra. Built for Dhaka.
-          </p>
-        </div>
-      </footer>
+        </section>
+
+        {/* Tracking Timeline Process Section */}
+        <section className="overflow-hidden border-y border-border/40 bg-muted/20 py-16 sm:py-24">
+          <div className="mx-auto max-w-6xl px-4 sm:px-6">
+            <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-8">
+              <div>
+                <div className="mb-6 inline-flex items-center rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-sm font-medium text-primary">
+                  {t.timeline.badge}
+                </div>
+                <h2 className="mb-6 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+                  {t.timeline.title}
+                </h2>
+                <p className="mb-8 text-lg leading-relaxed text-muted-foreground">
+                  {t.timeline.desc}
+                </p>
+                <div className="flex gap-4">
+                  <Link
+                    href="/login"
+                    className={cn(buttonVariants(), "rounded-full")}
+                  >
+                    {t.timeline.cta}
+                  </Link>
+                </div>
+              </div>
+              <div className="relative">
+                <div className="absolute inset-0 -z-10 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] [mask-image:linear-gradient(to_bottom,transparent,black,transparent)] bg-[size:24px_24px]"></div>
+                <div className="relative ml-auto max-w-md rounded-3xl border border-border/50 bg-background/80 p-6 backdrop-blur-sm sm:p-8">
+                  <h4 className="mb-6 text-lg font-semibold text-foreground">
+                    {t.timeline.exampleTitle}
+                  </h4>
+                  <div className="relative space-y-6 before:absolute before:inset-y-2 before:left-[11px] before:w-0.5 before:bg-border/50">
+                    <div className="relative flex gap-4">
+                      <div className="relative z-10 flex size-6 items-center justify-center rounded-full bg-primary text-primary-foreground ring-4 ring-background">
+                        <CheckCircle className="size-4" weight="bold" />
+                      </div>
+                      <div>
+                        <h5 className="font-medium text-foreground">
+                          {t.timeline.resolved}
+                        </h5>
+                        <p className="text-sm text-muted-foreground">
+                          {t.timeline.resolvedDesc}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="relative flex gap-4">
+                      <div className="relative z-10 flex size-6 items-center justify-center rounded-full bg-primary/20 text-primary ring-4 ring-background">
+                        <div className="size-2 rounded-full bg-primary"></div>
+                      </div>
+                      <div>
+                        <h5 className="font-medium text-foreground">
+                          {t.timeline.underReview}
+                        </h5>
+                        <p className="text-sm text-muted-foreground">
+                          {t.timeline.underReviewDesc}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="relative flex gap-4">
+                      <div className="relative z-10 flex size-6 items-center justify-center rounded-full bg-muted text-muted-foreground ring-4 ring-background">
+                        <div className="size-2 rounded-full bg-muted-foreground"></div>
+                      </div>
+                      <div>
+                        <h5 className="font-medium text-foreground">
+                          {t.timeline.submitted}
+                        </h5>
+                        <p className="text-sm text-muted-foreground">
+                          {t.timeline.submittedDesc}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Categories Section */}
+        <section className="bg-background py-16 sm:py-24">
+          <div className="mx-auto max-w-6xl px-4 sm:px-6">
+            <div className="mx-auto mb-12 max-w-2xl text-center">
+              <h2 className="mb-4 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+                {t.categories.title}
+              </h2>
+              <p className="text-lg text-muted-foreground">
+                {t.categories.subtitle}
+              </p>
+            </div>
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+              {categoryIcons.map((cat, i) => {
+                const Icon = cat.icon
+                return (
+                  <div
+                    key={i}
+                    className="group flex flex-col items-center gap-3 rounded-2xl border border-border/50 bg-background p-5 text-center transition-all duration-300 hover:border-primary/20 hover:shadow-sm"
+                  >
+                    <div className="flex size-12 items-center justify-center rounded-xl bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
+                      <Icon className="size-6" weight="duotone" />
+                    </div>
+                    <span className="text-sm font-medium text-foreground">
+                      {cat.label}
+                    </span>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        </section>
+
+        {/* FAQ Section */}
+        <section className="border-t border-border/40 bg-muted/10 py-16 sm:py-24">
+          <div className="mx-auto max-w-3xl px-4 sm:px-6">
+            <div className="mb-12 text-center">
+              <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+                <Question className="size-6" weight="duotone" />
+              </div>
+              <h2 className="mb-4 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+                {t.faq.title}
+              </h2>
+              <p className="text-lg text-muted-foreground">{t.faq.subtitle}</p>
+            </div>
+            <FaqAccordion items={faqs} />
+          </div>
+        </section>
+
+        {/* Bottom CTA */}
+        <section className="relative overflow-hidden border-t border-border/40 py-20 sm:py-32">
+          <div className="absolute inset-0 -z-10 bg-primary/5"></div>
+          <div className="mx-auto max-w-3xl px-4 text-center sm:px-6">
+            <h2 className="mb-6 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+              {t.cta.title}
+            </h2>
+            <p className="mb-10 text-lg text-muted-foreground">{t.cta.desc}</p>
+            <Link
+              href="/login"
+              className={cn(
+                buttonVariants({ size: "lg" }),
+                "h-14 rounded-full px-10 text-lg font-semibold transition-all hover:-translate-y-1 active:translate-y-0"
+              )}
+            >
+              {t.cta.button}
+            </Link>
+          </div>
+        </section>
+      </main>
     </div>
   )
 }

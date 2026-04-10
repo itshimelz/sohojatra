@@ -53,13 +53,13 @@
 
 **Estimated scope:** M (3-5 files)
 
-## Task 3: Add Supabase configuration and client wrappers
+## Task 3: Add Better Auth configuration and client wrappers
 
-**Description:** Implement server/client Supabase helper modules with strict environment validation and safe secret boundaries.
+**Description:** Implement Better Auth configuration and client/server helper modules with strict environment validation and safe secret boundaries.
 
 **Acceptance criteria:**
 
-- [ ] Server and client Supabase helpers are separated correctly.
+- [ ] Better Auth server instance and client instance are configured correctly.
 - [ ] Missing env variables fail fast with clear error paths.
 - [ ] No service-role secrets are referenced in client code.
 
@@ -83,7 +83,7 @@
 - [ ] `npm run lint` passes
 - [ ] `npm run typecheck` passes
 - [ ] `npm run build` passes
-- [ ] Locale toggle and Supabase config smoke checks pass
+- [ ] Locale toggle and Better Auth config smoke checks pass
 - [ ] Human review before core features
 
 ## Phase 2 - Core Vertical Slices
@@ -116,7 +116,7 @@
 
 ## Task 5: Implement OTP auth flow (signup/login/session)
 
-**Description:** Build complete citizen authentication flow using Supabase phone OTP and protect concern routes for authenticated users.
+**Description:** Build complete citizen authentication flow using Better Auth phone OTP (or email/pass if OTP is deferred) and protect concern routes for authenticated users.
 
 **Acceptance criteria:**
 
