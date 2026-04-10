@@ -18,6 +18,9 @@
 # production
 /build
 
+/tasks
+/SPEC.md
+
 # misc
 .DS_Store
 *.pem
