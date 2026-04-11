@@ -51,6 +51,22 @@ export const en = {
   },
   footer: {
     tagline: "Sohojatra. Built for Dhaka.",
+    description:
+      "A civic platform for Dhaka residents to report issues, follow progress, and help prioritize what gets fixed first.",
+    exploreTitle: "Explore",
+    resourcesTitle: "Resources",
+    preferencesTitle: "Preferences",
+    home: "Home",
+    reportConcern: "Report a concern",
+    signIn: "Sign in",
+    faq: "FAQ",
+    privacy: "Privacy",
+    terms: "Terms",
+    contact: "Contact",
+    contactHint: "Questions or feedback? Reach out anytime.",
+    supportEmail: "support@sohojatra.app",
+    legalNote:
+      "By using Sohojatra you agree to transparent, accountable reporting. Abuse may lead to restricted access.",
   },
   concerns: {
     title: "Citizen Concerns",
@@ -125,6 +141,11 @@ export const en = {
     c4: "Waste & Sanitation",
     c5: "Public Safety",
     c6: "Parks & Spaces",
+  },
+  partners: {
+    title: "Partnered with Dhaka's civic bodies",
+    subtitle:
+      "Working with the institutions that keep the city running.",
   },
   faq: {
     title: "Frequently Asked Questions",

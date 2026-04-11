@@ -1,7 +1,10 @@
 import { getDictionary } from "@/lib/i18n/server"
+import { requireServerSession } from "@/lib/auth-session"
+
 import { SubmitConcernForm } from "./submit-form"
 
 export default async function SubmitConcernPage() {
+  await requireServerSession()
   const d = await getDictionary()
 
   return (

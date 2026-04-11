@@ -1,13 +1,11 @@
 import Link from "next/link"
 import { buttonVariants } from "@/components/ui/button-variants"
 import { cn } from "@/lib/utils"
-import { LanguageSwitcher } from "@/components/language-switcher"
-import { getDictionary, getLocale } from "@/lib/i18n/server"
+import { getDictionary } from "@/lib/i18n/server"
 import {
   MapPinLine,
   ThumbsUp,
   CheckCircle,
-  Megaphone,
   CaretRight,
   ShieldCheck,
   ClockCounterClockwise,
@@ -25,10 +23,10 @@ import {
   Question,
 } from "@phosphor-icons/react/dist/ssr"
 import { FaqAccordion } from "@/components/faq-accordion"
+import { PartnersRail } from "@/components/partners-rail"
 
 export default async function MarketingPage() {
-  const locale = await getLocale()
-  const t = await getDictionary(locale)
+  const t = await getDictionary()
 
   const categoryIcons = [
     { icon: RoadHorizon, label: t.categories.c1 },
@@ -69,43 +67,7 @@ export default async function MarketingPage() {
   ]
 
   return (
-    <div className="flex flex-1 flex-col bg-background text-foreground selection:bg-primary/20">
-      {/* Navbar */}
-      <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
-          <div className="flex items-center gap-2">
-            <div className="flex size-8 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-              <Megaphone weight="fill" className="size-5" />
-            </div>
-            <span className="text-xl font-bold tracking-tight text-foreground">
-              Sohojatra
-            </span>
-          </div>
-          <nav className="flex items-center gap-2 sm:gap-4">
-            <LanguageSwitcher currentLocale={locale} />
-            <Link
-              href="/concerns"
-              className={cn(
-                buttonVariants({ variant: "ghost" }),
-                "hidden text-muted-foreground transition-colors duration-200 hover:text-foreground sm:inline-flex"
-              )}
-            >
-              {t.nav.browseConcerns}
-            </Link>
-            <Link
-              href="/login"
-              className={cn(
-                buttonVariants(),
-                "rounded-full transition-all duration-200"
-              )}
-            >
-              {t.nav.login}
-            </Link>
-          </nav>
-        </div>
-      </header>
-
-      <main className="flex-1">
+    <main className="flex flex-1 flex-col">
         {/* Hero Section */}
         <section className="relative overflow-hidden px-4 pt-16 pb-16 sm:pt-24 lg:pt-32">
           <div className="absolute inset-0 -z-10 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] bg-[size:24px_24px]"></div>
@@ -285,6 +247,12 @@ export default async function MarketingPage() {
           </div>
         </section>
 
+        {/* Partners Rail — after steps, before transparency story */}
+        <PartnersRail
+          title={t.partners.title}
+          subtitle={t.partners.subtitle}
+        />
+
         {/* Tracking Timeline Process Section */}
         <section className="overflow-hidden border-y border-border/40 bg-muted/20 py-16 sm:py-24">
           <div className="mx-auto max-w-6xl px-4 sm:px-6">
@@ -394,7 +362,10 @@ export default async function MarketingPage() {
         </section>
 
         {/* FAQ Section */}
-        <section className="border-t border-border/40 bg-muted/10 py-16 sm:py-24">
+        <section
+          id="faq"
+          className="border-t border-border/40 bg-muted/10 py-16 sm:py-24 scroll-mt-24"
+        >
           <div className="mx-auto max-w-3xl px-4 sm:px-6">
             <div className="mb-12 text-center">
               <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary">
@@ -428,7 +399,6 @@ export default async function MarketingPage() {
             </Link>
           </div>
         </section>
-      </main>
-    </div>
+    </main>
   )
 }

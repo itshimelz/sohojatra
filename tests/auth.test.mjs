@@ -411,7 +411,6 @@ describe("Auth client production HTTPS check", () => {
 
   it("accepts HTTPS URLs in production logic", () => {
     const url = "https://sohojatra.app"
-    const isProduction = true
     const isHttps = url.startsWith("https://")
 
     assert.equal(isHttps, true)

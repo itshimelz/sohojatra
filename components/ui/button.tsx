@@ -19,6 +19,7 @@ function Button({
         data-slot="button"
         className={cn(buttonVariants({ variant, size, className }))}
         render={props.children}
+        nativeButton={false}
         {...(props as any)}
       />
     )
