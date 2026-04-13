@@ -1,4 +1,15 @@
-import { LoginForm } from "@/components/login-form"
+"use client"
+
+import dynamic from "next/dynamic"
+import { AuthFormSkeleton } from "@/components/auth-form-skeleton"
+
+const LoginForm = dynamic(
+  () =>
+    import("@/components/login-form").then((mod) => ({
+      default: mod.LoginForm,
+    })),
+  { loading: () => <AuthFormSkeleton />, ssr: false }
+)
 
 export default function LoginPage() {
   return (

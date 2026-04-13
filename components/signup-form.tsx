@@ -50,8 +50,14 @@ function mapAuthError(
     }
   }
 
-  if (phase === "verify" && (normalized.includes("invalid") || normalized.includes("otp"))) {
-    return { channel: "alert", message: "Invalid OTP. Please check the code and try again." }
+  if (
+    phase === "verify" &&
+    (normalized.includes("invalid") || normalized.includes("otp"))
+  ) {
+    return {
+      channel: "alert",
+      message: "Invalid OTP. Please check the code and try again.",
+    }
   }
 
   if (phase === "send" && normalized.includes("invalid")) {
@@ -297,13 +303,13 @@ export function SignupForm({
       </Card>
       <FieldDescription className="px-6 text-center text-xs">
         By clicking continue, you agree to our{" "}
-        <a href="#" className="underline hover:text-foreground">
+        <Link href="/terms" className="underline hover:text-foreground">
           Terms of Service
-        </a>{" "}
+        </Link>{" "}
         and{" "}
-        <a href="#" className="underline hover:text-foreground">
+        <Link href="/privacy" className="underline hover:text-foreground">
           Privacy Policy
-        </a>
+        </Link>
         .
       </FieldDescription>
     </div>

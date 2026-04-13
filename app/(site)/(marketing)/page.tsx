@@ -382,8 +382,11 @@ export default async function MarketingPage() {
 
         {/* Bottom CTA */}
         <section className="relative overflow-hidden border-t border-border/40 py-20 sm:py-32">
-          <div className="absolute inset-0 -z-10 bg-primary/5"></div>
-          <div className="mx-auto max-w-3xl px-4 text-center sm:px-6">
+          {/* Subtle primary tint base */}
+          <div className="absolute inset-0 bg-primary/5 dark:bg-primary/10 pointer-events-none"></div>
+          {/* Dot-grid pattern — distinct from the hero's line grid */}
+          <div className="absolute inset-0 bg-[radial-gradient(circle,_var(--color-primary)_2px,_transparent_2px)] bg-[size:24px_24px] opacity-[0.08] dark:opacity-[0.15] [mask-image:radial-gradient(ellipse_70%_60%_at_50%_50%,_black_30%,_transparent_100%)] pointer-events-none"></div>
+          <div className="relative z-10 mx-auto max-w-3xl px-4 text-center sm:px-6">
             <h2 className="mb-6 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
               {t.cta.title}
             </h2>

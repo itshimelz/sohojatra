@@ -19,7 +19,9 @@ export function SiteFooter({ locale, footer, nav }: Props) {
           <div className="lg:col-span-2">
             <div className="mb-4 flex items-center gap-2">
               <Megaphone weight="fill" className="size-6 text-primary" />
-              <span className="text-lg font-bold tracking-tight">Sohojatra</span>
+              <span className="text-lg font-bold tracking-tight">
+                Sohojatra
+              </span>
             </div>
             <p className="max-w-md text-sm leading-relaxed text-muted-foreground">
               {footer.description}
@@ -94,11 +96,25 @@ export function SiteFooter({ locale, footer, nav }: Props) {
                   >
                     {footer.supportEmail}
                   </a>
-                  <span className="mt-1 block text-xs">{footer.contactHint}</span>
+                  <span className="mt-1 block text-xs">
+                    {footer.contactHint}
+                  </span>
                 </p>
               </li>
               <li className="pt-1 text-xs text-muted-foreground">
-                {footer.privacy} · {footer.terms}
+                <Link
+                  href="/privacy"
+                  className="transition-colors hover:text-foreground"
+                >
+                  {footer.privacy}
+                </Link>{" "}
+                ·{" "}
+                <Link
+                  href="/terms"
+                  className="transition-colors hover:text-foreground"
+                >
+                  {footer.terms}
+                </Link>
               </li>
             </ul>
           </div>

@@ -2,6 +2,7 @@ import Link from "next/link"
 import { Megaphone } from "@phosphor-icons/react/dist/ssr"
 import { buttonVariants } from "@/components/ui/button-variants"
 import { cn } from "@/lib/utils"
+import { UserButton } from "@/components/user-button"
 
 type Props = {
   nav: {
@@ -35,15 +36,7 @@ export function SiteHeader({ nav }: Props) {
           >
             {nav.browseConcerns}
           </Link>
-          <Link
-            href="/login"
-            className={cn(
-              buttonVariants(),
-              "rounded-full transition-all duration-200"
-            )}
-          >
-            {nav.login}
-          </Link>
+          <UserButton loginLabel={nav.login} />
         </nav>
       </div>
     </header>
