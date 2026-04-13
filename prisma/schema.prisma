@@ -10,8 +10,6 @@ generator client {
 
 datasource db {
   provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
 }
 
 model User {
@@ -79,4 +77,228 @@ model Verification {
 
   @@index([identifier])
   @@map("verification")
+}
+
+enum ConcernStatus {
+  Submitted
+  UnderReview
+  Resolved
+  Rejected
+}
+
+enum ProposalStatus {
+  Pending
+  Approved
+  Rejected
+}
+
+enum ResearchStatus {
+  Open
+  UnderReview
+  Funded
+  Closed
+}
+
+enum ModerationStatus {
+  Pending
+  NeedsReview
+  Escalated
+  Resolved
+}
+
+enum NotificationChannel {
+  Push
+  Sms
+  Email
+  InApp
+}
+
+model Concern {
+  id          String         @id
+  title       String
+  description String
+  status      ConcernStatus  @default(Submitted)
+  upvotes     Int            @default(0)
+  downvotes   Int            @default(0)
+  hasUpvoted  Boolean        @default(false)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  authorName  String
+  locationLat Float
+  locationLng Float
+  location    String?
+  photos      Json
+  updates     Json
+
+  proposals   Proposal[]
+  comments    Comment[]
+  analyses    AiAnalysisResult[]
+
+  @@index([status, createdAt])
+  @@map("concern")
+}
+
+model Proposal {
+  id             String          @id
+  title          String
+  body           String
+  authorName     String
+  category       String
+  votes          Int             @default(0)
+  downvotes      Int             @default(0)
+  status         ProposalStatus  @default(Pending)
+  aiPriorityScore Float          @default(0)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  concernId      String?
+  concern        Concern?        @relation(fields: [concernId], references: [id], onDelete: SetNull)
+  comments       Comment[]
+  awards         Award[]
+
+  @@index([status, createdAt])
+  @@index([concernId])
+  @@map("proposal")
+}
+
+model Comment {
+  id               String   @id
+  body             String
+  authorName       String
+  aiPriorityScore  Float    @default(0)
+  upvotes          Int      @default(0)
+  downvotes        Int      @default(0)
+  quoted           String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  proposalId       String?
+  concernId        String?
+  parentCommentId  String?
+  proposal         Proposal? @relation(fields: [proposalId], references: [id], onDelete: SetNull)
+  concern          Concern?  @relation(fields: [concernId], references: [id], onDelete: SetNull)
+  parentComment    Comment?  @relation("CommentThread", fields: [parentCommentId], references: [id], onDelete: SetNull)
+  replies          Comment[] @relation("CommentThread")
+  awards           Award[]
+
+  @@index([proposalId, createdAt])
+  @@index([concernId, createdAt])
+  @@map("comment")
+}
+
+model Award {
+  id          String   @id
+  commentId   String?
+  proposalId  String?
+  awardType   String
+  givenBy     String
+  createdAt   DateTime @default(now())
+  comment     Comment? @relation(fields: [commentId], references: [id], onDelete: SetNull)
+  proposal    Proposal? @relation(fields: [proposalId], references: [id], onDelete: SetNull)
+
+  @@index([commentId])
+  @@index([proposalId])
+  @@map("award")
+}
+
+model ResearchProblem {
+  id           String         @id
+  title        String
+  summary      String
+  ministry     String
+  grantAmount  String
+  deadline     String
+  status       ResearchStatus @default(Open)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  applications GrantApplication[]
+
+  @@index([status, createdAt])
+  @@map("research_problem")
+}
+
+model GrantApplication {
+  id               String   @id
+  researcherName   String
+  institution      String
+  proposalText     String
+  panelScore       Float    @default(0)
+  status           String   @default("submitted")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  researchProblemId String
+  researchProblem  ResearchProblem @relation(fields: [researchProblemId], references: [id], onDelete: Cascade)
+  milestones       Milestone[]
+
+  @@index([researchProblemId])
+  @@map("grant_application")
+}
+
+model Milestone {
+  id              String   @id
+  grantApplicationId String
+  title           String
+  dueDate         String
+  status          String
+  deliverableUrl  String?
+  paymentAmount   String?
+  paidAt          String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  grantApplication GrantApplication @relation(fields: [grantApplicationId], references: [id], onDelete: Cascade)
+
+  @@index([grantApplicationId])
+  @@map("milestone")
+}
+
+model AssemblyEvent {
+  id            String   @id
+  title         String
+  location      String
+  agenda        String?
+  eventTime     String
+  minutesUrl    String?
+  organizedBy   String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("assembly_event")
+}
+
+model Notification {
+  id          String   @id
+  userId      String
+  concernId   String?
+  message     String
+  channel     NotificationChannel
+  isRead      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  @@index([userId, isRead])
+  @@map("notification")
+}
+
+model ModerationFlag {
+  id          String            @id
+  title       String
+  reason      String
+  severity    String
+  status      ModerationStatus  @default(Pending)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  @@index([status, severity])
+  @@map("moderation_flag")
+}
+
+model AiAnalysisResult {
+  id            String   @id
+  concernId     String
+  sentimentScore Float
+  urgencyScore  Float
+  categoryTags  Json
+  crimeFlags    Json
+  analyzedAt    DateTime @default(now())
+  concern       Concern  @relation(fields: [concernId], references: [id], onDelete: Cascade)
+
+  @@index([concernId, analyzedAt])
+  @@map("ai_analysis_result")
 }

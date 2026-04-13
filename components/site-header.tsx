@@ -2,18 +2,22 @@ import Link from "next/link"
 import { Megaphone } from "@phosphor-icons/react/dist/ssr"
 import { buttonVariants } from "@/components/ui/button-variants"
 import { cn } from "@/lib/utils"
+import { LanguageSwitcher } from "@/components/language-switcher"
+import { ThemeToggle } from "@/components/theme-toggle"
+import type { Locale } from "@/lib/i18n/config"
 
 type Props = {
   nav: {
     browseConcerns: string
     login: string
   }
+  locale: Locale
 }
 
-export function SiteHeader({ nav }: Props) {
+export function SiteHeader({ nav, locale }: Props) {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
+      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4 sm:px-6">
         <Link
           href="/"
           className="flex items-center gap-2 transition-opacity hover:opacity-90"
@@ -44,6 +48,10 @@ export function SiteHeader({ nav }: Props) {
           >
             {nav.login}
           </Link>
+          <div className="flex items-center gap-1.5">
+            <ThemeToggle />
+            <LanguageSwitcher currentLocale={locale} />
+          </div>
         </nav>
       </div>
     </header>

@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -20,6 +21,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty"
+import { createBrowserConcern } from "@/lib/concerns/client-store"
 
 type Dictionary = {
   title: string
@@ -57,10 +59,15 @@ export function SubmitConcernForm({
   const [location, setLocation] = useState<{ lat: number; lng: number } | null>(
     null
   )
+  const [locationLabel, setLocationLabel] = useState<string | null>(null)
+  const [title, setTitle] = useState("")
+  const [description, setDescription] = useState("")
+  const [photoCount, setPhotoCount] = useState(0)
+  const [error, setError] = useState<string | null>(null)
 
   const handleDetectLocation = () => {
     if (!("geolocation" in navigator)) {
-      alert(t.geoNotSupported)
+      toast.error(t.geoNotSupported)
       return
     }
 
@@ -70,25 +77,52 @@ export function SubmitConcernForm({
           lat: position.coords.latitude,
           lng: position.coords.longitude,
         })
+        setLocationLabel(
+          `${position.coords.latitude.toFixed(4)}, ${position.coords.longitude.toFixed(4)}`
+        )
       },
       (error) => {
         console.error("Error getting location", error)
-        alert(t.geoError)
+        toast.error(t.geoError)
       }
     )
   }
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    setError(null)
+
+    if (!location) {
+      setError(t.validationLocation)
+      return
+    }
+
+    if (title.trim().length < 5) {
+      setError(t.validationTitle)
+      return
+    }
+
     setIsSubmitting(true)
 
-    // Mock API call
-    setTimeout(() => {
-      setIsSubmitting(false)
-      // alert(t.success)
-      router.push("/concerns")
-      router.refresh()
-    }, 1500)
+    const concern = createBrowserConcern({
+      title,
+      description,
+      location: {
+        ...location,
+        address: locationLabel ?? undefined,
+      },
+      photos:
+        photoCount > 0
+          ? Array.from({ length: photoCount }, (_, index) =>
+              `https://placehold.co/600x400/png?text=Evidence+${index + 1}`
+            )
+          : [],
+    })
+
+    toast.success(t.success)
+    setIsSubmitting(false)
+    router.push(`/concerns/${concern.id}`)
+    router.refresh()
   }
 
   return (
@@ -101,6 +135,8 @@ export function SubmitConcernForm({
           placeholder={t.formTitlePlaceholder}
           required
           minLength={5}
+          value={title}
+          onChange={(event) => setTitle(event.target.value)}
         />
       </div>
 
@@ -112,6 +148,8 @@ export function SubmitConcernForm({
           placeholder={t.formDescriptionPlaceholder}
           required
           className="min-h-[120px]"
+          value={description}
+          onChange={(event) => setDescription(event.target.value)}
         />
       </div>
 
@@ -134,7 +172,7 @@ export function SubmitConcernForm({
             <EmptyDescription>
               {location && (
                 <span className="font-mono text-xs text-muted-foreground">
-                  {location.lat.toFixed(4)}, {location.lng.toFixed(4)}
+                  {locationLabel}
                 </span>
               )}
               {!location && t.locationHelper}
@@ -171,13 +209,26 @@ export function SubmitConcernForm({
             </EmptyDescription>
           </EmptyHeader>
           <EmptyContent className="mt-4">
-            <Button type="button" variant="outline" size="sm">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setPhotoCount((count) => Math.min(3, count + 1))}
+            >
               <ImageIcon className="mr-2 h-4 w-4" />
               {t.selectFiles}
             </Button>
           </EmptyContent>
         </Empty>
       </div>
+
+      {photoCount > 0 && (
+        <p className="text-sm text-muted-foreground">
+          {photoCount} / 3 photos staged for upload.
+        </p>
+      )}
+
+      {error && <p className="text-sm font-medium text-destructive">{error}</p>}
 
       <Button
         type="submit"

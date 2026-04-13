@@ -13,7 +13,7 @@ export default async function SiteLayout({
 
   return (
     <div className="flex min-h-svh flex-col bg-background text-foreground selection:bg-primary/20">
-      <SiteHeader nav={t.nav} />
+      <SiteHeader nav={t.nav} locale={locale} />
       <div className="flex flex-1 flex-col">{children}</div>
       <SiteFooter locale={locale} footer={t.footer} nav={t.nav} />
     </div>

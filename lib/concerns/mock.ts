@@ -18,6 +18,7 @@ export interface Concern {
   description: string
   status: ConcernStatus
   upvotes: number
+  downvotes: number
   hasUpvoted: boolean
   createdAt: string
   author: {
@@ -41,6 +42,7 @@ export const MOCK_CONCERNS: Concern[] = [
       "There is a completely open manhole near the metro rail station entrance. It is extremely dangerous for pedestrians, especially at night when the streetlights are dim.",
     status: "Under Review",
     upvotes: 142,
+    downvotes: 8,
     hasUpvoted: true,
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString(), // 2 days ago
     author: {
@@ -77,6 +79,7 @@ export const MOCK_CONCERNS: Concern[] = [
       "Every night, unknown trucks are dumping industrial waste near the Dhanmondi Boys School wall. The smell is unbearable and it's a major health hazard for the students.",
     status: "Submitted",
     upvotes: 85,
+    downvotes: 3,
     hasUpvoted: false,
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(), // 5 hours ago
     author: {
@@ -104,6 +107,7 @@ export const MOCK_CONCERNS: Concern[] = [
       "The main streetlight at the Banani intersection has been broken for 3 weeks. There have been two minor collisions already.",
     status: "Resolved",
     upvotes: 210,
+    downvotes: 11,
     hasUpvoted: true,
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 10).toISOString(), // 10 days ago
     author: {

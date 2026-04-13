@@ -1,0 +1,58 @@
+{
+  "concerns": [
+    {
+      "id": "c-001",
+      "title": "Open manhole on Mirpur 10 roundabout",
+      "description": "There is a completely open manhole near the metro rail station entrance. It is extremely dangerous for pedestrians, especially at night when the streetlights are dim.",
+      "status": "Under Review",
+      "upvotes": 142,
+      "downvotes": 8,
+      "hasUpvoted": true,
+      "createdAt": "2026-04-13T21:32:03.191Z",
+      "author": {
+        "name": "Ahmed R."
+      },
+      "location": {
+        "lat": 23.8069,
+        "lng": 90.3687,
+        "address": "Mirpur 10, Dhaka"
+      },
+      "photos": [
+        "https://placehold.co/600x400/png?text=Open+Manhole"
+      ],
+      "updates": []
+    }
+  ],
+  "proposals": [
+    {
+      "id": "p-101",
+      "title": "Create ward-level drainage status board",
+      "body": "Every ward should publish a live drainage map with blocked lines, cleaning status, and the next maintenance date.",
+      "author": "Dr. Rafiq Hasan",
+      "category": "Infrastructure",
+      "votes": 421,
+      "downvotes": 12,
+      "createdAt": "2026-04-13T21:32:03.191Z",
+      "comments": []
+    }
+  ],
+  "researchProblems": [
+    {
+      "id": "rp-11",
+      "title": "Flood-prone intersection prediction in Dhaka South",
+      "ministry": "Ministry of Local Government",
+      "grant": "BDT 12,00,000",
+      "deadline": "15 May 2026",
+      "summary": "Build a model that predicts flood-prone intersections using rainfall, drainage status, and past complaint density."
+    }
+  ],
+  "moderation": [
+    {
+      "id": "mq-1",
+      "title": "Proposal: anti-dumping zone near school",
+      "reason": "Needs source citations and contractor references",
+      "severity": "Medium",
+      "status": "Pending"
+    }
+  ]
+}

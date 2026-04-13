@@ -121,7 +121,7 @@ export const en = {
   },
   howItWorks: {
     title: "Report in 3 Simple Steps",
-    subtitle: "From concern to resolution — it only takes a minute to make your voice heard.",
+    subtitle: "From concern to resolution, it only takes a minute to make your voice heard.",
     step1Label: "Step 1",
     step1Title: "Snap & Pin",
     step1Desc: "Take a photo and mark the exact GPS location of the issue on the map.",

@@ -13,6 +13,10 @@ type SessionPayload = {
 }
 
 export async function getServerSession(): Promise<SessionPayload | null> {
+  if (!env.BETTER_AUTH_URL) {
+    return null
+  }
+
   const cookieHeader = (await cookies()).toString()
 
   if (!cookieHeader) {
