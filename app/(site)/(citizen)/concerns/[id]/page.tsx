@@ -1,6 +1,10 @@
 import type { Metadata } from "next"
 import { getDictionary } from "@/lib/i18n/server"
-import { MOCK_CONCERNS } from "@/lib/concerns/mock"
+import type { Concern } from "@/lib/concerns/mock"
+
+import mockConcernsRaw from "@/public/mock-concerns.json"
+const MOCK_CONCERNS = mockConcernsRaw as Concern[]
+
 import {
   getStatusBadgeVariant,
   getStatusLabel,
