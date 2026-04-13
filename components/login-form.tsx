@@ -235,7 +235,7 @@ export function LoginForm({
             </FieldGroup>
           </form>
           <div className="relative hidden flex-col items-center justify-center overflow-hidden border-l border-border/40 bg-muted/30 p-10 text-center md:flex">
-            <div className="absolute inset-0 -z-10 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
+            <div className="absolute inset-0 -z-10 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-size-[24px_24px]"></div>
             <div className="z-10 flex flex-col items-center gap-4">
               <h2 className="text-3xl font-bold tracking-tight text-balance text-foreground">
                 Together,

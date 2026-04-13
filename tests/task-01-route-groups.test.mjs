@@ -10,7 +10,7 @@ function hasPath(relativePath) {
 }
 
 test("Task 01 route groups and navigation entry points exist", () => {
-  assert.equal(hasPath("app/(marketing)/page.tsx"), true)
+  assert.equal(hasPath("app/(site)/(marketing)/page.tsx"), true)
   assert.equal(hasPath("app/(auth)/login/page.tsx"), true)
-  assert.equal(hasPath("app/(citizen)/concerns/page.tsx"), true)
+  assert.equal(hasPath("app/(site)/(citizen)/concerns/page.tsx"), true)
 })

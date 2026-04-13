@@ -4,14 +4,9 @@ import Link from "next/link"
 import Image from "next/image"
 import { buttonVariants } from "@/components/ui/button-variants"
 import { cn } from "@/lib/utils"
-import { UserButton } from "@/components/user-button"
-import {
-  NavigationMenu,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-  navigationMenuTriggerStyle,
-} from "@/components/ui/navigation-menu"
+import { LanguageSwitcher } from "@/components/language-switcher"
+import { ThemeToggle } from "@/components/theme-toggle"
+import type { Locale } from "@/lib/i18n/config"
 
 type Props = {
   nav: {
@@ -20,12 +15,13 @@ type Props = {
     howItWorks: string
     login: string
   }
+  locale: Locale
 }
 
-export function SiteHeader({ nav }: Props) {
+export function SiteHeader({ nav, locale }: Props) {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
+      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4 sm:px-6">
         <Link
           href="/"
           className="flex items-center gap-2 transition-opacity hover:opacity-90"
@@ -85,7 +81,19 @@ export function SiteHeader({ nav }: Props) {
           >
             {nav.browseConcerns}
           </Link>
-          <UserButton loginLabel={nav.login} />
+          <Link
+            href="/login"
+            className={cn(
+              buttonVariants(),
+              "rounded-full transition-all duration-200"
+            )}
+          >
+            {nav.login}
+          </Link>
+          <div className="flex items-center gap-1.5">
+            <ThemeToggle />
+            <LanguageSwitcher currentLocale={locale} />
+          </div>
         </nav>
       </div>
     </header>

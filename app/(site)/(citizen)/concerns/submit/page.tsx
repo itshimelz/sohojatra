@@ -24,7 +24,7 @@ export default async function SubmitConcernPage() {
         <p className="mt-1 text-muted-foreground">{d.submit.description}</p>
       </div>
 
-      <div className="rounded-lg border bg-card p-6 text-card-foreground">
+      <div className="rounded-3xl border border-border/60 bg-card p-6 text-card-foreground shadow-sm">
         <SubmitConcernForm dictionary={d.submit} />
       </div>
     </div>

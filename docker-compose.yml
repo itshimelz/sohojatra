@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgis/postgis:15-3.3
+    container_name: sohojatra_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password123
+      POSTGRES_DB: sohojatra
+    ports:
+      - "5432:5432"
+    volumes:
+      - sohojatra_pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  sohojatra_pgdata:
