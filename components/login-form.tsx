@@ -12,10 +12,12 @@ import {
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Megaphone, WarningCircle } from "@phosphor-icons/react"
+import { WarningCircle } from "@phosphor-icons/react"
 import Link from "next/link"
+import Image from "next/image"
 import { authClient } from "@/lib/auth-client"
 import { useRouter } from "next/navigation"
+import { OTPFieldPreview as OTPField } from "@base-ui/react/otp-field"
 import { toast } from "sonner"
 import { mapAuthError } from "@/lib/auth-feedback"
 import { bdPhoneSchema, otpCodeSchema } from "@/lib/validation/auth"
@@ -122,16 +124,23 @@ export function LoginForm({
           >
             <FieldGroup className="gap-5">
               <div className="mb-2 flex flex-col items-center gap-2 text-center">
-                <div className="mb-2 flex size-12 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-                  <Megaphone weight="fill" className="size-6" />
+                <div className="mb-2 flex size-12 items-center justify-center">
+                  <Image src="/logo.svg" alt="Sohojatra Logo" width={48} height={48} className="size-12 w-auto" />
                 </div>
                 <h1 className="text-2xl font-bold tracking-tight">
                   {isOtpSent ? "Verify Phone" : "Welcome back"}
                 </h1>
                 <p className="text-sm text-balance text-muted-foreground">
-                  {isOtpSent
-                    ? "Enter the OTP sent to your phone"
-                    : "Sign in to Sohojatra with your mobile number"}
+                  {isOtpSent ? (
+                    <>
+                      Enter the 6-digit code sent to{" "}
+                      <span className="font-bold text-foreground">
+                        +880 {phoneNumber.slice(0, 3)}****{phoneNumber.slice(-3)}
+                      </span>
+                    </>
+                  ) : (
+                    "Sign in to Sohojatra with your mobile number"
+                  )}
                 </p>
               </div>
 
@@ -173,20 +182,26 @@ export function LoginForm({
               ) : (
                 <>
                   <Field>
-                    <FieldLabel htmlFor="otp">OTP Code</FieldLabel>
-                    <Input
+
+                    <OTPField.Root
                       id="otp"
-                      type="text"
-                      placeholder="123456"
-                      required
+                      length={6}
                       value={otp}
-                      onChange={(e) => {
-                        const val = e.target.value.replace(/\D/g, "")
-                        if (val.length <= 6) setOtp(val)
-                      }}
-                      className="h-11"
-                      disabled={isLoading}
-                    />
+                      onValueChange={(val) => setOtp(val)}
+                      className="flex gap-2 justify-center"
+                    >
+                      {Array.from({ length: 6 }).map((_, index) => (
+                        <OTPField.Input
+                          key={index}
+                          className={cn(
+                            "flex h-12 w-12 items-center justify-center rounded-md border border-input bg-transparent text-center text-lg transition-colors",
+                            "placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                          )}
+                          aria-label={`Character ${index + 1} of 6`}
+                          disabled={isLoading}
+                        />
+                      ))}
+                    </OTPField.Root>
                   </Field>
                   <Field className="mt-2">
                     <Button

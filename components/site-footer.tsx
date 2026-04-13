@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { Megaphone } from "@phosphor-icons/react/dist/ssr"
+import Image from "next/image"
 import { LanguageSwitcher } from "@/components/language-switcher"
 import { ThemeToggle } from "@/components/theme-toggle"
 import type { Locale } from "@/lib/i18n/config"
@@ -18,7 +18,7 @@ export function SiteFooter({ locale, footer, nav }: Props) {
         <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-4 lg:gap-8">
           <div className="lg:col-span-2">
             <div className="mb-4 flex items-center gap-2">
-              <Megaphone weight="fill" className="size-6 text-primary" />
+              <Image src="/logo.svg" alt="Sohojatra Logo" width={32} height={32} className="size-8 w-auto" />
               <span className="text-lg font-bold tracking-tight">
                 Sohojatra
               </span>
