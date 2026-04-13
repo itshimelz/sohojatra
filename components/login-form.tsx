@@ -12,57 +12,15 @@ import {
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Megaphone, WarningCircle } from "@phosphor-icons/react"
+import { WarningCircle } from "@phosphor-icons/react"
 import Link from "next/link"
+import Image from "next/image"
 import { authClient } from "@/lib/auth-client"
 import { useRouter } from "next/navigation"
+import { OTPFieldPreview as OTPField } from "@base-ui/react/otp-field"
 import { toast } from "sonner"
-
-type FeedbackChannel = "alert" | "toast"
-type AuthPhase = "send" | "verify"
-
-function mapAuthError(
-  message: string,
-  fallback: string,
-  phase: AuthPhase = "verify"
-): {
-  channel: FeedbackChannel
-  message: string
-} {
-  const normalized = message.toLowerCase()
-
-  if (
-    normalized.includes("rate") ||
-    normalized.includes("too many") ||
-    normalized.includes("limit")
-  ) {
-    return {
-      channel: "toast",
-      message: "Too many attempts. Please wait a few minutes and try again.",
-    }
-  }
-
-  if (normalized.includes("network") || normalized.includes("fetch")) {
-    return {
-      channel: "toast",
-      message:
-        "Network issue detected. Please check your connection and retry.",
-    }
-  }
-
-  if (phase === "verify" && (normalized.includes("invalid") || normalized.includes("otp"))) {
-    return { channel: "alert", message: "Invalid OTP. Please check the code and try again." }
-  }
-
-  if (phase === "send" && normalized.includes("invalid")) {
-    return {
-      channel: "alert",
-      message: "Could not send OTP. Please check your phone number.",
-    }
-  }
-
-  return { channel: "toast", message: fallback }
-}
+import { mapAuthError } from "@/lib/auth-feedback"
+import { bdPhoneSchema, otpCodeSchema } from "@/lib/validation/auth"
 
 export function LoginForm({
   className,
@@ -77,12 +35,10 @@ export function LoginForm({
 
   const handleSendOtp = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault()
-    if (!phoneNumber) return
-
-    const bdPhoneRegex = /^1[3-9]\d{8}$/
-    if (!bdPhoneRegex.test(phoneNumber)) {
+    const phoneResult = bdPhoneSchema.safeParse(phoneNumber)
+    if (!phoneResult.success) {
       setInlineError(
-        "Please enter a valid 10-digit Bangladeshi mobile number (e.g., 17XXXXXXXX)."
+        phoneResult.error.issues[0]?.message ?? "Invalid phone number."
       )
       return
     }
@@ -120,13 +76,18 @@ export function LoginForm({
 
   const handleVerifyOtp = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    if (!otp) return
+    const otpResult = otpCodeSchema.safeParse(otp)
+    if (!otpResult.success) {
+      setInlineError(otpResult.error.issues[0]?.message ?? "Invalid OTP code.")
+      return
+    }
+
     setIsLoading(true)
     setInlineError(null)
     try {
       const { error } = await authClient.phoneNumber.verify({
         phoneNumber: `+880${phoneNumber}`,
-        code: otp,
+        code: otpResult.data,
       })
 
       if (error) {
@@ -163,16 +124,23 @@ export function LoginForm({
           >
             <FieldGroup className="gap-5">
               <div className="mb-2 flex flex-col items-center gap-2 text-center">
-                <div className="mb-2 flex size-12 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-                  <Megaphone weight="fill" className="size-6" />
+                <div className="mb-2 flex size-12 items-center justify-center">
+                  <Image src="/logo.svg" alt="Sohojatra Logo" width={48} height={48} className="size-12 w-auto" />
                 </div>
                 <h1 className="text-2xl font-bold tracking-tight">
                   {isOtpSent ? "Verify Phone" : "Welcome back"}
                 </h1>
                 <p className="text-sm text-balance text-muted-foreground">
-                  {isOtpSent
-                    ? "Enter the OTP sent to your phone"
-                    : "Sign in to Sohojatra with your mobile number"}
+                  {isOtpSent ? (
+                    <>
+                      Enter the 6-digit code sent to{" "}
+                      <span className="font-bold text-foreground">
+                        +880 {phoneNumber.slice(0, 3)}****{phoneNumber.slice(-3)}
+                      </span>
+                    </>
+                  ) : (
+                    "Sign in to Sohojatra with your mobile number"
+                  )}
                 </p>
               </div>
 
@@ -188,7 +156,7 @@ export function LoginForm({
                       <Input
                         id="phone"
                         type="tel"
-                        placeholder="17XXXXXXXX"
+                        placeholder="1712345678"
                         required
                         value={phoneNumber}
                         onChange={(e) => {
@@ -214,17 +182,26 @@ export function LoginForm({
               ) : (
                 <>
                   <Field>
-                    <FieldLabel htmlFor="otp">OTP Code</FieldLabel>
-                    <Input
+
+                    <OTPField.Root
                       id="otp"
-                      type="text"
-                      placeholder="123456"
-                      required
+                      length={6}
                       value={otp}
-                      onChange={(e) => setOtp(e.target.value)}
-                      className="h-11"
-                      disabled={isLoading}
-                    />
+                      onValueChange={(val) => setOtp(val)}
+                      className="flex gap-2 justify-center"
+                    >
+                      {Array.from({ length: 6 }).map((_, index) => (
+                        <OTPField.Input
+                          key={index}
+                          className={cn(
+                            "flex h-12 w-12 items-center justify-center rounded-md border border-input bg-transparent text-center text-lg transition-colors",
+                            "placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                          )}
+                          aria-label={`Character ${index + 1} of 6`}
+                          disabled={isLoading}
+                        />
+                      ))}
+                    </OTPField.Root>
                   </Field>
                   <Field className="mt-2">
                     <Button
@@ -275,13 +252,13 @@ export function LoginForm({
       </Card>
       <FieldDescription className="px-6 text-center text-xs">
         By clicking continue, you agree to our{" "}
-        <a href="#" className="underline hover:text-foreground">
+        <Link href="/terms" className="underline hover:text-foreground">
           Terms of Service
-        </a>{" "}
+        </Link>{" "}
         and{" "}
-        <a href="#" className="underline hover:text-foreground">
+        <Link href="/privacy" className="underline hover:text-foreground">
           Privacy Policy
-        </a>
+        </Link>
         .
       </FieldDescription>
     </div>

@@ -1,4 +1,15 @@
-import { SignupForm } from "@/components/signup-form"
+"use client"
+
+import dynamic from "next/dynamic"
+import { AuthFormSkeleton } from "@/components/auth-form-skeleton"
+
+const SignupForm = dynamic(
+  () =>
+    import("@/components/signup-form").then((mod) => ({
+      default: mod.SignupForm,
+    })),
+  { loading: () => <AuthFormSkeleton />, ssr: false }
+)
 
 export default function SignupPage() {
   return (

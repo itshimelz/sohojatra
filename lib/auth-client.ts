@@ -1,5 +1,13 @@
 import { createAuthClient } from "better-auth/react"
 import { phoneNumberClient } from "better-auth/client/plugins"
+import { adminClient } from "better-auth/client/plugins"
+import {
+  ac,
+  citizen,
+  moderator,
+  admin,
+  superadmin,
+} from "@/lib/permissions"
 
 const publicAppUrl = process.env.NEXT_PUBLIC_APP_URL
 
@@ -15,7 +23,18 @@ if (
 
 export const authClient = createAuthClient({
   ...(publicAppUrl ? { baseURL: publicAppUrl } : {}),
-  plugins: [phoneNumberClient()],
+  plugins: [
+    phoneNumberClient(),
+    adminClient({
+      ac,
+      roles: {
+        citizen,
+        moderator,
+        admin,
+        superadmin,
+      },
+    }),
+  ],
 })
 
 export const { signIn, signUp, useSession } = authClient

@@ -17,6 +17,7 @@
 
 # production
 /build
+/.agents
 
 /tasks
 /SPEC.md

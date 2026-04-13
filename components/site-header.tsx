@@ -1,11 +1,23 @@
+"use client"
+
 import Link from "next/link"
-import { Megaphone } from "@phosphor-icons/react/dist/ssr"
+import Image from "next/image"
 import { buttonVariants } from "@/components/ui/button-variants"
 import { cn } from "@/lib/utils"
+import { UserButton } from "@/components/user-button"
+import {
+  NavigationMenu,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  navigationMenuTriggerStyle,
+} from "@/components/ui/navigation-menu"
 
 type Props = {
   nav: {
     browseConcerns: string
+    submitConcern: string
+    howItWorks: string
     login: string
   }
 }
@@ -18,32 +30,62 @@ export function SiteHeader({ nav }: Props) {
           href="/"
           className="flex items-center gap-2 transition-opacity hover:opacity-90"
         >
-          <div className="flex size-8 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-            <Megaphone weight="fill" className="size-5" />
-          </div>
+          <Image src="/logo.svg" alt="Sohojatra Logo" width={32} height={32} className="size-8 w-auto" />
           <span className="text-xl font-bold tracking-tight text-foreground">
             Sohojatra
           </span>
         </Link>
+        <div className="hidden md:flex">
+          <NavigationMenu>
+            <NavigationMenuList className="gap-2">
+              <NavigationMenuItem>
+                <NavigationMenuLink
+                  className={cn(
+                    navigationMenuTriggerStyle(),
+                    "bg-transparent font-medium"
+                  )}
+                  render={<Link href="/concerns" />}
+                >
+                  {nav.browseConcerns}
+                </NavigationMenuLink>
+              </NavigationMenuItem>
+              <NavigationMenuItem>
+                <NavigationMenuLink
+                  className={cn(
+                    navigationMenuTriggerStyle(),
+                    "bg-transparent font-medium"
+                  )}
+                  render={<Link href="/concerns/submit" />}
+                >
+                  {nav.submitConcern}
+                </NavigationMenuLink>
+              </NavigationMenuItem>
+              <NavigationMenuItem>
+                <NavigationMenuLink
+                  className={cn(
+                    navigationMenuTriggerStyle(),
+                    "bg-transparent font-medium"
+                  )}
+                  render={<Link href="/#how-it-works" />}
+                >
+                  {nav.howItWorks}
+                </NavigationMenuLink>
+              </NavigationMenuItem>
+            </NavigationMenuList>
+          </NavigationMenu>
+        </div>
         <nav className="flex items-center gap-1 sm:gap-2">
+          {/* Mobile visible basic link just in case */}
           <Link
             href="/concerns"
             className={cn(
               buttonVariants({ variant: "ghost" }),
-              "hidden text-muted-foreground transition-colors duration-200 hover:text-foreground sm:inline-flex"
+              "text-muted-foreground transition-colors duration-200 hover:text-foreground sm:inline-flex md:hidden"
             )}
           >
             {nav.browseConcerns}
           </Link>
-          <Link
-            href="/login"
-            className={cn(
-              buttonVariants(),
-              "rounded-full transition-all duration-200"
-            )}
-          >
-            {nav.login}
-          </Link>
+          <UserButton loginLabel={nav.login} />
         </nav>
       </div>
     </header>

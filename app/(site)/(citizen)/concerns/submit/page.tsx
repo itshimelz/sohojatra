@@ -1,7 +1,17 @@
+import type { Metadata } from "next"
 import { getDictionary } from "@/lib/i18n/server"
 import { requireServerSession } from "@/lib/auth-session"
+import { SITE_URL } from "@/lib/seo"
 
 import { SubmitConcernForm } from "./submit-form"
+
+export const metadata: Metadata = {
+  title: "Report a Concern",
+  description:
+    "Submit a civic concern in Dhaka — report broken infrastructure, waste, or safety issues with photos and GPS location.",
+  alternates: { canonical: `${SITE_URL}/concerns/submit` },
+  robots: { index: false, follow: true },
+}
 
 export default async function SubmitConcernPage() {
   await requireServerSession()

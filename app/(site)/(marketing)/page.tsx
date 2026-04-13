@@ -1,7 +1,14 @@
 import Link from "next/link"
+import type { Metadata } from "next"
 import { buttonVariants } from "@/components/ui/button-variants"
 import { cn } from "@/lib/utils"
 import { getDictionary } from "@/lib/i18n/server"
+import { SITE_URL } from "@/lib/seo"
+import {
+  organizationJsonLd,
+  websiteJsonLd,
+  faqJsonLd,
+} from "@/lib/structured-data"
 import {
   MapPinLine,
   ThumbsUp,
@@ -24,6 +31,19 @@ import {
 } from "@phosphor-icons/react/dist/ssr"
 import { FaqAccordion } from "@/components/faq-accordion"
 import { PartnersRail } from "@/components/partners-rail"
+
+export const metadata: Metadata = {
+  title: { absolute: "Sohojatra — Civic Reporting for Dhaka" },
+  description:
+    "Report local civic issues in Dhaka, track real-time progress, and upvote what matters most. A transparent platform for citizens to improve their city.",
+  alternates: { canonical: SITE_URL },
+  openGraph: {
+    title: "Sohojatra — Together, We Decide.",
+    description:
+      "Join thousands of Dhaka citizens reporting urban issues, tracking resolutions, and building a better city.",
+    url: SITE_URL,
+  },
+}
 
 export default async function MarketingPage() {
   const t = await getDictionary()
@@ -68,6 +88,30 @@ export default async function MarketingPage() {
 
   return (
     <main className="flex flex-1 flex-col">
+        {/* JSON-LD Structured Data */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(organizationJsonLd()),
+          }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(websiteJsonLd()),
+          }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(
+              faqJsonLd(
+                faqs.map((f) => ({ question: f.q, answer: f.a }))
+              )
+            ),
+          }}
+        />
+
         {/* Hero Section */}
         <section className="relative overflow-hidden px-4 pt-16 pb-16 sm:pt-24 lg:pt-32">
           <div className="absolute inset-0 -z-10 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] bg-[size:24px_24px]"></div>
@@ -382,8 +426,11 @@ export default async function MarketingPage() {
 
         {/* Bottom CTA */}
         <section className="relative overflow-hidden border-t border-border/40 py-20 sm:py-32">
-          <div className="absolute inset-0 -z-10 bg-primary/5"></div>
-          <div className="mx-auto max-w-3xl px-4 text-center sm:px-6">
+          {/* Subtle primary tint base */}
+          <div className="absolute inset-0 bg-primary/5 dark:bg-primary/10 pointer-events-none"></div>
+          {/* Dot-grid pattern — distinct from the hero's line grid */}
+          <div className="absolute inset-0 bg-[radial-gradient(circle,_var(--color-primary)_2px,_transparent_2px)] bg-[size:24px_24px] opacity-[0.08] dark:opacity-[0.15] [mask-image:radial-gradient(ellipse_70%_60%_at_50%_50%,_black_30%,_transparent_100%)] pointer-events-none"></div>
+          <div className="relative z-10 mx-auto max-w-3xl px-4 text-center sm:px-6">
             <h2 className="mb-6 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
               {t.cta.title}
             </h2>

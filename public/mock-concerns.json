@@ -1,0 +1,431 @@
+[
+  {
+    "id": "c-001",
+    "title": "Open manhole on Mirpur 10 roundabout",
+    "description": "There is a completely open manhole near the metro rail station entrance. It is extremely dangerous for pedestrians, especially at night when the streetlights are dim.",
+    "status": "Under Review",
+    "upvotes": 142,
+    "hasUpvoted": true,
+    "createdAt": "2026-04-12T10:00:00.000Z",
+    "author": {
+      "name": "Ahmed R."
+    },
+    "location": {
+      "lat": 23.8069,
+      "lng": 90.3687,
+      "address": "Mirpur 10, Dhaka"
+    },
+    "photos": ["https://placehold.co/600x400/png?text=Open+Manhole"],
+    "updates": [
+      {
+        "id": "u-001",
+        "status": "Submitted",
+        "timestamp": "2026-04-12T10:00:00.000Z",
+        "author": "Ahmed R."
+      },
+      {
+        "id": "u-002",
+        "status": "Under Review",
+        "note": "Assigned to DNCC Ward 14 maintenance team for inspection.",
+        "timestamp": "2026-04-13T08:30:00.000Z",
+        "author": "DNCC Admin"
+      }
+    ]
+  },
+  {
+    "id": "c-002",
+    "title": "Illegal waste dumping near school",
+    "description": "Every night, unknown trucks are dumping industrial waste near the Dhanmondi Boys School wall. The smell is unbearable and it's a major health hazard for the students.",
+    "status": "Submitted",
+    "upvotes": 85,
+    "hasUpvoted": false,
+    "createdAt": "2026-04-13T22:00:00.000Z",
+    "author": {
+      "name": "Fatima S."
+    },
+    "location": {
+      "lat": 23.7461,
+      "lng": 90.3742,
+      "address": "Dhanmondi, Dhaka"
+    },
+    "photos": ["https://placehold.co/600x400/png?text=Waste+Dump"],
+    "updates": [
+      {
+        "id": "u-003",
+        "status": "Submitted",
+        "timestamp": "2026-04-13T22:00:00.000Z",
+        "author": "Fatima S."
+      }
+    ]
+  },
+  {
+    "id": "c-003",
+    "title": "Broken streetlight causing accidents",
+    "description": "The main streetlight at the Banani intersection has been broken for 3 weeks. There have been two minor collisions already.",
+    "status": "Resolved",
+    "upvotes": 210,
+    "hasUpvoted": true,
+    "createdAt": "2026-04-03T18:00:00.000Z",
+    "author": {
+      "name": "Kamrul H."
+    },
+    "location": {
+      "lat": 23.794,
+      "lng": 90.4043,
+      "address": "Banani, Dhaka"
+    },
+    "photos": ["https://placehold.co/600x400/png?text=Broken+Light"],
+    "updates": [
+      {
+        "id": "u-004",
+        "status": "Submitted",
+        "timestamp": "2026-04-03T18:00:00.000Z",
+        "author": "Kamrul H."
+      },
+      {
+        "id": "u-005",
+        "status": "Under Review",
+        "note": "Forwarded to DESCO electrical division.",
+        "timestamp": "2026-04-04T09:00:00.000Z",
+        "author": "City Admin"
+      },
+      {
+        "id": "u-006",
+        "status": "Resolved",
+        "note": "The streetlight bulb has been replaced and the circuit board repaired.",
+        "timestamp": "2026-04-12T14:00:00.000Z",
+        "author": "DESCO Field Team"
+      }
+    ]
+  },
+  {
+    "id": "c-004",
+    "title": "Severe waterlogging after 10 mins of rain",
+    "description": "The entire Shantinagar intersection floods waist-deep after minimal rain. The drainage pipes seem to be clogged by plastic waste from the nearby market.",
+    "status": "Under Review",
+    "upvotes": 345,
+    "hasUpvoted": false,
+    "createdAt": "2026-04-10T14:20:00.000Z",
+    "author": {
+      "name": "Rizwan K."
+    },
+    "location": {
+      "lat": 23.7381,
+      "lng": 90.4131,
+      "address": "Shantinagar, Dhaka"
+    },
+    "photos": [],
+    "updates": [
+      {
+        "id": "u-007",
+        "status": "Submitted",
+        "timestamp": "2026-04-10T14:20:00.000Z",
+        "author": "Rizwan K."
+      },
+      {
+        "id": "u-008",
+        "status": "Under Review",
+        "note": "WASA informed. Scheduled for pipe jetting next week.",
+        "timestamp": "2026-04-11T10:15:00.000Z",
+        "author": "WASA Inspector"
+      }
+    ]
+  },
+  {
+    "id": "c-005",
+    "title": "Unregulated construction blocking sidewalk",
+    "description": "A developer is building a high-rise and has dumped sand and bricks completely blocking the footpath on Satmasjid Road, forcing people to walk into heavy traffic.",
+    "status": "Submitted",
+    "upvotes": 128,
+    "hasUpvoted": true,
+    "createdAt": "2026-04-13T09:00:00.000Z",
+    "author": {
+      "name": "Nafisa T."
+    },
+    "location": {
+      "lat": 23.7432,
+      "lng": 90.3725,
+      "address": "Satmasjid Road, Dhaka"
+    },
+    "photos": [],
+    "updates": [
+      {
+        "id": "u-009",
+        "status": "Submitted",
+        "timestamp": "2026-04-13T09:00:00.000Z",
+        "author": "Nafisa T."
+      }
+    ]
+  },
+  {
+    "id": "c-006",
+    "title": "Fallen tree blocking lane 4",
+    "description": "Yesterday's storm uprooted a massive tree. It crashed into an electric pole and is blocking the entirety of Lane 4 in Baridhara DOHS. Power is also unstable here now.",
+    "status": "Resolved",
+    "upvotes": 412,
+    "hasUpvoted": false,
+    "createdAt": "2026-04-09T06:30:00.000Z",
+    "author": {
+      "name": "Omar F."
+    },
+    "location": {
+      "lat": 23.8142,
+      "lng": 90.4132,
+      "address": "Baridhara DOHS, Dhaka"
+    },
+    "photos": [],
+    "updates": [
+      {
+        "id": "u-010",
+        "status": "Submitted",
+        "timestamp": "2026-04-09T06:30:00.000Z",
+        "author": "Omar F."
+      },
+      {
+        "id": "u-011",
+        "status": "Under Review",
+        "note": "Emergency response team dispatched alongside DESCO technicians.",
+        "timestamp": "2026-04-09T07:15:00.000Z",
+        "author": "DOHS Council"
+      },
+      {
+        "id": "u-012",
+        "status": "Resolved",
+        "note": "Tree cleared, road reopened, and power restored.",
+        "timestamp": "2026-04-09T18:45:00.000Z",
+        "author": "DOHS Council"
+      }
+    ]
+  },
+  {
+    "id": "c-007",
+    "title": "Mosquito infestation due to stagnant water",
+    "description": "There is an abandoned plot of land next to our apartment building that has become a massive breeding pool for mosquitoes. Dengue cases are rising nearby.",
+    "status": "Under Review",
+    "upvotes": 523,
+    "hasUpvoted": true,
+    "createdAt": "2026-04-05T11:00:00.000Z",
+    "author": {
+      "name": "Tariq J."
+    },
+    "location": {
+      "lat": 23.7545,
+      "lng": 90.3702,
+      "address": "Mohammadpur, Dhaka"
+    },
+    "photos": [],
+    "updates": [
+      {
+        "id": "u-013",
+        "status": "Submitted",
+        "timestamp": "2026-04-05T11:00:00.000Z",
+        "author": "Tariq J."
+      },
+      {
+        "id": "u-014",
+        "status": "Under Review",
+        "note": "Health dept notified. Fogging scheduled for tommorrow and a notice issued to the land owner.",
+        "timestamp": "2026-04-06T10:00:00.000Z",
+        "author": "City Health Admin"
+      }
+    ]
+  },
+  {
+    "id": "c-008",
+    "title": "Broken pedestrian bridge stairs",
+    "description": "The stairs on the south side of the Farmgate foot overbridge have rusted through and someone could easily fall through the gaps.",
+    "status": "Rejected",
+    "upvotes": 74,
+    "hasUpvoted": false,
+    "createdAt": "2026-03-25T15:00:00.000Z",
+    "author": {
+      "name": "Salma H."
+    },
+    "location": {
+      "lat": 23.7561,
+      "lng": 90.3872,
+      "address": "Farmgate, Dhaka"
+    },
+    "photos": [],
+    "updates": [
+      {
+        "id": "u-015",
+        "status": "Submitted",
+        "timestamp": "2026-03-25T15:00:00.000Z",
+        "author": "Salma H."
+      },
+      {
+        "id": "u-016",
+        "status": "Rejected",
+        "note": "This bridge is scheduled for complete demolition next month as part of the expressway project. Immediate repairs cancelled.",
+        "timestamp": "2026-03-27T09:00:00.000Z",
+        "author": "Transport Authority Admin"
+      }
+    ]
+  },
+  {
+    "id": "c-009",
+    "title": "Extortion ring at local kitchen market",
+    "description": "A group of thugs are forcibly collecting excessive 'tolls' from poor vegetable vendors every morning. It's driving up food prices for the residents.",
+    "status": "Submitted",
+    "upvotes": 918,
+    "hasUpvoted": true,
+    "createdAt": "2026-04-14T01:30:00.000Z",
+    "author": {
+      "name": "Anonymous"
+    },
+    "location": {
+      "lat": 23.7145,
+      "lng": 90.4152,
+      "address": "Karwan Bazar, Dhaka"
+    },
+    "photos": [],
+    "updates": [
+      {
+        "id": "u-017",
+        "status": "Submitted",
+        "timestamp": "2026-04-14T01:30:00.000Z",
+        "author": "Anonymous"
+      }
+    ]
+  },
+  {
+    "id": "c-010",
+    "title": "Traffic signal malfunctioning",
+    "description": "All the lights at the intersection are staying red permanently, causing absolute chaos and gridlock that stretches back 3 kilometers.",
+    "status": "Resolved",
+    "upvotes": 312,
+    "hasUpvoted": false,
+    "createdAt": "2026-04-11T08:00:00.000Z",
+    "author": {
+      "name": "Hasan P."
+    },
+    "location": {
+      "lat": 23.7745,
+      "lng": 90.3952,
+      "address": "Mohakhali, Dhaka"
+    },
+    "photos": [],
+    "updates": [
+      {
+        "id": "u-018",
+        "status": "Submitted",
+        "timestamp": "2026-04-11T08:00:00.000Z",
+        "author": "Hasan P."
+      },
+      {
+        "id": "u-019",
+        "status": "Under Review",
+        "note": "Traffic police deployed manually. Signal maintenance team informed.",
+        "timestamp": "2026-04-11T08:30:00.000Z",
+        "author": "Traffic Control"
+      },
+      {
+        "id": "u-020",
+        "status": "Resolved",
+        "note": "Control box motherboard was fried. Replaced and functioning normally.",
+        "timestamp": "2026-04-11T12:00:00.000Z",
+        "author": "Traffic Control"
+      }
+    ]
+  },
+  {
+    "id": "c-011",
+    "title": "Dangerous stray dog pack",
+    "description": "A pack of highly aggressive stray dogs has chased down and bitten two school children this week. Residents are terrified to walk outside.",
+    "status": "Under Review",
+    "upvotes": 255,
+    "hasUpvoted": true,
+    "createdAt": "2026-04-12T16:45:00.000Z",
+    "author": {
+      "name": "Nadia C."
+    },
+    "location": {
+      "lat": 23.7915,
+      "lng": 90.4122,
+      "address": "Gulshan 1, Dhaka"
+    },
+    "photos": [],
+    "updates": [
+      {
+        "id": "u-021",
+        "status": "Submitted",
+        "timestamp": "2026-04-12T16:45:00.000Z",
+        "author": "Nadia C."
+      },
+      {
+        "id": "u-022",
+        "status": "Under Review",
+        "note": "Animal control unit scheduled to visit the area for humane relocation.",
+        "timestamp": "2026-04-13T10:00:00.000Z",
+        "author": "City Admin"
+      }
+    ]
+  },
+  {
+    "id": "c-012",
+    "title": "Public park occupied by drug peddlers",
+    "description": "The local park is completely unusable for families. After 6 PM, it is entirely occupied by gangs openly selling and consuming narcotics.",
+    "status": "Submitted",
+    "upvotes": 612,
+    "hasUpvoted": true,
+    "createdAt": "2026-04-13T20:00:00.000Z",
+    "author": {
+      "name": "Anonymous"
+    },
+    "location": {
+      "lat": 23.7255,
+      "lng": 90.3952,
+      "address": "Azimpur, Dhaka"
+    },
+    "photos": [],
+    "updates": [
+      {
+        "id": "u-023",
+        "status": "Submitted",
+        "timestamp": "2026-04-13T20:00:00.000Z",
+        "author": "Anonymous"
+      }
+    ]
+  },
+  {
+    "id": "c-013",
+    "title": "Leaking underground gas pipe",
+    "description": "Strong smell of natural gas continuously emitting from a crack in the pavement. It's right next to a busy tea stall where people are smoking. Extremely high risk of explosion.",
+    "status": "Resolved",
+    "upvotes": 1205,
+    "hasUpvoted": false,
+    "createdAt": "2026-04-14T02:00:00.000Z",
+    "author": {
+      "name": "Zubair M."
+    },
+    "location": {
+      "lat": 23.7345,
+      "lng": 90.4052,
+      "address": "Baily Road, Dhaka"
+    },
+    "photos": [],
+    "updates": [
+      {
+        "id": "u-024",
+        "status": "Submitted",
+        "timestamp": "2026-04-14T02:00:00.000Z",
+        "author": "Zubair M."
+      },
+      {
+        "id": "u-025",
+        "status": "Under Review",
+        "note": "Emergency flagged! Titas Gas transmission unit en route.",
+        "timestamp": "2026-04-14T02:05:00.000Z",
+        "author": "Titas Admin"
+      },
+      {
+        "id": "u-026",
+        "status": "Resolved",
+        "note": "Valve shut off, leak welded securely. High pressure tests passed.",
+        "timestamp": "2026-04-14T03:00:00.000Z",
+        "author": "Titas Field Team"
+      }
+    ]
+  }
+]
