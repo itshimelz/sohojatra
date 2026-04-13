@@ -1,3 +1,5 @@
+import type { Metadata } from "next"
+import { SITE_URL } from "@/lib/seo"
 import { getDictionary } from "@/lib/i18n/server"
 import { MOCK_CONCERNS } from "@/lib/concerns/mock"
 import {
@@ -6,6 +8,7 @@ import {
 } from "@/lib/concerns/presentation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import { buttonVariants } from "@/components/ui/button-variants"
 import { Badge } from "@/components/ui/badge"
 import {
   MapPin,
@@ -13,6 +16,19 @@ import {
   Clock,
   Chat as MessageSquare,
 } from "@phosphor-icons/react/dist/ssr"
+
+export const metadata: Metadata = {
+  title: "Citizen Concerns",
+  description:
+    "Browse and upvote civic issues reported by verified citizens across Dhaka — from potholes and streetlights to waste management and public safety.",
+  alternates: { canonical: `${SITE_URL}/concerns` },
+  openGraph: {
+    title: "Citizen Concerns — Sohojatra",
+    description:
+      "See what issues Dhaka residents are reporting. Upvote to help prioritize what gets fixed first.",
+    url: `${SITE_URL}/concerns`,
+  },
+}
 
 type PageProps = {
   searchParams: Promise<{ sort?: string }>
@@ -45,29 +61,36 @@ export default async function ConcernsPage({ searchParams }: PageProps) {
           <h1 className="text-3xl font-bold tracking-tight">{t.title}</h1>
           <p className="mt-1 text-muted-foreground">{t.description}</p>
         </div>
-        <Button asChild>
-          <Link href="/concerns/submit">{t.submitNew}</Link>
-        </Button>
+        <Link
+          href="/concerns/submit"
+          className={buttonVariants({ variant: "default" })}
+        >
+          {t.submitNew}
+        </Link>
       </div>
 
       <div className="mb-6 flex items-center gap-2">
         <span className="text-sm font-medium text-muted-foreground">
           {t.sortBy}:
         </span>
-        <Button
-          variant={sort === "recent" ? "secondary" : "ghost"}
-          size="sm"
-          asChild
+        <Link
+          href="/concerns?sort=recent"
+          className={buttonVariants({
+            variant: sort === "recent" ? "secondary" : "ghost",
+            size: "sm",
+          })}
         >
-          <Link href="/concerns?sort=recent">{t.sortRecent}</Link>
-        </Button>
-        <Button
-          variant={sort === "upvotes" ? "secondary" : "ghost"}
-          size="sm"
-          asChild
+          {t.sortRecent}
+        </Link>
+        <Link
+          href="/concerns?sort=upvotes"
+          className={buttonVariants({
+            variant: sort === "upvotes" ? "secondary" : "ghost",
+            size: "sm",
+          })}
         >
-          <Link href="/concerns?sort=upvotes">{t.sortUpvotes}</Link>
-        </Button>
+          {t.sortUpvotes}
+        </Link>
       </div>
 
       <div className="grid gap-4">

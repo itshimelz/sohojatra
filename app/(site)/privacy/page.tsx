@@ -11,13 +11,20 @@ import {
 } from "@phosphor-icons/react/dist/ssr"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
+import { buttonVariants } from "@/components/ui/button-variants"
 import { Separator } from "@/components/ui/separator"
 
 export const metadata: Metadata = {
-  title: "Privacy | Sohojatra",
+  title: "Privacy",
   description:
     "How Sohojatra handles citizen data, protects privacy, and keeps civic reporting secure.",
+  alternates: { canonical: "https://sohojatra.app/privacy" },
+  openGraph: {
+    title: "Privacy — Sohojatra",
+    description:
+      "Learn how Sohojatra responsibly handles data, protects citizen privacy, and secures civic reporting.",
+    url: "https://sohojatra.app/privacy",
+  },
 }
 
 const privacySections = [
@@ -110,18 +117,17 @@ export default function PrivacyPage() {
           </p>
 
           <div className="mt-6 flex flex-wrap items-center gap-3">
-            <Button asChild>
-              <a href="mailto:support@sohojatra.app">
-                <Envelope className="size-4" weight="bold" />
-                support@sohojatra.app
-              </a>
-            </Button>
-            <Button variant="outline" asChild>
-              <Link href="/">
-                <ArrowLeft className="size-4" weight="bold" />
-                Back to Home
-              </Link>
-            </Button>
+            <a
+              href="mailto:support@sohojatra.app"
+              className={buttonVariants({ variant: "default" })}
+            >
+              <Envelope className="size-4" weight="bold" />
+              support@sohojatra.app
+            </a>
+            <Link href="/" className={buttonVariants({ variant: "outline" })}>
+              <ArrowLeft className="size-4" weight="bold" />
+              Back to Home
+            </Link>
           </div>
         </div>
       </section>

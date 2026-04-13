@@ -1,6 +1,8 @@
 export const en = {
   nav: {
     browseConcerns: "Browse Concerns",
+    submitConcern: "Submit Concern",
+    howItWorks: "How it Works",
     login: "Log in",
   },
   hero: {
@@ -92,14 +94,16 @@ export const en = {
     description:
       "Help improve Dhaka by reporting local issues. Please provide clear details.",
     formTitle: "Title",
-    formTitlePlaceholder: "e.g., Broken streetlight on Mirpur Road",
+    formTitlePlaceholder: "e.g., Broken streetlight on Mirpur 10",
     formDescription: "Description",
-    formDescriptionPlaceholder: "Provide details about the issue...",
+    formDescriptionPlaceholder:
+      "Provide details like nearest landmark (e.g. opposite to Square Hospital)...",
     formPhotos: "Photos (Max 3)",
     formLocation: "Location (GPS Pin)",
     detectLocation: "Use current location",
     locationDetected: "Location Detected",
-    locationHelper: "We need your precise location to route this concern correctly.",
+    locationHelper:
+      "We need your precise location to route this concern correctly.",
     detectGps: "Detect via GPS",
     uploadProof: "Upload Proof Photos",
     uploadHelper: "Attach up to 3 visual proofs (Max 5MB each) of the concern.",
@@ -121,20 +125,25 @@ export const en = {
   },
   howItWorks: {
     title: "Report in 3 Simple Steps",
-    subtitle: "From concern to resolution — it only takes a minute to make your voice heard.",
+    subtitle:
+      "From concern to resolution — it only takes a minute to make your voice heard.",
     step1Label: "Step 1",
     step1Title: "Snap & Pin",
-    step1Desc: "Take a photo and mark the exact GPS location of the issue on the map.",
+    step1Desc:
+      "Take a photo and mark the exact GPS location of the issue on the map.",
     step2Label: "Step 2",
     step2Title: "Describe & Submit",
-    step2Desc: "Add a title, describe the problem clearly, and submit your report.",
+    step2Desc:
+      "Add a title, describe the problem clearly, and submit your report.",
     step3Label: "Step 3",
     step3Title: "Track & Resolve",
-    step3Desc: "Follow the real-time timeline as authorities review and resolve your concern.",
+    step3Desc:
+      "Follow the real-time timeline as authorities review and resolve your concern.",
   },
   categories: {
     title: "What You Can Report",
-    subtitle: "Sohojatra covers a wide range of civic concerns — from infrastructure to public safety.",
+    subtitle:
+      "Sohojatra covers a wide range of civic concerns — from infrastructure to public safety.",
     c1: "Roads & Potholes",
     c2: "Streetlights",
     c3: "Water & Drainage",
@@ -144,12 +153,12 @@ export const en = {
   },
   partners: {
     title: "Partnered with Dhaka's civic bodies",
-    subtitle:
-      "Working with the institutions that keep the city running.",
+    subtitle: "Working with the institutions that keep the city running.",
   },
   faq: {
     title: "Frequently Asked Questions",
-    subtitle: "Everything you need to know about reporting concerns on Sohojatra.",
+    subtitle:
+      "Everything you need to know about reporting concerns on Sohojatra.",
     q1: "Is Sohojatra free to use?",
     a1: "Yes. Sohojatra is completely free for all citizens of Dhaka. No subscriptions, no hidden fees.",
     q2: "Do I need to create an account?",

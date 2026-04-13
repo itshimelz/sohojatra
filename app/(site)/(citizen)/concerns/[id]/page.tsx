@@ -1,14 +1,16 @@
+import type { Metadata } from "next"
 import { getDictionary } from "@/lib/i18n/server"
 import { MOCK_CONCERNS } from "@/lib/concerns/mock"
 import {
   getStatusBadgeVariant,
   getStatusLabel,
 } from "@/lib/concerns/presentation"
+import { SITE_URL } from "@/lib/seo"
 import { notFound } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+import { buttonVariants } from "@/components/ui/button-variants"
 import {
   CaretLeft as ChevronLeft,
   MapPin,
@@ -17,6 +19,35 @@ import {
   CheckCircle as CheckCircle2,
   WarningCircle as AlertCircle,
 } from "@phosphor-icons/react/dist/ssr"
+
+type DetailParams = { params: Promise<{ id: string }> }
+
+export async function generateMetadata({
+  params,
+}: DetailParams): Promise<Metadata> {
+  const { id } = await params
+  const concern = MOCK_CONCERNS.find((c) => c.id === id)
+
+  if (!concern) {
+    return { title: "Concern Not Found" }
+  }
+
+  const title = concern.title
+  const description = `${concern.description.slice(0, 150)}…`
+  const url = `${SITE_URL}/concerns/${id}`
+
+  return {
+    title,
+    description,
+    alternates: { canonical: url },
+    openGraph: {
+      title: `${title} — Sohojatra`,
+      description,
+      url,
+      type: "article",
+    },
+  }
+}
 
 export default async function ConcernDetailPage({
   params,
@@ -52,17 +83,26 @@ export default async function ConcernDetailPage({
       color: "text-primary",
       bg: "bg-primary/10",
     },
-    Rejected: { icon: AlertCircle, color: "text-destructive", bg: "bg-destructive/10" },
+    Rejected: {
+      icon: AlertCircle,
+      color: "text-destructive",
+      bg: "bg-destructive/10",
+    },
   } as const
 
   return (
     <div className="container mx-auto max-w-4xl px-4 py-8">
-      <Button variant="ghost" size="sm" asChild className="mb-6 -ml-3">
-        <Link href="/concerns" className="flex items-center gap-2">
-          <ChevronLeft className="h-4 w-4" />
-          Back to Concerns
-        </Link>
-      </Button>
+      <Link
+        href="/concerns"
+        className={buttonVariants({
+          variant: "ghost",
+          size: "sm",
+          className: "mb-6 -ml-3 text-muted-foreground hover:text-foreground",
+        })}
+      >
+        <ChevronLeft className="h-4 w-4" />
+        Back to Concerns
+      </Link>
 
       <div className="grid gap-8 md:grid-cols-[2fr_1fr]">
         <div className="space-y-8">
@@ -114,7 +154,10 @@ export default async function ConcernDetailPage({
               <h3 className="text-lg font-semibold">Attached Photos</h3>
               <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
                 {concern.photos.map((photo, index) => (
-                  <div key={index} className="relative aspect-video w-full overflow-hidden rounded-md border bg-muted">
+                  <div
+                    key={index}
+                    className="relative aspect-video w-full overflow-hidden rounded-md border bg-muted"
+                  >
                     <Image
                       src={photo}
                       alt={`Concern proof ${index + 1}`}

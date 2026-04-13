@@ -17,58 +17,12 @@ import Link from "next/link"
 import { authClient } from "@/lib/auth-client"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-
-type FeedbackChannel = "alert" | "toast"
-type AuthPhase = "send" | "verify"
-
-function mapAuthError(
-  message: string,
-  fallback: string,
-  phase: AuthPhase = "verify"
-): {
-  channel: FeedbackChannel
-  message: string
-} {
-  const normalized = message.toLowerCase()
-
-  if (
-    normalized.includes("rate") ||
-    normalized.includes("too many") ||
-    normalized.includes("limit")
-  ) {
-    return {
-      channel: "toast",
-      message: "Too many attempts. Please wait a few minutes and try again.",
-    }
-  }
-
-  if (normalized.includes("network") || normalized.includes("fetch")) {
-    return {
-      channel: "toast",
-      message:
-        "Network issue detected. Please check your connection and retry.",
-    }
-  }
-
-  if (
-    phase === "verify" &&
-    (normalized.includes("invalid") || normalized.includes("otp"))
-  ) {
-    return {
-      channel: "alert",
-      message: "Invalid OTP. Please check the code and try again.",
-    }
-  }
-
-  if (phase === "send" && normalized.includes("invalid")) {
-    return {
-      channel: "alert",
-      message: "Could not send OTP. Please check your phone number.",
-    }
-  }
-
-  return { channel: "toast", message: fallback }
-}
+import { mapAuthError } from "@/lib/auth-feedback"
+import {
+  bdPhoneSchema,
+  otpCodeSchema,
+  signupNameSchema,
+} from "@/lib/validation/auth"
 
 export function SignupForm({
   className,
@@ -84,15 +38,16 @@ export function SignupForm({
 
   const handleSendOtp = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault()
-    if (!name || !phoneNumber) {
-      setInlineError("Name and phone number are required.")
+    const nameResult = signupNameSchema.safeParse(name)
+    if (!nameResult.success) {
+      setInlineError(nameResult.error.issues[0]?.message ?? "Name is required.")
       return
     }
 
-    const bdPhoneRegex = /^1[3-9]\d{8}$/
-    if (!bdPhoneRegex.test(phoneNumber)) {
+    const phoneResult = bdPhoneSchema.safeParse(phoneNumber)
+    if (!phoneResult.success) {
       setInlineError(
-        "Please enter a valid 10-digit Bangladeshi mobile number (e.g., 17XXXXXXXX)."
+        phoneResult.error.issues[0]?.message ?? "Invalid phone number."
       )
       return
     }
@@ -130,15 +85,20 @@ export function SignupForm({
 
   const handleVerifyOtp = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    if (!otp) return
+    const otpResult = otpCodeSchema.safeParse(otp)
+    if (!otpResult.success) {
+      setInlineError(otpResult.error.issues[0]?.message ?? "Invalid OTP code.")
+      return
+    }
+
     setIsLoading(true)
     setInlineError(null)
     try {
       const { error } = await authClient.phoneNumber.verify({
         phoneNumber: `+880${phoneNumber}`,
-        code: otp,
+        code: otpResult.data,
         // Passing the name here so Better Auth can set it during signup if user doesn't exist
-        name,
+        name: signupNameSchema.parse(name),
       } as any)
 
       if (error) {
@@ -195,7 +155,7 @@ export function SignupForm({
                     <Input
                       id="name"
                       type="text"
-                      placeholder="e.g. John Doe"
+                      placeholder="e.g. Rahim Uddin"
                       required
                       value={name}
                       onChange={(e) => setName(e.target.value)}
@@ -213,7 +173,7 @@ export function SignupForm({
                       <Input
                         id="phone"
                         type="tel"
-                        placeholder="17XXXXXXXX"
+                        placeholder="1712345678"
                         required
                         value={phoneNumber}
                         onChange={(e) => {
@@ -249,7 +209,10 @@ export function SignupForm({
                       placeholder="123456"
                       required
                       value={otp}
-                      onChange={(e) => setOtp(e.target.value)}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/\D/g, "")
+                        if (val.length <= 6) setOtp(val)
+                      }}
                       className="h-11"
                       disabled={isLoading}
                     />

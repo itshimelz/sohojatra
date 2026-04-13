@@ -1,8 +1,11 @@
 import Link from "next/link"
+import type { Metadata } from "next"
 import { ShieldWarning } from "@phosphor-icons/react/dist/ssr"
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "Unauthorized",
+  description: "You do not have permission to access this page.",
+  robots: { index: false, follow: false },
 }
 
 export default function UnauthorizedPage() {

@@ -74,15 +74,4 @@ export const auth = betterAuth({
       },
     }),
   ],
-  databaseHooks: {
-    user: {
-      create: {
-        before: async (user) => {
-          // You could extract extra request metadata here if passed through context
-          // or handle custom parsing. But better auth allows name passing natively if schema has it.
-          return { data: user }
-        },
-      },
-    },
-  },
 })
