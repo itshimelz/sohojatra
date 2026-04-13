@@ -64,7 +64,7 @@ type StateFile = {
   awards: Award[]
 }
 
-const stateFilePath = join(process.cwd(), ".nagarik-state.json")
+const stateFilePath = join(process.cwd(), ".sohojatra-state.json")
 
 const defaultState: StateFile = {
   concerns: [...MOCK_CONCERNS],

@@ -1,4 +1,4 @@
-import { voteOnConcern, downvoteConcern, updateConcernStatus, detectDuplicateConcerns } from "@/lib/nagarik/store"
+import { voteOnConcern, downvoteConcern, updateConcernStatus, detectDuplicateConcerns } from "@/lib/sohojatra/store"
 
 export async function GET(
   request: Request,

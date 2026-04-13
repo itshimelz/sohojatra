@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 
-import { sentiment } from "@/lib/nagarik/ai"
+import { sentiment } from "@/lib/sohojatra/ai"
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => ({}))

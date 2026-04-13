@@ -1,4 +1,4 @@
-import { listResearchProblems, createResearchProblem, matchResearchWithConcerns } from "@/lib/nagarik/store"
+import { listResearchProblems, createResearchProblem, matchResearchWithConcerns } from "@/lib/sohojatra/store"
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)

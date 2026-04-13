@@ -74,16 +74,16 @@ A fully functional civic engagement platform with end-to-end feature coverage ac
 ### Data Layer (Prisma + PostgreSQL)
 - Full ORM schema with 12+ civic models
 - Initial SQL migration ready for deployment
-- File-based fallback at `.nagarik-state.json`
+- File-based fallback at `.sohojatra-state.json`
 - Deterministic fallback ensures dev works offline
 
-### Store (`lib/nagarik/store.ts`)
+### Store (`lib/sohojatra/store.ts`)
 - 20+ async operations
 - Prisma-first with automatic fallback
 - Full CRUD for concerns, proposals, comments, awards, research problems
 - Moderation, voting, and matching operations
 
-### AI/ML Layer (`lib/nagarik/ai.ts`)
+### AI/ML Layer (`lib/sohojatra/ai.ts`)
 - Deterministic scoring functions:
   - Urgency scoring (0-100)
   - Comment scoring with sentiment analysis
@@ -142,7 +142,7 @@ npm run dev
 ```
 
 **Without database setup:**
-- All data automatically fallbacks to `.nagarik-state.json`
+- All data automatically fallbacks to `.sohojatra-state.json`
 - Features work identically
 - Seed script handles initialization
 
@@ -161,7 +161,7 @@ npm run db:reset
 
 ✅ **TypeScript**: Full compilation passes (`npm run typecheck`)  
 ✅ **Tests**: Auth module tests pass (`npm test`)  
-✅ **Seed**: Bootstrap script creates `.nagarik-state.json` with sample data  
+✅ **Seed**: Bootstrap script creates `.sohojatra-state.json` with sample data  
 ✅ **API**: 30+ routes implemented and type-safe  
 ✅ **UI**: 8 feature pages + 3 auth pages fully responsive  
 ✅ **i18n**: English & Bangla across UI  
@@ -221,7 +221,7 @@ npm run db:reset
 /components         # UI components (shadcn + custom)
 /lib
   /concerns/        # Concern mock data & types
-  /nagarik/
+  /sohojatra/
     store.ts        # Complete CRUD + fallback logic
     ai.ts           # Deterministic AI helpers
   /i18n/            # Bangla/English translations
@@ -229,7 +229,7 @@ npm run db:reset
   /migrations/      # SQL migration for PostgreSQL
   schema.prisma     # ORM model definitions
 /scripts
-  seed-state.mjs    # Initialize .nagarik-state.json
+  seed-state.mjs    # Initialize .sohojatra-state.json
 ```
 
 ---

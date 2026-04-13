@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 
-import { createConcern, listConcerns } from "@/lib/nagarik/store"
+import { createConcern, listConcerns } from "@/lib/sohojatra/store"
 
 export async function GET() {
   return NextResponse.json({ concerns: await listConcerns() })

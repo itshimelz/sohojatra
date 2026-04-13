@@ -3,7 +3,7 @@ import { BookOpenText, ChatCircleText, ShieldCheck, Sparkle } from "@phosphor-ic
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
-import { chatbotMessages } from "@/lib/nagarik/mock"
+import { chatbotMessages } from "@/lib/sohojatra/mock"
 
 const prompts = [
   "How do I submit a concern?",

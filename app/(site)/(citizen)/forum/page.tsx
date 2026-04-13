@@ -3,7 +3,7 @@ import { ArrowFatUp, ChatCircle, Quotes, Star } from "@phosphor-icons/react/dist
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
-import { forumProposals } from "@/lib/nagarik/mock"
+import { forumProposals } from "@/lib/sohojatra/mock"
 
 const sorts = ["Hot", "Best", "Top", "New", "Controversial"] as const
 

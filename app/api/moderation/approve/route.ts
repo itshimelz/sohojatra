@@ -3,7 +3,7 @@ import {
   approveModerationFlag,
   rejectModerationFlag,
   escalateModerationFlag,
-} from "@/lib/nagarik/store"
+} from "@/lib/sohojatra/store"
 
 export async function GET() {
   const queue = await listModerationQueue()

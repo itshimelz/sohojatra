@@ -1,4 +1,4 @@
-import { createProposal, listProposals, voteOnProposal, downvoteProposal, type ProposalRecord } from "@/lib/nagarik/store"
+import { createProposal, listProposals, voteOnProposal, downvoteProposal, type ProposalRecord } from "@/lib/sohojatra/store"
 
 export async function GET(
   request: Request,

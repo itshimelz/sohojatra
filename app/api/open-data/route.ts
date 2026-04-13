@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server"
 
-import { getDashboardSnapshot, listConcerns, listProposals, listResearchProblems, listAwards } from "@/lib/nagarik/store"
+import { getDashboardSnapshot, listConcerns, listProposals, listResearchProblems, listAwards } from "@/lib/sohojatra/store"
 import type { Concern } from "@/lib/concerns/mock"
-import type { ProposalRecord } from "@/lib/nagarik/store"
+import type { ProposalRecord } from "@/lib/sohojatra/store"
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)

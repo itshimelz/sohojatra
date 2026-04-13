@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 
-import { getConcern } from "@/lib/nagarik/store"
+import { getConcern } from "@/lib/sohojatra/store"
 
 export async function GET(
   _request: Request,

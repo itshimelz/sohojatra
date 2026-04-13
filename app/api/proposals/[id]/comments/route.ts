@@ -1,4 +1,4 @@
-import { addProposalComment, voteOnComment, downvoteComment } from "@/lib/nagarik/store"
+import { addProposalComment, voteOnComment, downvoteComment } from "@/lib/sohojatra/store"
 
 export async function GET(
   request: Request,

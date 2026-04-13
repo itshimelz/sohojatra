@@ -1,4 +1,4 @@
--- Initial Sohojatra / Nagarik schema migration
+-- Initial Sohojatra / Sohojatra schema migration
 -- Generated to match prisma/schema.prisma and the civic platform data model.
 
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";

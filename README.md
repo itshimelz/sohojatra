@@ -31,7 +31,7 @@ npm run seed
 ```
 
 This command will:
-- Create `.nagarik-state.json` with mock civic data (concerns, proposals, research, etc.)
+- Create `.sohojatra-state.json` with mock civic data (concerns, proposals, research, etc.)
 - Attempt to connect to Prisma for database seeding (gracefully falls back if DB unavailable)
 
 Then, run the development server:
@@ -76,7 +76,7 @@ The platform now includes:
 
 The application uses a **Prisma-first with file fallback** architecture:
 - **Primary**: PostgreSQL via Prisma (when database is available)
-- **Fallback**: File-backed state at `.nagarik-state.json` (always available)
+- **Fallback**: File-backed state at `.sohojatra-state.json` (always available)
 
 ### Database Commands
 

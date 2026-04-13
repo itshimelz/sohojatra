@@ -1,4 +1,4 @@
-import { listAwards, createAward } from "@/lib/nagarik/store"
+import { listAwards, createAward } from "@/lib/sohojatra/store"
 
 export async function GET() {
   const awards = await listAwards()

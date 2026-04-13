@@ -1,7 +1,7 @@
 import { ChartBar, Clock, MapPin, Users } from "@phosphor-icons/react/dist/ssr"
 
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
-import { governanceKpis, moderationQueue } from "@/lib/nagarik/mock"
+import { governanceKpis, moderationQueue } from "@/lib/sohojatra/mock"
 
 export default function DashboardPage() {
   return (

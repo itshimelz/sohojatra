@@ -3,7 +3,7 @@ import { Bank, Briefcase, CalendarCheck, GraduationCap } from "@phosphor-icons/r
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
-import { researchProblems } from "@/lib/nagarik/mock"
+import { researchProblems } from "@/lib/sohojatra/mock"
 
 export default function ResearchPage() {
   return (

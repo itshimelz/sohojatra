@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 
-import { addProposalComment } from "@/lib/nagarik/store"
+import { addProposalComment } from "@/lib/sohojatra/store"
 
 export async function POST(
   request: Request,

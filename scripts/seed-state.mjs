@@ -1,7 +1,7 @@
 import { writeFileSync } from "node:fs"
 import { join } from "node:path"
 
-const stateFilePath = join(process.cwd(), ".nagarik-state.json")
+const stateFilePath = join(process.cwd(), ".sohojatra-state.json")
 
 const now = new Date().toISOString()
 
