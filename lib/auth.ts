@@ -1,7 +1,14 @@
 import { betterAuth } from "better-auth"
 import { prismaAdapter } from "better-auth/adapters/prisma"
-import { phoneNumber } from "better-auth/plugins"
+import { phoneNumber, admin } from "better-auth/plugins"
 import { prisma } from "@/lib/prisma"
+import {
+  ac,
+  citizen,
+  moderator,
+  admin as adminRole,
+  superadmin,
+} from "@/lib/permissions"
 
 const OTP_WINDOW_MS = 10 * 60 * 1000
 const OTP_MAX_PER_WINDOW = 5
@@ -53,6 +60,17 @@ export const auth = betterAuth({
       },
       signUpOnVerification: {
         getTempEmail: (phoneNumber) => `${phoneNumber}@sohojatra.example.com`,
+      },
+    }),
+    admin({
+      defaultRole: "citizen",
+      adminRoles: ["admin", "superadmin"],
+      ac,
+      roles: {
+        citizen,
+        moderator,
+        admin: adminRole,
+        superadmin,
       },
     }),
   ],

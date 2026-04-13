@@ -1,43 +1,24 @@
 import "server-only"
 
-import { cookies } from "next/headers"
+import { headers } from "next/headers"
 import { redirect } from "next/navigation"
 
-import { env } from "@/lib/env"
+import { auth } from "@/lib/auth"
 
-type SessionPayload = {
-  user?: {
-    id: string
-    phoneNumber?: string | null
-  }
+/**
+ * Get the current session using Better Auth's built-in session API.
+ * Returns the full session or null if not authenticated.
+ */
+export async function getServerSession() {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  })
+  return session
 }
 
-export async function getServerSession(): Promise<SessionPayload | null> {
-  const cookieHeader = (await cookies()).toString()
-
-  if (!cookieHeader) {
-    return null
-  }
-
-  const response = await fetch(
-    new URL("/api/auth/get-session", env.BETTER_AUTH_URL),
-    {
-      method: "GET",
-      headers: {
-        cookie: cookieHeader,
-      },
-      cache: "no-store",
-    }
-  )
-
-  if (!response.ok) {
-    return null
-  }
-
-  const payload = (await response.json()) as SessionPayload | null
-  return payload
-}
-
+/**
+ * Require an authenticated session. Redirects to /login if not authenticated.
+ */
 export async function requireServerSession() {
   const session = await getServerSession()
   if (!session?.user) {

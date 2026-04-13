@@ -14,6 +14,7 @@ export const env = {
 const missingVars: string[] = []
 
 if (!env.DATABASE_URL) missingVars.push("DATABASE_URL")
+if (!env.DIRECT_URL) missingVars.push("DIRECT_URL")
 if (!env.BETTER_AUTH_SECRET) missingVars.push("BETTER_AUTH_SECRET")
 if (!env.BETTER_AUTH_URL) missingVars.push("BETTER_AUTH_URL")
 
