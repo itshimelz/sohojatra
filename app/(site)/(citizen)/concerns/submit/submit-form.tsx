@@ -329,7 +329,7 @@ export function SubmitConcernForm({ dictionary: t }: { dictionary: Dictionary })
 
             <div className="space-y-2">
               <Label>Category</Label>
-              <Select value={category} onValueChange={setCategory}>
+              <Select value={category} onValueChange={(v) => setCategory(v ?? "")}>
                 <SelectTrigger className="h-10 w-full">
                   <SelectValue placeholder="Select a category...">
                     {category ? CONCERN_CATEGORIES.find((c) => c.value === category)?.label : undefined}
@@ -369,7 +369,7 @@ export function SubmitConcernForm({ dictionary: t }: { dictionary: Dictionary })
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label>Division <span className="text-destructive">*</span></Label>
-                <Select value={division} onValueChange={(v) => { setDivision(v); setDistrict("") }}>
+                <Select value={division} onValueChange={(v) => { setDivision(v ?? ""); setDistrict("") }}>
                   <SelectTrigger className="h-10">
                     <SelectValue placeholder="Select division..." />
                   </SelectTrigger>
@@ -381,7 +381,7 @@ export function SubmitConcernForm({ dictionary: t }: { dictionary: Dictionary })
 
               <div className="space-y-2">
                 <Label>District <span className="text-destructive">*</span></Label>
-                <Select value={district} onValueChange={setDistrict} disabled={!division}>
+                <Select value={district} onValueChange={(v) => setDistrict(v ?? "")} disabled={!division}>
                   <SelectTrigger className="h-10">
                     <SelectValue placeholder={division ? "Select district..." : "Select division first"} />
                   </SelectTrigger>
