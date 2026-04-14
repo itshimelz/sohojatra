@@ -22,16 +22,17 @@ import { getStatusBadgeVariant, getStatusLabel } from "@/lib/concerns/presentati
 import type { Concern } from "@/lib/concerns/mock"
 
 type ConcernCardProps = {
-  concern: Concern
+  concern: Concern & { currentVote?: "up" | "down" | null }
   statusLabels: {
     submitted: string
     underReview: string
     resolved: string
     rejected: string
   }
+  isAuthenticated: boolean
 }
 
-export function ConcernCard({ concern, statusLabels }: ConcernCardProps) {
+export function ConcernCard({ concern, statusLabels, isAuthenticated }: ConcernCardProps) {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "Submitted":
@@ -51,8 +52,11 @@ export function ConcernCard({ concern, statusLabels }: ConcernCardProps) {
     <div className="group flex gap-5 rounded-2xl border border-border/60 bg-card p-6 text-card-foreground transition-all duration-300 hover:border-primary/40 sm:gap-6">
       <div className="flex shrink-0 flex-col items-center pt-1 sm:w-16">
         <UpvoteButton
+          concernId={concern.id}
           initialUpvotes={concern.upvotes}
-          initialHasUpvoted={concern.hasUpvoted}
+          initialDownvotes={concern.downvotes}
+          initialVote={concern.currentVote ?? null}
+          isAuthenticated={isAuthenticated}
         />
       </div>
 

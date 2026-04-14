@@ -7,7 +7,7 @@ import { useAuth } from "@/components/auth-provider"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { buttonVariants } from "@/components/ui/button-variants"
-import { SignOut, User as UserIcon } from "@phosphor-icons/react"
+import { SignOut, User as UserIcon, WarningOctagon as ConcernIcon } from "@phosphor-icons/react"
 import { toast } from "sonner"
 import {
   DropdownMenu,
@@ -113,6 +113,14 @@ export function UserButton({ loginLabel }: { loginLabel: string }) {
           >
             <UserIcon className="mr-2 size-4" />
             <span>My Profile</span>
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            className="cursor-pointer"
+            onClick={() => router.push("/concerns/submit")}
+          >
+            <ConcernIcon className="mr-2 size-4" />
+            <span>Submit Concern</span>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem

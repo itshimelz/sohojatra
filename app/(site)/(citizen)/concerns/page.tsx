@@ -5,10 +5,8 @@ import type { Concern } from "@/lib/concerns/mock"
 import Link from "next/link"
 import { buttonVariants } from "@/components/ui/button-variants"
 import { ConcernCard } from "@/components/concern-card"
-
-// Import Mock JSON Data Database
-import mockConcernsRaw from "@/public/mock-concerns.json"
-const MOCK_CONCERNS = mockConcernsRaw as Concern[]
+import { prisma } from "@/lib/prisma"
+import { getServerSession } from "@/lib/auth-session"
 
 export const metadata: Metadata = {
   title: "Citizen Concerns",
@@ -33,14 +31,49 @@ export default async function ConcernsPage({ searchParams }: PageProps) {
   const params = await searchParams
   const sort = params.sort || "recent"
 
-  const sortedConcerns = [...MOCK_CONCERNS].sort((a, b) => {
-    if (sort === "upvotes") {
-      return b.upvotes - a.upvotes
-    }
-    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  // Get current session (optional — visitors can still see concerns)
+  const session = await getServerSession()
+  const userId = session?.user?.id ?? null
+
+  const dbConcerns = await prisma.concern.findMany({
+    orderBy: sort === "upvotes" ? { upvotes: "desc" } : { createdAt: "desc" },
   })
 
-  // Status map for translations
+  // Fetch this user's votes in one query if logged in
+  const userVotes: Record<string, "up" | "down"> = {}
+  if (userId) {
+    const votes = await prisma.concernVote.findMany({
+      where: {
+        userId,
+        concernId: { in: dbConcerns.map((c) => c.id) },
+      },
+      select: { concernId: true, voteType: true },
+    })
+    for (const v of votes) {
+      userVotes[v.concernId] = v.voteType as "up" | "down"
+    }
+  }
+
+  const sortedConcerns: Concern[] = dbConcerns.map((c) => ({
+    id: c.id,
+    title: c.title,
+    description: c.description,
+    status: (c.status === "UnderReview" ? "Under Review" : c.status) as any,
+    upvotes: c.upvotes,
+    downvotes: c.downvotes,
+    hasUpvoted: userVotes[c.id] === "up",
+    currentVote: userVotes[c.id] ?? null,
+    createdAt: c.createdAt.toISOString(),
+    author: { name: c.authorName },
+    location: {
+      lat: c.locationLat,
+      lng: c.locationLng,
+      address: c.location || undefined,
+    },
+    photos: Array.isArray(c.photos) ? (c.photos as string[]) : [],
+    updates: Array.isArray(c.updates) ? (c.updates as any[]) : [],
+  }))
+
   const statusLabels = {
     submitted: t.submitted,
     underReview: t.underReview,
@@ -55,33 +88,22 @@ export default async function ConcernsPage({ searchParams }: PageProps) {
           <h1 className="text-3xl font-bold tracking-tight">{t.title}</h1>
           <p className="mt-1 text-muted-foreground">{t.description}</p>
         </div>
-        <Link
-          href="/concerns/submit"
-          className={buttonVariants({ variant: "default" })}
-        >
+        <Link href="/concerns/submit" className={buttonVariants({ variant: "default" })}>
           {t.submitNew}
         </Link>
       </div>
 
       <div className="mb-6 flex items-center gap-2">
-        <span className="text-sm font-medium text-muted-foreground">
-          {t.sortBy}:
-        </span>
+        <span className="text-sm font-medium text-muted-foreground">{t.sortBy}:</span>
         <Link
           href="/concerns?sort=recent"
-          className={buttonVariants({
-            variant: sort === "recent" ? "secondary" : "ghost",
-            size: "sm",
-          })}
+          className={buttonVariants({ variant: sort === "recent" ? "secondary" : "ghost", size: "sm" })}
         >
           {t.sortRecent}
         </Link>
         <Link
           href="/concerns?sort=upvotes"
-          className={buttonVariants({
-            variant: sort === "upvotes" ? "secondary" : "ghost",
-            size: "sm",
-          })}
+          className={buttonVariants({ variant: sort === "upvotes" ? "secondary" : "ghost", size: "sm" })}
         >
           {t.sortUpvotes}
         </Link>
@@ -94,11 +116,15 @@ export default async function ConcernsPage({ searchParams }: PageProps) {
           </div>
         ) : (
           sortedConcerns.map((concern) => (
-            <ConcernCard key={concern.id} concern={concern} statusLabels={statusLabels} />
+            <ConcernCard
+              key={concern.id}
+              concern={concern}
+              statusLabels={statusLabels}
+              isAuthenticated={!!userId}
+            />
           ))
         )}
       </div>
     </div>
   )
 }
-

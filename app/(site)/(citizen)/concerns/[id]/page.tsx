@@ -1,57 +1,52 @@
 import type { Metadata } from "next"
 import { getDictionary } from "@/lib/i18n/server"
-import type { Concern } from "@/lib/concerns/mock"
-
-import mockConcernsRaw from "@/public/mock-concerns.json"
-const MOCK_CONCERNS = mockConcernsRaw as Concern[]
-
-import {
-  getStatusBadgeVariant,
-  getStatusLabel,
-} from "@/lib/concerns/presentation"
+import { getStatusBadgeVariant, getStatusLabel } from "@/lib/concerns/presentation"
 import { SITE_URL } from "@/lib/seo"
 import { notFound } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
 import { Badge } from "@/components/ui/badge"
+import { AspectRatio } from "@/components/ui/aspect-ratio"
 import { buttonVariants } from "@/components/ui/button-variants"
+import { UpvoteButton } from "@/components/upvote-button"
+import { prisma } from "@/lib/prisma"
+import { getServerSession } from "@/lib/auth-session"
 import {
-  CaretLeft as ChevronLeft,
+  CaretLeft,
   MapPin,
   Clock,
   User,
-  CheckCircle as CheckCircle2,
-  WarningCircle as AlertCircle,
+  CheckCircle,
+  WarningCircle,
+  PaperPlaneTilt,
+  MagnifyingGlass,
+  XCircle,
+  Images,
 } from "@phosphor-icons/react/dist/ssr"
 
 type DetailParams = { params: Promise<{ id: string }> }
 
-export async function generateMetadata({
-  params,
-}: DetailParams): Promise<Metadata> {
+export async function generateMetadata({ params }: DetailParams): Promise<Metadata> {
   const { id } = await params
-  const concern = MOCK_CONCERNS.find((c) => c.id === id)
-
-  if (!concern) {
-    return { title: "Concern Not Found" }
-  }
-
+  const concern = await prisma.concern.findUnique({ where: { id } })
+  if (!concern) return { title: "Concern Not Found" }
   const title = concern.title
   const description = `${concern.description.slice(0, 150)}…`
   const url = `${SITE_URL}/concerns/${id}`
-
   return {
     title,
     description,
     alternates: { canonical: url },
-    openGraph: {
-      title: `${title} — Sohojatra`,
-      description,
-      url,
-      type: "article",
-    },
+    openGraph: { title: `${title} — Sohojatra`, description, url, type: "article" },
   }
 }
+
+const STATUS_CONFIG = {
+  Submitted:     { icon: PaperPlaneTilt, color: "text-muted-foreground",     bg: "bg-muted",           ring: "ring-muted-foreground/20" },
+  "Under Review":{ icon: MagnifyingGlass,color: "text-amber-600",            bg: "bg-amber-500/10",    ring: "ring-amber-500/20" },
+  Resolved:      { icon: CheckCircle,    color: "text-emerald-600",          bg: "bg-emerald-500/10",  ring: "ring-emerald-500/20" },
+  Rejected:      { icon: XCircle,        color: "text-destructive",           bg: "bg-destructive/10",  ring: "ring-destructive/20" },
+} as const
 
 export default async function ConcernDetailPage({
   params,
@@ -60,10 +55,18 @@ export default async function ConcernDetailPage({
 }) {
   const d = await getDictionary()
   const { id } = await params
-  const concern = MOCK_CONCERNS.find((c) => c.id === id)
 
-  if (!concern) {
-    notFound()
+  const concern = await prisma.concern.findUnique({ where: { id } })
+  if (!concern) notFound()
+
+  const session = await getServerSession()
+  const userId = session?.user?.id ?? null
+  let currentVote: "up" | "down" | null = null
+  if (userId) {
+    const vote = await prisma.concernVote.findUnique({
+      where: { concernId_userId: { concernId: id, userId } },
+    })
+    currentVote = (vote?.voteType as "up" | "down") ?? null
   }
 
   const t = d.concerns
@@ -75,157 +78,192 @@ export default async function ConcernDetailPage({
     rejected: t.rejected,
   }
 
-  const statusConfig = {
-    Submitted: { icon: Clock, color: "text-muted-foreground", bg: "bg-muted" },
-    "Under Review": {
-      icon: AlertCircle,
-      color: "text-accent-foreground",
-      bg: "bg-accent",
-    },
-    Resolved: {
-      icon: CheckCircle2,
-      color: "text-primary",
-      bg: "bg-primary/10",
-    },
-    Rejected: {
-      icon: AlertCircle,
-      color: "text-destructive",
-      bg: "bg-destructive/10",
-    },
-  } as const
+  const displayStatus = concern.status === "UnderReview" ? "Under Review" : concern.status
+  const statusCfg = STATUS_CONFIG[displayStatus as keyof typeof STATUS_CONFIG] ?? STATUS_CONFIG.Submitted
+  const StatusIcon = statusCfg.icon
+
+  const photos = Array.isArray(concern.photos) ? (concern.photos as string[]) : []
+  const updates = Array.isArray(concern.updates)
+    ? ([...concern.updates] as any[]).sort(
+        (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+      )
+    : []
 
   return (
-    <div className="container mx-auto max-w-4xl px-4 py-8">
+    <div className="container mx-auto max-w-5xl px-4 py-8">
+      {/* ── Back link ── */}
       <Link
         href="/concerns"
         className={buttonVariants({
           variant: "ghost",
           size: "sm",
-          className: "mb-6 -ml-3 text-muted-foreground hover:text-foreground",
+          className: "mb-6 -ml-2 gap-1.5 text-muted-foreground hover:text-foreground",
         })}
       >
-        <ChevronLeft className="h-4 w-4" />
+        <CaretLeft className="size-4" />
         Back to Concerns
       </Link>
 
-      <div className="grid gap-8 md:grid-cols-[2fr_1fr]">
-        <div className="space-y-8">
-          <div className="rounded-lg border bg-card p-6">
-            <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
-              <Badge
-                variant={getStatusBadgeVariant(concern.status, "detail")}
-                className="px-3 py-1 text-sm font-medium"
-              >
-                {getStatusLabel(concern.status, statusLabels)}
-              </Badge>
-              <span className="rounded bg-muted px-2 py-1 font-mono text-sm text-muted-foreground">
-                ID: {concern.id}
-              </span>
+      {/* ── Photo gallery hero ── */}
+      {photos.length > 0 && (
+        <div className="mb-8 overflow-hidden rounded-2xl border border-border/60">
+          {photos.length === 1 ? (
+            <AspectRatio ratio={16 / 7}>
+              <Image src={photos[0]} alt="Concern photo" fill className="object-cover" />
+            </AspectRatio>
+          ) : photos.length === 2 ? (
+            <div className="grid grid-cols-2 gap-px bg-border/40">
+              {photos.map((src, i) => (
+                <div key={i} className="relative overflow-hidden bg-muted">
+                  <AspectRatio ratio={4 / 3}>
+                    <Image src={src} alt={`Photo ${i + 1}`} fill className="object-cover" />
+                  </AspectRatio>
+                </div>
+              ))}
             </div>
-
-            <h1 className="mb-4 text-2xl leading-tight font-bold tracking-tight sm:text-3xl">
-              {concern.title}
-            </h1>
-
-            <p className="mb-6 text-[15px] leading-relaxed whitespace-pre-wrap text-muted-foreground">
-              {concern.description}
-            </p>
-
-            <div className="flex flex-wrap gap-4 border-t pt-6 text-sm text-muted-foreground">
-              <div className="flex items-center gap-2">
-                <User className="h-4 w-4" />
-                <span className="font-medium text-foreground">
-                  {concern.author.name}
-                </span>
+          ) : (
+            /* 3-photo mosaic: large left + two stacked right */
+            <div className="grid grid-cols-[2fr_1fr] gap-px bg-border/40" style={{ height: "380px" }}>
+              <div className="relative overflow-hidden bg-muted">
+                <Image src={photos[0]} alt="Photo 1" fill className="object-cover" />
               </div>
-              <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4" />
-                <span>{new Date(concern.createdAt).toLocaleDateString()}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <MapPin className="h-4 w-4" />
-                <span>
-                  {concern.location.address ||
-                    `${concern.location.lat.toFixed(4)}, ${concern.location.lng.toFixed(4)}`}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Photos Section */}
-          {concern.photos && concern.photos.length > 0 && (
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Attached Photos</h3>
-              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-                {concern.photos.map((photo, index) => (
-                  <div
-                    key={index}
-                    className="relative aspect-video w-full overflow-hidden rounded-md border bg-muted"
-                  >
-                    <Image
-                      src={photo}
-                      alt={`Concern proof ${index + 1}`}
-                      fill
-                      className="object-cover"
-                    />
+              <div className="flex flex-col gap-px">
+                {photos.slice(1, 3).map((src, i) => (
+                  <div key={i} className="relative flex-1 overflow-hidden bg-muted">
+                    <Image src={src} alt={`Photo ${i + 2}`} fill className="object-cover" />
                   </div>
                 ))}
               </div>
             </div>
           )}
+          {photos.length > 0 && (
+            <div className="flex items-center gap-1.5 border-t border-border/40 bg-muted/30 px-4 py-2 text-xs text-muted-foreground">
+              <Images className="size-3.5" />
+              {photos.length} photo{photos.length > 1 ? "s" : ""} attached
+            </div>
+          )}
         </div>
+      )}
 
-        {/* Tracking Timeline */}
-        <div className="sticky top-6 h-fit space-y-6 rounded-lg border bg-card p-6">
-          <div>
-            <h3 className="mb-1 text-lg font-semibold">{tr.timeline}</h3>
-            <p className="mb-6 text-sm text-muted-foreground">
-              Live updates from authorities
+      {/* ── Main two-column layout ── */}
+      <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
+
+        {/* ── Left column: concern body ── */}
+        <div className="space-y-6">
+          {/* Header card */}
+          <div className="rounded-2xl border border-border/60 bg-card p-6">
+            {/* Status + ID row */}
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+              <div className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold ${statusCfg.bg} ${statusCfg.color}`}>
+                <StatusIcon className="size-3.5" weight="fill" />
+                {getStatusLabel(displayStatus, statusLabels)}
+              </div>
+              <span className="rounded-lg bg-muted px-2.5 py-1 font-mono text-xs text-muted-foreground">
+                #{concern.id.slice(0, 8)}
+              </span>
+            </div>
+
+            {/* Title */}
+            <h1 className="mb-4 text-2xl font-bold tracking-tight leading-tight sm:text-3xl">
+              {concern.title}
+            </h1>
+
+            {/* Description */}
+            <p className="text-[15px] leading-relaxed whitespace-pre-wrap text-muted-foreground">
+              {concern.description}
             </p>
+
+            {/* Meta row */}
+            <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2.5 border-t border-border/50 pt-5 text-sm text-muted-foreground">
+              <div className="flex items-center gap-1.5">
+                <User className="size-4" weight="duotone" />
+                <span className="font-medium text-foreground">{concern.authorName}</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <Clock className="size-4" weight="duotone" />
+                <time dateTime={concern.createdAt.toISOString()}>
+                  {concern.createdAt.toLocaleDateString(undefined, {
+                    day: "numeric",
+                    month: "long",
+                    year: "numeric",
+                  })}
+                </time>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <MapPin className="size-4" weight="duotone" />
+                <span>
+                  {concern.location ||
+                    `${concern.locationLat.toFixed(4)}, ${concern.locationLng.toFixed(4)}`}
+                </span>
+              </div>
+            </div>
           </div>
 
-          <div className="space-y-8 pl-2">
-            {[...concern.updates]
-              .sort(
-                (a, b) =>
-                  new Date(b.timestamp).getTime() -
-                  new Date(a.timestamp).getTime()
-              )
-              .map((update, index) => {
-                const config =
-                  statusConfig[update.status] || statusConfig["Submitted"]
-                const Icon = config.icon
-                const isLast = index === concern.updates.length - 1
+          {/* Vote bar — compact FB-style */}
+          <div className="flex items-center justify-between rounded-2xl border border-border/60 bg-card px-5 py-3">
+            <span className="text-xs font-medium text-muted-foreground">
+              {!userId ? "Sign in to vote" : "Was this helpful?"}
+            </span>
+            <UpvoteButton
+              concernId={concern.id}
+              initialUpvotes={concern.upvotes}
+              initialDownvotes={concern.downvotes}
+              initialVote={currentVote}
+              isAuthenticated={!!userId}
+              variant="compact"
+            />
+          </div>
+        </div>
+
+        {/* ── Right column: tracking timeline ── */}
+        <div className="sticky top-6 h-fit rounded-2xl border border-border/60 bg-card p-5">
+          <h3 className="mb-0.5 text-base font-semibold">{tr.timeline}</h3>
+          <p className="mb-5 text-xs text-muted-foreground">Live updates from authorities</p>
+
+          {updates.length === 0 ? (
+            <div className="rounded-xl border border-dashed py-6 text-center">
+              <p className="text-sm text-muted-foreground italic">No updates yet.</p>
+            </div>
+          ) : (
+            <div className="space-y-6 pl-1">
+              {updates.map((update, index) => {
+                const cfg =
+                  STATUS_CONFIG[update.status as keyof typeof STATUS_CONFIG] ??
+                  STATUS_CONFIG.Submitted
+                const Icon = cfg.icon
+                const isLast = index === updates.length - 1
 
                 return (
-                  <div key={update.id} className="relative">
+                  <div key={update.id ?? index} className="relative">
                     {!isLast && (
-                      <div className="absolute top-6 bottom-[-32px] left-[11px] w-px bg-border"></div>
+                      <div className="absolute left-[11px] top-6 bottom-[-24px] w-px bg-border" />
                     )}
-                    <div className="flex gap-4">
+                    <div className="flex gap-3">
+                      {/* Node */}
                       <div
-                        className={`relative z-10 flex h-6 w-6 items-center justify-center rounded-full ${config.bg} ${config.color} ring-4 ring-card`}
+                        className={`relative z-10 mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full ring-4 ring-card ${cfg.bg} ${cfg.color}`}
                       >
-                        <Icon className="h-3 w-3" />
+                        <Icon className="size-3" weight="fill" />
                       </div>
-                      <div className="flex-1 pb-1">
-                        <div className="flex items-baseline justify-between gap-4">
-                          <p className="text-sm leading-none font-medium text-foreground">
+
+                      {/* Content */}
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-start justify-between gap-1">
+                          <p className="text-sm font-semibold leading-snug text-foreground">
                             {getStatusLabel(update.status, statusLabels)}
                           </p>
-                          <time className="shrink-0 text-xs whitespace-nowrap text-muted-foreground">
-                            {new Date(update.timestamp).toLocaleDateString()}
+                          <time className="shrink-0 text-[11px] text-muted-foreground">
+                            {new Date(update.timestamp).toLocaleDateString(undefined, {
+                              month: "short",
+                              day: "numeric",
+                            })}
                           </time>
                         </div>
-
-                        <div className="mt-1 text-xs font-medium text-muted-foreground">
-                          by {update.author}
-                        </div>
-
+                        <p className="mt-0.5 text-xs text-muted-foreground">by {update.author}</p>
                         {update.note && (
-                          <div className="mt-3 rounded border bg-muted/50 p-3 text-sm text-foreground">
-                            <span className="mb-1 block text-xs font-semibold tracking-wider text-muted-foreground uppercase">
-                              {tr.officialNote}:
+                          <div className="mt-2 rounded-lg border border-border/60 bg-muted/40 px-3 py-2 text-xs leading-relaxed text-foreground">
+                            <span className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                              {tr.officialNote}
                             </span>
                             {update.note}
                           </div>
@@ -235,7 +273,8 @@ export default async function ConcernDetailPage({
                   </div>
                 )
               })}
-          </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

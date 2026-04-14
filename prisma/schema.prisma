@@ -145,9 +145,25 @@ model Concern {
   proposals   Proposal[]
   comments    Comment[]
   analyses    AiAnalysisResult[]
+  votes       ConcernVote[]
 
   @@index([status, createdAt])
   @@map("concern")
+}
+
+model ConcernVote {
+  id        String   @id @default(cuid())
+  concernId String
+  userId    String
+  voteType  String   // "up" | "down"
+  createdAt DateTime @default(now())
+
+  concern   Concern  @relation(fields: [concernId], references: [id], onDelete: Cascade)
+
+  @@unique([concernId, userId])
+  @@index([userId])
+  @@index([concernId])
+  @@map("concern_vote")
 }
 
 model Proposal {
