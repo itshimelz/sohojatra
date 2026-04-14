@@ -48,6 +48,20 @@ Use the Prisma Postgres adapter (Prisma 7 style):
   - `DATABASE_URL`
   - `DIRECT_URL`
 
+## Proxy & Session Management (Next.js 16+)
+
+In Next.js 16, **\`middleware.ts\` is deprecated** in favor of **\`proxy.ts\`**. All route interception, authentications, and rate-limiting should be handled via `proxy.ts` at the root of the project.
+
+- **Optimistic Auth**: Read standard paths by checking if the session cookie exists (`getSessionCookie(request)`).
+- **Session Enforcement**: To enforce exact state values (like `/onboard` redirecting when `onboarded` is false), use `betterFetch('/api/auth/get-session', ...)` directly inside `proxy.ts`. Ensure paths are properly excluded via matcher or conditional checks to avoid infinite loops.
+- **Custom Session Fields**: New user fields (e.g., `dob`, `education`, `onboarded`) are mapped directly in `lib/auth.ts` via `user.additionalFields`. Be sure to update the explicit `AuthUser` type exported from `components/auth-provider.tsx` to satisfy React context.
+
+## Server-Side Auth Checks
+
+Use the abstracted guards from `@/lib/auth-session`:
+- `getServerSession()`: Safe fetch, returns session or null.
+- `requireServerSession()`: Throws/redirects if unauthorized. Used for Server Components and Actions.
+
 ## Migration Workflow
 
 From project root:

@@ -44,6 +44,7 @@ export function UserButton({ loginLabel }: { loginLabel: string }) {
   const { session, isPending, signOut } = useAuth()
   const router = useRouter()
   const [showProfile, setShowProfile] = useState(false)
+  const [activeTab, setActiveTab] = useState<"profile" | "account" | "privacy">("profile")
 
   // Still loading (should be near-instant with SSR prefill)
   if (session === undefined) {
@@ -130,35 +131,121 @@ export function UserButton({ loginLabel }: { loginLabel: string }) {
       </DropdownMenu>
 
       <Dialog open={showProfile} onOpenChange={setShowProfile}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>My Profile</DialogTitle>
-            <DialogDescription>
-              Your basic account information.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex flex-col items-center gap-4 py-6">
-            <Avatar className="size-24 border">
-              <AvatarImage
-                src={user.image || undefined}
-                alt={user.name || ""}
-              />
-              <AvatarFallback className="bg-primary/10 text-primary">
-                <UserIcon className="size-12" weight="fill" />
-              </AvatarFallback>
-            </Avatar>
-            <div className="space-y-1 text-center">
-              <h3 className="text-lg font-semibold">{user.name || "Citizen"}</h3>
-              <p className="text-sm text-muted-foreground">{phoneLabel}</p>
-              {user.email && (
-                <p className="text-sm text-muted-foreground">{user.email}</p>
+        <DialogContent className="sm:max-w-[700px] p-0 flex flex-col md:flex-row overflow-hidden min-h-[450px]">
+          <DialogTitle className="sr-only">My Profile & Settings</DialogTitle>
+          <DialogDescription className="sr-only">Manage your profile information and account settings.</DialogDescription>
+          
+          {/* Sidebar */}
+          <div className="w-full md:w-[220px] bg-secondary/30 flex flex-col p-4 border-b md:border-r md:border-b-0 space-y-2 shrink-0">
+            <h2 className="font-semibold text-sm px-3 mb-2 text-muted-foreground uppercase tracking-wider">Settings</h2>
+            <Button
+              variant={activeTab === "profile" ? "secondary" : "ghost"}
+              className="justify-start w-full"
+              onClick={() => setActiveTab("profile")}
+            >
+              Profile Data
+            </Button>
+            <Button
+              variant={activeTab === "account" ? "secondary" : "ghost"}
+              className="justify-start w-full"
+              onClick={() => setActiveTab("account")}
+            >
+              Account
+            </Button>
+            <Button
+              variant={activeTab === "privacy" ? "secondary" : "ghost"}
+              className="justify-start w-full"
+              onClick={() => setActiveTab("privacy")}
+            >
+              Privacy
+            </Button>
+          </div>
+
+          {/* Main Content Area */}
+          <div className="flex-1 p-6 relative overflow-y-auto max-h-[70vh] md:max-h-full">
+            <div className="flex flex-col h-full">
+              {activeTab === "profile" && (
+                <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+                  <div>
+                    <h3 className="text-lg font-semibold">General Profile</h3>
+                    <p className="text-sm text-muted-foreground">Your basic civic identities and personal data.</p>
+                  </div>
+                  
+                  <div className="flex items-center gap-4">
+                    <Avatar className="size-20 border shadow-sm">
+                      <AvatarImage src={user.image || undefined} alt={user.name || ""} />
+                      <AvatarFallback className="bg-primary/10 text-primary">
+                        <UserIcon className="size-10" weight="fill" />
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <h4 className="font-medium text-lg">{user.name || "Citizen"}</h4>
+                      <p className="text-sm text-muted-foreground">{user.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : "Citizen Member"}</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-4 border-t">
+                    <div className="space-y-1">
+                      <p className="text-xs font-medium text-muted-foreground uppercase">Email Address</p>
+                      <p className="text-sm font-medium">{user.email || "—"}</p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-xs font-medium text-muted-foreground uppercase">Phone Number</p>
+                      <p className="text-sm font-medium">{phoneLabel !== "Citizen" ? phoneLabel : "—"}</p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-xs font-medium text-muted-foreground uppercase">Date of Birth</p>
+                      <p className="text-sm font-medium">
+                        {user.dob ? new Date(user.dob).toLocaleDateString() : "Not provided"}
+                      </p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-xs font-medium text-muted-foreground uppercase">NID Number</p>
+                      <p className="text-sm font-medium">{user.nid || "Not provided"}</p>
+                    </div>
+                    <div className="space-y-1 sm:col-span-2">
+                      <p className="text-xs font-medium text-muted-foreground uppercase">Education</p>
+                      <p className="text-sm font-medium capitalize">{user.education || "Not provided"}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === "account" && (
+                <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+                  <div>
+                    <h3 className="text-lg font-semibold">Account Options</h3>
+                    <p className="text-sm text-muted-foreground">Manage your authentication and active sessions.</p>
+                  </div>
+                  
+                  <div className="pt-4 space-y-4">
+                    <Button variant="outline" className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10" onClick={(e) => { e.preventDefault(); setShowProfile(false); void handleSignOut(); }}>
+                      <SignOut className="mr-2 size-4" />
+                      Sign out of this device
+                    </Button>
+                    <p className="text-xs text-muted-foreground">
+                      If you have lost a device or noticed suspicious activity, you can securely sign out from options later available here.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === "privacy" && (
+                <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+                  <div>
+                    <h3 className="text-lg font-semibold">Privacy</h3>
+                    <p className="text-sm text-muted-foreground">Control who sees what and how your data is handled.</p>
+                  </div>
+                  
+                  <div className="pt-4 rounded-lg bg-muted/30 p-4 border border-border/50 text-sm text-muted-foreground">
+                    <span className="block font-medium text-foreground mb-1">Your data is strictly secured.</span>
+                    We do not share your NID, Date of Birth, or precise personal details with common civic entities unless explicitly authorized or mandated.
+                  </div>
+                  
+                  <Button variant="outline" disabled className="w-full">Download Personal Data Archive</Button>
+                </div>
               )}
             </div>
-          </div>
-          <div className="flex justify-end">
-            <Button variant="outline" onClick={() => setShowProfile(false)}>
-              Close
-            </Button>
           </div>
         </DialogContent>
       </Dialog>

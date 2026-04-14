@@ -291,7 +291,7 @@
   },
   {
     "id": "c-010",
-    "title": "Traffic signal malfunctioning",
+    "title": "ট্র্যাফিক সিগন্যাল কাজ করছে না",
     "description": "All the lights at the intersection are staying red permanently, causing absolute chaos and gridlock that stretches back 3 kilometers.",
     "status": "Resolved",
     "upvotes": 312,
