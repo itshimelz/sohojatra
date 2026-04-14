@@ -3,7 +3,7 @@ import { join } from "node:path"
 
 type VerificationRecord = {
   id: string
-  type: "nid" | "passport"
+  type: "nid"
   valueHash: string
   status: "verified" | "needs-review" | "rejected"
   trustScore: number
@@ -92,7 +92,7 @@ function tokenize(text: string) {
 }
 
 function embed(text: string) {
-  const vector = Array.from({ length: 16 }).fill(0)
+  const vector: number[] = new Array(16).fill(0)
   tokenize(text).forEach((token, tokenIndex) => {
     const tokenHash = Number(hash(token))
     vector[tokenIndex % 16] += (tokenHash % 1000) / 1000
@@ -143,7 +143,7 @@ function defaultState(): AdvancedState {
   }
 }
 
-let state: AdvancedState = loadState()
+const state: AdvancedState = loadState()
 
 function loadState(): AdvancedState {
   if (!existsSync(statePath)) return defaultState()
@@ -188,24 +188,6 @@ export function verifyNid(nid: string) {
   return record
 }
 
-export function verifyPassport(passport: string, country = "BD") {
-  const normalized = passport.trim().toUpperCase()
-  const valid = /^[A-Z0-9]{6,12}$/.test(normalized)
-  const trustScore = valid ? (country === "BD" ? 80 : 75) : 25
-
-  const record: VerificationRecord = {
-    id: uid("v"),
-    type: "passport",
-    valueHash: hash(normalized),
-    status: valid ? "verified" : "needs-review",
-    trustScore,
-    createdAt: new Date().toISOString(),
-  }
-
-  state.verifications.unshift(record)
-  saveState()
-  return record
-}
 
 export function trustFromFingerprint(input: {
   fingerprint: string

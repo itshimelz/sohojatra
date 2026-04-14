@@ -309,12 +309,10 @@ export default async function MarketingPage() {
                 constitutional guidance, research, and public accountability.
               </p>
             </div>
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <div className="mx-auto grid max-w-4xl gap-4 sm:grid-cols-2">
               {[
-                { href: "/forum", title: "Voice Forum", desc: "Vote on proposals, pin strong comments, and quote-reply threads." },
                 { href: "/chatbot", title: "Chatbot", desc: "Bangla-first rights guidance with citations and session memory." },
                 { href: "/research", title: "Research Lab", desc: "Open problems, grant applications, and milestone tracking." },
-                { href: "/dashboard", title: "Dashboard", desc: "Public KPIs, moderation queue, and heatmap preview." },
               ].map((item) => (
                 <Link key={item.href} href={item.href}>
                   <Card className="h-full rounded-3xl border-border/60 transition-transform duration-200 hover:-translate-y-1 hover:border-primary/30">
