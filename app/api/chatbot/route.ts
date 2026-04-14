@@ -20,7 +20,7 @@ export async function POST(request: Request) {
   const question = String(body.question ?? "").trim()
 
   const answer =
-    defaultReplies.find((reply) => question.length > 0) ?? defaultReplies[0]
+    defaultReplies.find(() => question.length > 0) ?? defaultReplies[0]
 
   return NextResponse.json({
     question,

@@ -8,7 +8,7 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
   const dataset = searchParams.get("dataset")
 
-  const [concerns, proposals, researchProblems, awards, dashboard] = await Promise.all([
+  const [concerns, proposals, researchProblems, awards] = await Promise.all([
     listConcerns(),
     listProposals(),
     listResearchProblems(),

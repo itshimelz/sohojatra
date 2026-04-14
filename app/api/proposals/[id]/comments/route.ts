@@ -1,8 +1,8 @@
 import { addProposalComment, voteOnComment, downvoteComment } from "@/lib/sohojatra/store"
 
 export async function GET(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  _request: Request,
+  _params: { params: Promise<{ id: string }> }
 ) {
   // GET comments endpoint would list comments for a proposal
   return Response.json([])

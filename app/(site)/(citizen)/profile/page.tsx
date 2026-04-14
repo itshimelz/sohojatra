@@ -26,7 +26,7 @@ interface UserRole {
 }
 
 export default function UserProfilePage() {
-  const [profile, setProfile] = useState<UserProfile>({
+  const [profile] = useState<UserProfile>({
     id: "u-101",
     name: "Ahmed Rahman",
     email: "ahmed.r@example.com",
@@ -38,7 +38,7 @@ export default function UserProfilePage() {
     verified: true,
   })
 
-  const [roles, setRoles] = useState<UserRole[]>([
+  const [roles] = useState<UserRole[]>([
     {
       id: "r-1",
       name: "Citizen",

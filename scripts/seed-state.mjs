@@ -94,7 +94,7 @@ try {
 
   console.log("✓ Database seeding complete.")
   await prisma.$disconnect()
-} catch (err) {
+} catch {
   console.log(
     "ℹ Database not available (expected during dev setup). Using file-backed state."
   )

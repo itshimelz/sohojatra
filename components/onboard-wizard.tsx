@@ -73,7 +73,7 @@ export function OnboardWizard({ user }: OnboardWizardProps) {
       })
       router.refresh() // Crucial to update the layout state
       router.push("/")
-    } catch (error) {
+    } catch {
       toast.error("Something went wrong", {
         description: "Please try submitting again.",
       })

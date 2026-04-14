@@ -18,7 +18,7 @@ interface AssemblyEvent {
 }
 
 export default function AssemblyEventsPage() {
-  const [events, setEvents] = useState<AssemblyEvent[]>([
+  const [events] = useState<AssemblyEvent[]>([
     {
       id: "ae-1",
       title: "Ward 50 Town Hall - Infrastructure Planning",

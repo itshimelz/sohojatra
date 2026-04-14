@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 
@@ -15,7 +15,7 @@ interface ProjectDeliverable {
 }
 
 export default function ProjectTrackerPage() {
-  const [projects, setProjects] = useState<ProjectDeliverable[]>([
+  const [projects] = useState<ProjectDeliverable[]>([
     {
       id: "pt-1",
       title: "Drainage system rehabilitation - Mirpur Zone",

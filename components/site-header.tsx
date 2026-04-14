@@ -11,9 +11,7 @@ import {
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu"
 import { cn } from "@/lib/utils"
-import { LanguageSwitcher } from "@/components/language-switcher"
-import { ThemeToggle } from "@/components/theme-toggle"
-import type { Locale } from "@/lib/i18n/config"
+import { UserButton } from "@/components/user-button"
 
 type Props = {
   nav: {
@@ -22,10 +20,9 @@ type Props = {
     howItWorks: string
     login: string
   }
-  locale: Locale
 }
 
-export function SiteHeader({ nav, locale }: Props) {
+export function SiteHeader({ nav }: Props) {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4 sm:px-6">
@@ -88,19 +85,7 @@ export function SiteHeader({ nav, locale }: Props) {
           >
             {nav.browseConcerns}
           </Link>
-          <Link
-            href="/login"
-            className={cn(
-              buttonVariants(),
-              "rounded-full transition-all duration-200"
-            )}
-          >
-            {nav.login}
-          </Link>
-          <div className="flex items-center gap-1.5">
-            <ThemeToggle />
-            <LanguageSwitcher currentLocale={locale} />
-          </div>
+          <UserButton loginLabel={nav.login} />
         </nav>
       </div>
     </header>
