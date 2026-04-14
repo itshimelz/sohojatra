@@ -31,6 +31,11 @@ model User {
   banReason  String?
   banExpires DateTime?
 
+  onboarded  Boolean   @default(false)
+  dob        DateTime?
+  nid        String?
+  education  String?
+
   @@unique([email])
   @@map("user")
   @@unique([phoneNumber])

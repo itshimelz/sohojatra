@@ -46,6 +46,9 @@ const protectedPaths = ["/concerns/submit"]
 /** Auth pages — redirect away if already logged in */
 const authPages = ["/login", "/signup"]
 
+import { betterFetch } from "@better-fetch/fetch"
+import type { auth } from "@/lib/auth"
+
 // ── Proxy ─────────────────────────────────────────────────────
 
 export async function proxy(request: NextRequest) {
@@ -70,20 +73,51 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next()
   }
 
+  // 1.5 Early exit for ALL other API routes to prevent recursive fetches
+  if (pathname.startsWith("/api")) {
+    return NextResponse.next()
+  }
+
   // 2. Optimistic session check via cookie
   const sessionCookie = getSessionCookie(request)
+  const isAuthPage = authPages.some((p) => pathname === p)
+  const isOnboardRoute = pathname === "/onboard"
 
-  // 3. Auth pages — redirect logged-in users to home
-  if (authPages.some((p) => pathname === p)) {
+  // 3. Auth pages — redirect logged-in users away
+  if (isAuthPage) {
     if (sessionCookie) {
       return NextResponse.redirect(new URL("/", request.url))
     }
     return NextResponse.next()
   }
 
-  // 4. Protected routes — redirect unauthenticated users to login
-  if (protectedPaths.some((p) => pathname.startsWith(p))) {
-    if (!sessionCookie) {
+  // 4. Force Onboard Check & Protected Routes
+  if (sessionCookie) {
+    // Only query DB for session if we really need to enforce onboard or access roles
+    const { data: session } = await betterFetch<typeof auth.$Infer.Session>(
+      "/api/auth/get-session",
+      {
+        baseURL: request.nextUrl.origin,
+        headers: { cookie: request.headers.get("cookie") || "" },
+      }
+    )
+
+    if (session?.user) {
+      const isOnboarded = (session.user as any).onboarded
+
+      // Not onboarded? Must go to /onboard
+      if (!isOnboarded && !isOnboardRoute) {
+        return NextResponse.redirect(new URL("/onboard", request.url))
+      }
+
+      // Already onboarded? Must not see /onboard
+      if (isOnboarded && isOnboardRoute) {
+        return NextResponse.redirect(new URL("/", request.url))
+      }
+    }
+  } else {
+    // 5. Unauthenticated user accessing protected path
+    if (protectedPaths.some((p) => pathname.startsWith(p)) || isOnboardRoute) {
       const loginUrl = new URL("/login", request.url)
       loginUrl.searchParams.set("callbackUrl", pathname)
       return NextResponse.redirect(loginUrl)
@@ -95,12 +129,6 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    // Auth API rate-limiting
-    "/api/auth/:path*",
-    // Auth pages (redirect if logged in)
-    "/login",
-    "/signup",
-    // Protected citizen routes
-    "/concerns/submit",
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 }

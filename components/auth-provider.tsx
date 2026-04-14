@@ -20,6 +20,10 @@ export type AuthUser = {
   image?: string | null
   role?: string
   phoneNumber?: string | null
+  onboarded?: boolean
+  dob?: Date | string | null
+  nid?: string | null
+  education?: string | null
 }
 
 export type AuthSession = {
