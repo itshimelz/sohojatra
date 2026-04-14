@@ -20,15 +20,26 @@ export default async function SiteLayout({
   try {
     const serverSession = await getServerSession()
     if (serverSession?.user) {
+      const u = serverSession.user as typeof serverSession.user & {
+        role?: string
+        phoneNumber?: string | null
+        onboarded?: boolean
+        dob?: string | Date | null
+        nid?: string | null
+        education?: string | null
+      }
       initialSession = {
         user: {
-          id: serverSession.user.id,
-          name: serverSession.user.name,
-          email: serverSession.user.email,
-          image: serverSession.user.image ?? null,
-          role: (serverSession.user as { role?: string }).role,
-          phoneNumber: (serverSession.user as { phoneNumber?: string })
-            .phoneNumber,
+          id: u.id,
+          name: u.name,
+          email: u.email,
+          image: u.image ?? null,
+          role: u.role,
+          phoneNumber: u.phoneNumber,
+          onboarded: u.onboarded,
+          dob: u.dob,
+          nid: u.nid,
+          education: u.education,
         },
       }
     }
