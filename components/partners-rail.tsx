@@ -1,6 +1,7 @@
 "use client"
 
 import { motion, useReducedMotion } from "framer-motion"
+import Image from "next/image"
 import { useLayoutEffect, useRef, useState } from "react"
 
 type Partner = {
@@ -8,6 +9,7 @@ type Partner = {
   name: string
   accentColor: string
   bgColor: string
+  logo?: string
 }
 
 const partners: Partner[] = [
@@ -16,12 +18,14 @@ const partners: Partner[] = [
     name: "Dhaka North City Corporation",
     accentColor: "#16a34a",
     bgColor: "#f0fdf4",
+    logo: "/logos/dncc.png",
   },
   {
     abbr: "DSCC",
     name: "Dhaka South City Corporation",
     accentColor: "#2563eb",
     bgColor: "#eff6ff",
+    logo: "/logos/dscc.png",
   },
   {
     abbr: "RAJUK",
@@ -34,24 +38,28 @@ const partners: Partner[] = [
     name: "Water Supply & Sewerage Authority",
     accentColor: "#0891b2",
     bgColor: "#ecfeff",
+    logo: "/logos/dwasa.png",
   },
   {
     abbr: "DMP",
     name: "Dhaka Metropolitan Police",
     accentColor: "#1d4ed8",
     bgColor: "#eff6ff",
+    logo: "/logos/dmp.png",
   },
   {
     abbr: "DESCO",
     name: "Dhaka Electric Supply Co.",
     accentColor: "#b45309",
     bgColor: "#fffbeb",
+    logo: "/logos/desco.png",
   },
   {
     abbr: "DPDC",
     name: "Dhaka Power Distribution Co.",
     accentColor: "#7c3aed",
     bgColor: "#f5f3ff",
+    logo: "/logos/dpdc_logo.png",
   },
   {
     abbr: "MLGRD",
@@ -68,13 +76,23 @@ function PartnerCard({ partner }: { partner: Partner }) {
         className="flex size-11 shrink-0 items-center justify-center rounded-xl font-bold tracking-tight sm:size-12"
         style={{ backgroundColor: partner.bgColor, color: partner.accentColor }}
       >
-        <span
-          className={
-            partner.abbr.length > 4 ? "text-[9px] sm:text-[10px]" : "text-[11px] sm:text-xs"
-          }
-        >
-          {partner.abbr}
-        </span>
+        {partner.logo ? (
+          <Image
+            src={partner.logo}
+            alt={partner.name}
+            width={36}
+            height={36}
+            className="size-8 rounded-md object-contain sm:size-9"
+          />
+        ) : (
+          <span
+            className={
+              partner.abbr.length > 4 ? "text-[9px] sm:text-[10px]" : "text-[11px] sm:text-xs"
+            }
+          >
+            {partner.abbr}
+          </span>
+        )}
       </div>
       <div className="min-w-0">
         <p className="max-w-44 truncate text-sm font-medium leading-snug text-foreground sm:max-w-52 sm:text-base">
