@@ -17,10 +17,9 @@ import Link from "next/link"
 import Image from "next/image"
 import { authClient } from "@/lib/auth-client"
 import { useRouter } from "next/navigation"
-import { OTPFieldPreview as OTPField } from "@base-ui/react/otp-field"
 import { toast } from "sonner"
 import { mapAuthError } from "@/lib/auth-feedback"
-import { bdPhoneSchema, otpCodeSchema } from "@/lib/validation/auth"
+import { bdPhoneRegex, bdPhoneSchema, otpCodeSchema } from "@/lib/validation/auth"
 
 export function LoginForm({
   className,
@@ -51,8 +50,13 @@ export function LoginForm({
       })
 
       if (error) {
+        const errorText =
+          ((error as { message?: string; code?: string }).message ||
+            (error as { code?: string }).code ||
+            "Failed to send OTP")
+
         const feedback = mapAuthError(
-          error.message || "Failed to send OTP",
+          errorText,
           "Failed to send OTP. Please try again.",
           "send"
         )
@@ -91,8 +95,13 @@ export function LoginForm({
       })
 
       if (error) {
+        const errorText =
+          ((error as { message?: string; code?: string }).message ||
+            (error as { code?: string }).code ||
+            "Invalid OTP")
+
         const feedback = mapAuthError(
-          error.message || "Invalid OTP",
+          errorText,
           "Unable to verify OTP. Please try again.",
           "verify"
         )
@@ -157,6 +166,7 @@ export function LoginForm({
                         id="phone"
                         type="tel"
                         placeholder="1712345678"
+                        pattern={bdPhoneRegex.source}
                         required
                         value={phoneNumber}
                         onChange={(e) => {
@@ -182,26 +192,22 @@ export function LoginForm({
               ) : (
                 <>
                   <Field>
-
-                    <OTPField.Root
+                    <FieldLabel htmlFor="otp">OTP Code</FieldLabel>
+                    <Input
                       id="otp"
-                      length={6}
+                      type="text"
+                      inputMode="numeric"
+                      autoComplete="one-time-code"
+                      pattern="[0-9]*"
+                      maxLength={6}
+                      placeholder="123456"
                       value={otp}
-                      onValueChange={(val) => setOtp(val)}
-                      className="flex gap-2 justify-center"
-                    >
-                      {Array.from({ length: 6 }).map((_, index) => (
-                        <OTPField.Input
-                          key={index}
-                          className={cn(
-                            "flex h-12 w-12 items-center justify-center rounded-md border border-input bg-transparent text-center text-lg transition-colors",
-                            "placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                          )}
-                          aria-label={`Character ${index + 1} of 6`}
-                          disabled={isLoading}
-                        />
-                      ))}
-                    </OTPField.Root>
+                      onChange={(e) =>
+                        setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))
+                      }
+                      className="h-12 text-center text-lg tracking-[0.35em]"
+                      disabled={isLoading}
+                    />
                   </Field>
                   <Field className="mt-2">
                     <Button

@@ -23,8 +23,8 @@ export default async function SiteLayout({
       initialSession = {
         user: {
           id: serverSession.user.id,
-          name: serverSession.user.name,
-          email: serverSession.user.email,
+          name: serverSession.user.name ?? "Citizen",
+          email: serverSession.user.email ?? "",
           image: serverSession.user.image ?? null,
           role: (serverSession.user as { role?: string }).role,
           phoneNumber: (serverSession.user as { phoneNumber?: string })
@@ -38,10 +38,12 @@ export default async function SiteLayout({
   }
 
   return (
-    <div className="flex min-h-svh flex-col bg-background text-foreground selection:bg-primary/20">
-      <SiteHeader nav={t.nav} locale={locale} />
-      <div className="flex flex-1 flex-col">{children}</div>
-      <SiteFooter locale={locale} footer={t.footer} nav={t.nav} />
-    </div>
+    <AuthProvider initialSession={initialSession}>
+      <div className="flex min-h-svh flex-col bg-background text-foreground selection:bg-primary/20">
+        <SiteHeader nav={t.nav} locale={locale} />
+        <div className="flex flex-1 flex-col">{children}</div>
+        <SiteFooter locale={locale} footer={t.footer} nav={t.nav} />
+      </div>
+    </AuthProvider>
   )
 }

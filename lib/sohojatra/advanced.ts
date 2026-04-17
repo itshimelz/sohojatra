@@ -92,7 +92,7 @@ function tokenize(text: string) {
 }
 
 function embed(text: string) {
-  const vector = new Array<number>(16).fill(0)
+  const vector = Array.from({ length: 16 }, () => 0)
   tokenize(text).forEach((token, tokenIndex) => {
     const tokenHash = Number(hash(token))
     vector[tokenIndex % 16] += (tokenHash % 1000) / 1000
@@ -143,7 +143,7 @@ function defaultState(): AdvancedState {
   }
 }
 
-let state: AdvancedState = loadState()
+const state: AdvancedState = loadState()
 
 function loadState(): AdvancedState {
   if (!existsSync(statePath)) return defaultState()

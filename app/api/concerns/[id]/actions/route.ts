@@ -1,8 +1,8 @@
 import { voteOnConcern, downvoteConcern, updateConcernStatus, detectDuplicateConcerns } from "@/lib/sohojatra/store"
 
 export async function GET(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  _request: Request,
+  _context: { params: Promise<{ id: string }> }
 ) {
   // GET would retrieve a specific concern (handled by main concerns[id] route)
   return Response.json({})

@@ -20,7 +20,7 @@ export default function App() {
 
       const data = await response.json();
       setStatus(`Synced: ${data.synced}`);
-    } catch (error) {
+    } catch {
       setStatus("Sync failed (check API host)");
     }
   }

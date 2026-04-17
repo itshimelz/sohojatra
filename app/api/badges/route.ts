@@ -1,29 +1,38 @@
 import { NextResponse } from "next/server"
 
-import { addBadge, listBadges } from "@/lib/sohojatra/advanced"
+import { awardBadge, getUserBadges, BADGE_CATALOG } from "@/lib/sohojatra/store"
 
-export async function GET() {
-  return NextResponse.json({ badges: listBadges() })
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url)
+  const userId = searchParams.get("userId")
+  const catalog = searchParams.get("catalog")
+
+  if (catalog === "true" || !userId) {
+    return NextResponse.json({ catalog: [...BADGE_CATALOG] })
+  }
+
+  const badges = await getUserBadges(userId)
+  return NextResponse.json({ userId, badges })
 }
 
 export async function POST(request: Request) {
-  const body = (await request.json()) as {
-    key?: string
+  const body = (await request.json().catch(() => ({}))) as {
+    userId?: string
+    badgeKey?: string
     label?: string
     description?: string
-    awardedTo?: string
   }
 
-  if (!body.key || !body.label || !body.awardedTo) {
-    return NextResponse.json({ error: "key, label, and awardedTo are required" }, { status: 400 })
+  if (!body.userId || !body.badgeKey) {
+    return NextResponse.json({ error: "userId and badgeKey are required" }, { status: 400 })
   }
 
-  const badge = addBadge({
-    key: body.key,
+  const result = await awardBadge({
+    userId: body.userId,
+    badgeKey: body.badgeKey,
     label: body.label,
-    description: body.description ?? "Achievement unlocked",
-    awardedTo: body.awardedTo,
+    description: body.description,
   })
 
-  return NextResponse.json({ badge }, { status: 201 })
+  return NextResponse.json(result, { status: result.alreadyHeld ? 200 : 201 })
 }

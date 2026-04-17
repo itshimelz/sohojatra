@@ -13,7 +13,7 @@ import {
 } from "@phosphor-icons/react/dist/ssr"
 
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+import { Button, buttonVariants } from "@/components/ui/button"
 import type { Concern } from "@/lib/concerns/mock"
 import { getStatusBadgeVariant, getStatusLabel } from "@/lib/concerns/presentation"
 import { getBrowserConcerns, upvoteConcern } from "@/lib/concerns/client-store"
@@ -87,9 +87,12 @@ export function ConcernsBrowser({ dictionary: t, initialConcerns }: Props) {
           <h1 className="text-3xl font-bold tracking-tight">{t.title}</h1>
           <p className="mt-1 max-w-2xl text-muted-foreground">{t.description}</p>
         </div>
-        <Button asChild className="rounded-full">
-          <Link href="/concerns/submit">{t.submitNew}</Link>
-        </Button>
+        <Link
+          href="/concerns/submit"
+          className={buttonVariants({ className: "rounded-full" })}
+        >
+          {t.submitNew}
+        </Link>
       </div>
 
       <div className="mb-6 grid gap-4 rounded-3xl border border-border/60 bg-muted/20 p-4 md:grid-cols-[1fr_auto] md:items-center">

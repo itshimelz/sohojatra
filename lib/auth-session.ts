@@ -1,13 +1,17 @@
 import "server-only"
 
-import { headers } from "next/headers"
+import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
 
-import { auth } from "@/lib/auth"
+import { env } from "@/lib/env"
 
 type SessionPayload = {
   user?: {
     id: string
+    name?: string | null
+    email?: string | null
+    image?: string | null
+    role?: string | null
     phoneNumber?: string | null
   }
 }

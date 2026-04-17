@@ -17,10 +17,10 @@ import Link from "next/link"
 import Image from "next/image"
 import { authClient } from "@/lib/auth-client"
 import { useRouter } from "next/navigation"
-import { OTPFieldPreview as OTPField } from "@base-ui/react/otp-field"
 import { toast } from "sonner"
 import { mapAuthError } from "@/lib/auth-feedback"
 import {
+  bdPhoneRegex,
   bdPhoneSchema,
   otpCodeSchema,
   signupNameSchema,
@@ -62,8 +62,13 @@ export function SignupForm({
       })
 
       if (error) {
+        const errorText =
+          ((error as { message?: string; code?: string }).message ||
+            (error as { code?: string }).code ||
+            "Failed to send OTP")
+
         const feedback = mapAuthError(
-          error.message || "Failed to send OTP",
+          errorText,
           "Failed to send OTP. Please try again.",
           "send"
         )
@@ -96,16 +101,23 @@ export function SignupForm({
     setIsLoading(true)
     setInlineError(null)
     try {
-      const { error } = await authClient.phoneNumber.verify({
+      type PhoneVerifyPayload = Parameters<typeof authClient.phoneNumber.verify>[0]
+      const payload = {
         phoneNumber: `+880${phoneNumber}`,
         code: otpResult.data,
-        // Passing the name here so Better Auth can set it during signup if user doesn't exist
         name: signupNameSchema.parse(name),
-      } as any)
+      } as unknown as PhoneVerifyPayload
+
+      const { error } = await authClient.phoneNumber.verify(payload)
 
       if (error) {
+        const errorText =
+          ((error as { message?: string; code?: string }).message ||
+            (error as { code?: string }).code ||
+            "Invalid OTP")
+
         const feedback = mapAuthError(
-          error.message || "Invalid OTP",
+          errorText,
           "Unable to verify OTP. Please try again.",
           "verify"
         )
@@ -183,6 +195,7 @@ export function SignupForm({
                         id="phone"
                         type="tel"
                         placeholder="1712345678"
+                        pattern={bdPhoneRegex.source}
                         required
                         value={phoneNumber}
                         onChange={(e) => {
@@ -211,26 +224,22 @@ export function SignupForm({
               ) : (
                 <>
                   <Field>
-
-                    <OTPField.Root
+                    <FieldLabel htmlFor="otp">OTP Code</FieldLabel>
+                    <Input
                       id="otp"
-                      length={6}
+                      type="text"
+                      inputMode="numeric"
+                      autoComplete="one-time-code"
+                      pattern="[0-9]*"
+                      maxLength={6}
+                      placeholder="123456"
                       value={otp}
-                      onValueChange={(val) => setOtp(val)}
-                      className="flex gap-2 justify-center"
-                    >
-                      {Array.from({ length: 6 }).map((_, index) => (
-                        <OTPField.Input
-                          key={index}
-                          className={cn(
-                            "flex h-12 w-12 items-center justify-center rounded-md border border-input bg-transparent text-center text-lg transition-colors",
-                            "placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                          )}
-                          aria-label={`Character ${index + 1} of 6`}
-                          disabled={isLoading}
-                        />
-                      ))}
-                    </OTPField.Root>
+                      onChange={(e) =>
+                        setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))
+                      }
+                      className="h-12 text-center text-lg tracking-[0.35em]"
+                      disabled={isLoading}
+                    />
                   </Field>
                   <Field className="mt-2">
                     <Button
@@ -264,7 +273,7 @@ export function SignupForm({
             </FieldGroup>
           </form>
           <div className="relative hidden flex-col items-center justify-center overflow-hidden border-l border-border/40 bg-muted/30 p-10 text-center md:flex">
-            <div className="absolute inset-0 -z-10 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
+            <div className="absolute inset-0 -z-10 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-size-[24px_24px]"></div>
             <div className="z-10 flex flex-col items-center gap-4">
               <h2 className="text-3xl font-bold tracking-tight text-balance text-foreground">
                 Together,

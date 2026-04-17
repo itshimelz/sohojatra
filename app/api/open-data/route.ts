@@ -1,6 +1,16 @@
 import { NextResponse } from "next/server"
 
-import { getDashboardSnapshot, listConcerns, listProposals, listResearchProblems, listAwards } from "@/lib/sohojatra/store"
+import {
+  getDashboardSnapshot,
+  listConcerns,
+  listProposals,
+  listResearchProblems,
+  listAwards,
+  listProjects,
+  listSolutionPlans,
+  listAssemblyEvents,
+  listActionLog,
+} from "@/lib/sohojatra/store"
 import type { Concern } from "@/lib/concerns/mock"
 import type { ProposalRecord } from "@/lib/sohojatra/store"
 
@@ -8,18 +18,24 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
   const dataset = searchParams.get("dataset")
 
-  const [concerns, proposals, researchProblems, awards, dashboard] = await Promise.all([
-    listConcerns(),
-    listProposals(),
-    listResearchProblems(),
-    listAwards(),
-    getDashboardSnapshot(),
-  ])
+  const [concerns, proposals, researchProblems, awards, projects, plans, events, actionLog, dashboard] =
+    await Promise.all([
+      listConcerns(),
+      listProposals(),
+      listResearchProblems(),
+      listAwards(),
+      listProjects(),
+      listSolutionPlans(),
+      listAssemblyEvents(),
+      listActionLog({ limit: 500 }),
+      getDashboardSnapshot(),
+    ])
 
   const openData = {
     timestamp: new Date().toISOString(),
-    version: "1.0",
+    version: "2.0",
     license: "CC BY 4.0",
+    compliance: "PDPO 2025 — no personally identifiable information exported",
     datasets: {
       concerns: {
         count: concerns.length,
@@ -56,42 +72,109 @@ export async function GET(request: Request) {
         count: awards.length,
         data: awards,
       },
+      projects: {
+        count: projects.length,
+        data: projects.map((p) => ({
+          id: p.id,
+          title: p.title,
+          ministry: p.ministry,
+          department: p.department,
+          status: p.status,
+          progress: p.progress,
+          deadline: p.deadline,
+          budgetAllocatedBdt: p.budgetAllocatedBdt,
+          budgetSpentBdt: p.budgetSpentBdt,
+          milestoneCount: p.milestones.length,
+          completedMilestones: p.milestones.filter((m) => m.status === "Verified").length,
+        })),
+      },
+      solutionPlans: {
+        count: plans.length,
+        data: plans.map((p) => ({
+          id: p.id,
+          concernId: p.concernId,
+          title: p.title,
+          summary: p.summary,
+          budgetEstimateBdt: p.budgetEstimateBdt,
+          timeline: p.timeline,
+          status: p.status,
+          submittedBy: p.submittedBy,
+          assignedDepartment: p.assignedDepartment,
+          createdAt: p.createdAt,
+          updatedAt: p.updatedAt,
+        })),
+      },
+      assemblyEvents: {
+        count: events.length,
+        data: events.map((e) => ({
+          id: e.id,
+          title: e.title,
+          date: e.date,
+          time: e.time,
+          location: e.location,
+          organizer: e.organizer,
+          topic: e.topic,
+          status: e.status,
+          rsvpCount: e.rsvps.length,
+          hasMinutes: Boolean(e.minutesUrl),
+        })),
+      },
+      actionLog: {
+        count: actionLog.length,
+        data: actionLog.map((entry) => ({
+          id: entry.id,
+          entityType: entry.entityType,
+          entityId: entry.entityId,
+          action: entry.action,
+          actorRole: entry.actorRole,
+          createdAt: entry.createdAt,
+        })),
+      },
       statistics: {
         totalConcerns: concerns.length,
         totalProposals: proposals.length,
         totalResearch: researchProblems.length,
         totalAwards: awards.length,
+        totalProjects: projects.length,
+        totalSolutionPlans: plans.length,
+        totalAssemblyEvents: events.length,
+        activeProjects: projects.filter((p) => p.status === "In Progress").length,
+        approvedPlans: plans.filter((p) => p.status === "Approved").length,
+        resolvedConcerns: concerns.filter((c: Concern) => c.status === "Resolved").length,
         averageConcernVotes:
           concerns.length > 0
-            ? Math.round(concerns.reduce((sum: number, c: Concern) => sum + c.upvotes, 0) / concerns.length)
+            ? Math.round(
+                concerns.reduce((sum: number, c: Concern) => sum + c.upvotes, 0) / concerns.length
+              )
             : 0,
         topConcerns: concerns.slice(0, 5).map((c: Concern, idx: number) => ({
           rank: idx + 1,
           title: c.title,
           votes: c.upvotes,
+          status: c.status,
         })),
+      },
+      dashboard: {
+        data: dashboard,
       },
     },
   }
 
-  if (dataset === "concerns") {
-    return NextResponse.json(openData.datasets.concerns)
+  const datasetMap: Record<string, unknown> = {
+    concerns: openData.datasets.concerns,
+    proposals: openData.datasets.proposals,
+    research: openData.datasets.researchProblems,
+    awards: openData.datasets.awards,
+    projects: openData.datasets.projects,
+    "solution-plans": openData.datasets.solutionPlans,
+    "assembly-events": openData.datasets.assemblyEvents,
+    "action-log": openData.datasets.actionLog,
+    statistics: openData.datasets.statistics,
+    dashboard: openData.datasets.dashboard,
   }
 
-  if (dataset === "proposals") {
-    return NextResponse.json(openData.datasets.proposals)
-  }
-
-  if (dataset === "research") {
-    return NextResponse.json(openData.datasets.researchProblems)
-  }
-
-  if (dataset === "awards") {
-    return NextResponse.json(openData.datasets.awards)
-  }
-
-  if (dataset === "statistics") {
-    return NextResponse.json(openData.datasets.statistics)
+  if (dataset && dataset in datasetMap) {
+    return NextResponse.json(datasetMap[dataset])
   }
 
   return NextResponse.json(openData)

@@ -8,6 +8,17 @@ export const env = {
   DIRECT_URL: process.env.DIRECT_URL ?? "",
   BETTER_AUTH_SECRET: process.env.BETTER_AUTH_SECRET ?? "",
   BETTER_AUTH_URL: process.env.BETTER_AUTH_URL ?? "",
+  SSL_SMS_API_URL: process.env.SSL_SMS_API_URL ?? "",
+  SSL_SMS_API_KEY:
+    process.env.SSL_SMS_API_KEY ?? process.env.SSL_SMS_API_TOKEN ?? "",
+  RESEND_API_KEY: process.env.RESEND_API_KEY ?? "",
+  RESEND_FROM_EMAIL:
+    process.env.RESEND_FROM_EMAIL ?? "onboarding@resend.dev",
+  REDIS_URL: process.env.REDIS_URL ?? "",
+  REDIS_HOST: process.env.REDIS_HOST ?? "",
+  REDIS_PORT: process.env.REDIS_PORT ? Number(process.env.REDIS_PORT) : 6379,
+  REDIS_USERNAME: process.env.REDIS_USERNAME ?? "default",
+  REDIS_PASSWORD: process.env.REDIS_PASSWORD ?? "",
 }
 
 export function assertAuthEnv() {
@@ -16,6 +27,8 @@ export function assertAuthEnv() {
   if (!env.DATABASE_URL) missingVars.push("DATABASE_URL")
   if (!env.BETTER_AUTH_SECRET) missingVars.push("BETTER_AUTH_SECRET")
   if (!env.BETTER_AUTH_URL) missingVars.push("BETTER_AUTH_URL")
+  if (!env.SSL_SMS_API_URL) missingVars.push("SSL_SMS_API_URL")
+  if (!env.SSL_SMS_API_KEY) missingVars.push("SSL_SMS_API_KEY or SSL_SMS_API_TOKEN")
 
   if (missingVars.length > 0) {
     throw new Error(

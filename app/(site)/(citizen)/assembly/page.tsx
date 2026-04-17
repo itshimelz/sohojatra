@@ -1,7 +1,8 @@
 "use client"
 
-import { useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { useEffect, useMemo, useState } from "react"
+import { CalendarCheck, Clock, MapPin, Users, ArrowRight, FileText } from "@phosphor-icons/react"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 
@@ -12,102 +13,185 @@ interface AssemblyEvent {
   time: string
   location: string
   organizer: string
-  attendees: number
   topic: string
+  agenda?: string
+  minutesUrl?: string
   status: "Upcoming" | "Ongoing" | "Completed"
+  rsvps: string[]
+}
+
+const statusStyles: Record<string, string> = {
+  Upcoming: "bg-blue-100 text-blue-700",
+  Ongoing: "bg-amber-100 text-amber-700",
+  Completed: "bg-green-100 text-green-700",
 }
 
 export default function AssemblyEventsPage() {
-  const [events, setEvents] = useState<AssemblyEvent[]>([
-    {
-      id: "ae-1",
-      title: "Ward 50 Town Hall - Infrastructure Planning",
-      date: "2026-04-20",
-      time: "18:00 - 20:00",
-      location: "Community Center, Mirpur 10",
-      organizer: "DMC Ward Commissioner",
-      attendees: 87,
-      topic: "Drainage & Street Maintenance Budget Review",
-      status: "Upcoming",
-    },
-    {
-      id: "ae-2",
-      title: "City Assembly Q&A: Waste Management",
-      date: "2026-04-18",
-      time: "10:00 - 12:00",
-      location: "City Hall, Main Building",
-      organizer: "Dhaka City Corporation",
-      attendees: 156,
-      topic: "Waste collection and disposal policies",
-      status: "Upcoming",
-    },
-    {
-      id: "ae-3",
-      title: "Public Hearing - Traffic Safety Measures",
-      date: "2026-03-28",
-      time: "15:00 - 17:00",
-      location: "Bangla Motor Station",
-      organizer: "DMP & DMC",
-      attendees: 203,
-      topic: "New lane markings and signal timing",
-      status: "Completed",
-    },
-  ])
+  const [events, setEvents] = useState<AssemblyEvent[]>([])
+  const [filter, setFilter] = useState<"all" | "Upcoming" | "Ongoing" | "Completed">("all")
+  const [isLoading, setIsLoading] = useState(true)
 
-  const statusColors: Record<string, string> = {
-    Upcoming: "bg-blue-100 text-blue-800",
-    Ongoing: "bg-yellow-100 text-yellow-800",
-    Completed: "bg-green-100 text-green-800",
+  const userId = useMemo(() => {
+    if (typeof window === "undefined") return "anonymous"
+    const existing = window.localStorage.getItem("sohojatra_user_id")
+    if (existing) return existing
+    const next = `citizen-${Math.random().toString(36).slice(2, 10)}`
+    window.localStorage.setItem("sohojatra_user_id", next)
+    return next
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    async function load() {
+      try {
+        const res = await fetch("/api/assembly/events", { cache: "no-store" })
+        const data = (await res.json()) as { events?: AssemblyEvent[] }
+        if (!cancelled) setEvents(Array.isArray(data.events) ? data.events : [])
+      } finally {
+        if (!cancelled) setIsLoading(false)
+      }
+    }
+    void load()
+    return () => { cancelled = true }
+  }, [])
+
+  const toggleRsvp = async (eventId: string) => {
+    const res = await fetch(`/api/assembly/events/${eventId}/actions`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "rsvp", userId }),
+    })
+    if (!res.ok) return
+    const result = (await res.json()) as { rsvps?: string[] }
+    setEvents((prev) =>
+      prev.map((ev) =>
+        ev.id === eventId && Array.isArray(result.rsvps)
+          ? { ...ev, rsvps: result.rsvps }
+          : ev
+      )
+    )
+  }
+
+  const filtered = filter === "all" ? events : events.filter((e) => e.status === filter)
+  const counts = {
+    Upcoming: events.filter((e) => e.status === "Upcoming").length,
+    Ongoing: events.filter((e) => e.status === "Ongoing").length,
+    Completed: events.filter((e) => e.status === "Completed").length,
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Assembly Events</h1>
-        <p className="text-gray-600">Civic meetings and town halls with government bodies</p>
+    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
+      {/* Header */}
+      <div className="mb-8">
+        <p className="text-xs font-semibold uppercase tracking-widest text-primary">Assemblies</p>
+        <h1 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">Civic Assembly Events</h1>
+        <p className="mt-2 max-w-2xl text-muted-foreground">
+          Town halls, ward meetings, and government consultations. RSVP to participate and
+          access published minutes.
+        </p>
       </div>
 
-      <div className="grid gap-4">
-        {events.map((event) => (
-          <Card key={event.id}>
-            <CardHeader className="pb-3">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <CardTitle className="text-lg">{event.title}</CardTitle>
-                  <CardDescription>{event.organizer}</CardDescription>
-                </div>
-                <Badge className={statusColors[event.status]}>{event.status}</Badge>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <p className="text-sm font-medium text-gray-700">Topic:</p>
-              <p className="text-sm text-gray-600">{event.topic}</p>
-
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <p className="text-gray-600">Date & Time</p>
-                  <p className="font-medium">{event.date}</p>
-                  <p className="text-gray-700">{event.time}</p>
-                </div>
-                <div>
-                  <p className="text-gray-600">Location</p>
-                  <p className="font-medium">{event.location}</p>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between text-sm">
-                <div>
-                  <p className="text-gray-600">Expected Attendees</p>
-                  <p className="font-medium">{event.attendees} registered</p>
-                </div>
-                <Button variant="outline" className="h-8">
-                  {event.status === "Completed" ? "View Minutes" : "Register"}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+      {/* Stats + filter */}
+      <div className="mb-6 flex flex-wrap items-center gap-2">
+        {([["all", "All Events", events.length], ["Upcoming", "Upcoming", counts.Upcoming], ["Ongoing", "Live Now", counts.Ongoing], ["Completed", "Completed", counts.Completed]] as const).map(([key, label, count]) => (
+          <button
+            key={key}
+            onClick={() => setFilter(key)}
+            className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+              filter === key
+                ? "bg-primary text-primary-foreground"
+                : "bg-muted text-muted-foreground hover:bg-muted/80"
+            }`}
+          >
+            {label} {count > 0 && <span className="ml-1 opacity-70">({count})</span>}
+          </button>
         ))}
       </div>
+
+      {/* Event list */}
+      {isLoading ? (
+        <div className="space-y-4">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="h-40 animate-pulse rounded-2xl bg-muted" />
+          ))}
+        </div>
+      ) : filtered.length === 0 ? (
+        <Card className="rounded-2xl">
+          <CardContent className="py-12 text-center text-sm text-muted-foreground">
+            No {filter !== "all" ? filter.toLowerCase() + " " : ""}events found.
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {filtered.map((event) => {
+            const isAttending = event.rsvps.includes(userId)
+            return (
+              <Card key={event.id} className="rounded-2xl flex flex-col transition-all hover:border-primary/30 hover:shadow-sm">
+                <CardHeader className="pb-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <Badge className={statusStyles[event.status]}>{event.status}</Badge>
+                    <p className="text-xs text-muted-foreground">{event.organizer}</p>
+                  </div>
+                  <CardTitle className="mt-2 text-base leading-snug">{event.title}</CardTitle>
+                  <CardDescription className="line-clamp-2">{event.topic}</CardDescription>
+                </CardHeader>
+                <CardContent className="flex flex-1 flex-col gap-4">
+                  <div className="grid grid-cols-2 gap-y-2 text-sm">
+                    <div className="flex items-center gap-1.5 text-muted-foreground">
+                      <CalendarCheck className="size-3.5 shrink-0" />
+                      <span>{event.date}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-muted-foreground">
+                      <Clock className="size-3.5 shrink-0" />
+                      <span>{event.time}</span>
+                    </div>
+                    <div className="col-span-2 flex items-center gap-1.5 text-muted-foreground">
+                      <MapPin className="size-3.5 shrink-0" />
+                      <span className="truncate">{event.location}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-muted-foreground">
+                      <Users className="size-3.5 shrink-0" />
+                      <span>{event.rsvps.length} registered</span>
+                    </div>
+                  </div>
+
+                  {event.agenda && (
+                    <div className="rounded-xl bg-muted/40 px-3 py-2 text-sm">
+                      <p className="font-medium text-foreground/80">Agenda</p>
+                      <p className="text-muted-foreground">{event.agenda}</p>
+                    </div>
+                  )}
+
+                  <div className="mt-auto flex gap-2">
+                    {event.status === "Completed" && event.minutesUrl ? (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="flex-1 rounded-full"
+                        onClick={() => window.open(event.minutesUrl, "_blank", "noopener,noreferrer")}
+                      >
+                        <FileText className="mr-1.5 size-4" />
+                        View Minutes
+                      </Button>
+                    ) : event.status !== "Completed" ? (
+                      <Button
+                        size="sm"
+                        variant={isAttending ? "outline" : "default"}
+                        className="flex-1 rounded-full"
+                        onClick={() => void toggleRsvp(event.id)}
+                      >
+                        {isAttending ? "Cancel RSVP" : "Register / RSVP"}
+                      </Button>
+                    ) : (
+                      <p className="text-xs text-muted-foreground">Minutes not published yet</p>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )
+          })}
+        </div>
+      )}
     </div>
   )
 }

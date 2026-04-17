@@ -65,10 +65,11 @@ export default function OpenDataPortalPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="mx-auto max-w-7xl space-y-6 px-4 py-8 sm:px-6">
       <div>
-        <h1 className="text-3xl font-bold">Open Data Portal</h1>
-        <p className="text-gray-600">
+        <p className="text-xs font-semibold uppercase tracking-widest text-primary">Transparency</p>
+        <h1 className="mt-2 text-3xl font-bold tracking-tight">Open Data Portal</h1>
+        <p className="mt-1 text-muted-foreground">
           Access civic data and research datasets under CC BY 4.0 license
         </p>
       </div>
