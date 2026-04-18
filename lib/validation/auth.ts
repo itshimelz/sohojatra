@@ -1,9 +1,11 @@
 import { z } from "zod"
 
+export const bdPhoneRegex = /^1[3-9]\d{8}$/
+
 export const bdPhoneSchema = z
   .string()
   .regex(
-    /^1[3-9]\d{8}$/,
+    bdPhoneRegex,
     "Please enter a valid 10-digit Bangladeshi mobile number (e.g., 17XXXXXXXX)."
   )
 

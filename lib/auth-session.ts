@@ -3,10 +3,18 @@ import "server-only"
 import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
 
-import { auth } from "@/lib/auth"
 import { env } from "@/lib/env"
 
-type SessionPayload = typeof auth.$Infer.Session
+type SessionPayload = {
+  user?: {
+    id: string
+    name?: string | null
+    email?: string | null
+    image?: string | null
+    role?: string | null
+    phoneNumber?: string | null
+  }
+}
 
 export async function getServerSession(): Promise<SessionPayload | null> {
   if (!env.BETTER_AUTH_URL) {

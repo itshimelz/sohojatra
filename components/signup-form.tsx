@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -11,16 +11,22 @@ import {
   FieldLabel,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import {
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSeparator,
+  InputOTPSlot,
+} from "@/components/ui/input-otp"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { WarningCircle } from "@phosphor-icons/react"
 import Link from "next/link"
 import Image from "next/image"
 import { authClient } from "@/lib/auth-client"
 import { useRouter } from "next/navigation"
-import { OTPFieldPreview as OTPField } from "@base-ui/react/otp-field"
 import { toast } from "sonner"
 import { mapAuthError } from "@/lib/auth-feedback"
 import {
+  bdPhoneRegex,
   bdPhoneSchema,
   otpCodeSchema,
   signupNameSchema,
@@ -37,6 +43,15 @@ export function SignupForm({
   const [isOtpSent, setIsOtpSent] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [inlineError, setInlineError] = useState<string | null>(null)
+  const [resendTimer, setResendTimer] = useState(0)
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout
+    if (isOtpSent && resendTimer > 0) {
+      interval = setInterval(() => setResendTimer((prev) => prev - 1), 1000)
+    }
+    return () => clearInterval(interval)
+  }, [isOtpSent, resendTimer])
 
   const handleSendOtp = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault()
@@ -62,8 +77,13 @@ export function SignupForm({
       })
 
       if (error) {
+        const errorText =
+          ((error as { message?: string; code?: string }).message ||
+            (error as { code?: string }).code ||
+            "Failed to send OTP")
+
         const feedback = mapAuthError(
-          error.message || "Failed to send OTP",
+          errorText,
           "Failed to send OTP. Please try again.",
           "send"
         )
@@ -77,6 +97,8 @@ export function SignupForm({
       }
 
       setIsOtpSent(true)
+      setResendTimer(60)
+      setOtp("")
       toast.success("OTP sent to your phone number.")
     } catch {
       toast.error("Unable to send OTP right now. Please try again.")
@@ -96,16 +118,23 @@ export function SignupForm({
     setIsLoading(true)
     setInlineError(null)
     try {
-      const { error } = await authClient.phoneNumber.verify({
+      type PhoneVerifyPayload = Parameters<typeof authClient.phoneNumber.verify>[0]
+      const payload = {
         phoneNumber: `+880${phoneNumber}`,
         code: otpResult.data,
-        // Passing the name here so Better Auth can set it during signup if user doesn't exist
         name: signupNameSchema.parse(name),
-      } as any)
+      } as unknown as PhoneVerifyPayload
+
+      const { data, error } = await authClient.phoneNumber.verify(payload)
 
       if (error) {
+        const errorText =
+          ((error as { message?: string; code?: string }).message ||
+            (error as { code?: string }).code ||
+            "Invalid OTP")
+
         const feedback = mapAuthError(
-          error.message || "Invalid OTP",
+          errorText,
           "Unable to verify OTP. Please try again.",
           "verify"
         )
@@ -119,7 +148,11 @@ export function SignupForm({
       }
 
       toast.success(`Welcome to Sohojatra, ${name}! Your account is ready.`)
-      void router.push("/concerns")
+      if ((data?.user as any)?.onboarded) {
+        void router.push("/concerns")
+      } else {
+        void router.push("/onboard")
+      }
     } catch {
       toast.error("Unable to verify OTP right now. Please try again.")
     } finally {
@@ -183,6 +216,7 @@ export function SignupForm({
                         id="phone"
                         type="tel"
                         placeholder="1712345678"
+                        pattern={bdPhoneRegex.source}
                         required
                         value={phoneNumber}
                         onChange={(e) => {
@@ -211,36 +245,58 @@ export function SignupForm({
               ) : (
                 <>
                   <Field>
-
-                    <OTPField.Root
-                      id="otp"
-                      length={6}
-                      value={otp}
-                      onValueChange={(val) => setOtp(val)}
-                      className="flex gap-2 justify-center"
-                    >
-                      {Array.from({ length: 6 }).map((_, index) => (
-                        <OTPField.Input
-                          key={index}
-                          className={cn(
-                            "flex h-12 w-12 items-center justify-center rounded-md border border-input bg-transparent text-center text-lg transition-colors",
-                            "placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                          )}
-                          aria-label={`Character ${index + 1} of 6`}
-                          disabled={isLoading}
-                        />
-                      ))}
-                    </OTPField.Root>
+                    <FieldLabel htmlFor="otp">OTP Code</FieldLabel>
+                    <div className="flex justify-center mt-2 mb-2">
+                      <InputOTP
+                        maxLength={6}
+                        value={otp}
+                        onChange={(value) => setOtp(value)}
+                        disabled={isLoading}
+                      >
+                        <InputOTPGroup>
+                          <InputOTPSlot index={0} />
+                          <InputOTPSlot index={1} />
+                          <InputOTPSlot index={2} />
+                        </InputOTPGroup>
+                        <InputOTPSeparator />
+                        <InputOTPGroup>
+                          <InputOTPSlot index={3} />
+                          <InputOTPSlot index={4} />
+                          <InputOTPSlot index={5} />
+                        </InputOTPGroup>
+                      </InputOTP>
+                    </div>
                   </Field>
                   <Field className="mt-2">
                     <Button
                       type="submit"
-                      disabled={isLoading || !otp}
+                      disabled={isLoading || !otp || otp.length < 6}
                       className="h-11 w-full rounded-full transition-all duration-200"
                     >
                       {isLoading ? "Verifying..." : "Verify & Sign Up"}
                     </Button>
                   </Field>
+
+                  <FieldDescription className="mt-4 text-center">
+                    {resendTimer > 0 ? (
+                      <>
+                        Code expires in 10 minutes. <br />
+                        Resend code in <span className="font-bold text-foreground">{resendTimer}s</span>
+                      </>
+                    ) : (
+                      <>
+                        Didn&apos;t receive the code?{" "}
+                        <button
+                          type="button"
+                          onClick={handleSendOtp}
+                          disabled={isLoading}
+                          className="font-medium text-primary underline-offset-4 hover:underline"
+                        >
+                          Resend OTP
+                        </button>
+                      </>
+                    )}
+                  </FieldDescription>
                 </>
               )}
 
@@ -264,7 +320,7 @@ export function SignupForm({
             </FieldGroup>
           </form>
           <div className="relative hidden flex-col items-center justify-center overflow-hidden border-l border-border/40 bg-muted/30 p-10 text-center md:flex">
-            <div className="absolute inset-0 -z-10 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
+            <div className="absolute inset-0 -z-10 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-size-[24px_24px]"></div>
             <div className="z-10 flex flex-col items-center gap-4">
               <h2 className="text-3xl font-bold tracking-tight text-balance text-foreground">
                 Together,

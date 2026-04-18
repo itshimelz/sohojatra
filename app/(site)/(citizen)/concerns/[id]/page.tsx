@@ -1,35 +1,24 @@
 import type { Metadata } from "next"
+
+import { getConcern } from "@/lib/sohojatra/store"
+import { MOCK_CONCERNS } from "@/lib/concerns/mock"
 import { getDictionary } from "@/lib/i18n/server"
-import { getStatusBadgeVariant, getStatusLabel } from "@/lib/concerns/presentation"
+import { ConcernDetailView } from "@/components/concern-detail-view"
 import { SITE_URL } from "@/lib/seo"
-import { notFound } from "next/navigation"
-import Link from "next/link"
-import Image from "next/image"
-import { Badge } from "@/components/ui/badge"
-import { AspectRatio } from "@/components/ui/aspect-ratio"
-import { buttonVariants } from "@/components/ui/button-variants"
-import { UpvoteButton } from "@/components/upvote-button"
-import { prisma } from "@/lib/prisma"
-import { getServerSession } from "@/lib/auth-session"
-import {
-  CaretLeft,
-  MapPin,
-  Clock,
-  User,
-  CheckCircle,
-  WarningCircle,
-  PaperPlaneTilt,
-  MagnifyingGlass,
-  XCircle,
-  Images,
-} from "@phosphor-icons/react/dist/ssr"
 
 type DetailParams = { params: Promise<{ id: string }> }
 
 export async function generateMetadata({ params }: DetailParams): Promise<Metadata> {
   const { id } = await params
-  const concern = await prisma.concern.findUnique({ where: { id } })
-  if (!concern) return { title: "Concern Not Found" }
+  const concern =
+    (await getConcern(id).catch(() => null)) ??
+    MOCK_CONCERNS.find((c) => c.id === id) ??
+    null
+
+  if (!concern) {
+    return { title: "Concern Not Found" }
+  }
+
   const title = concern.title
   const description = `${concern.description.slice(0, 150)}…`
   const url = `${SITE_URL}/concerns/${id}`
@@ -56,38 +45,11 @@ export default async function ConcernDetailPage({
   const d = await getDictionary()
   const { id } = await params
 
-  const concern = await prisma.concern.findUnique({ where: { id } })
-  if (!concern) notFound()
-
-  const session = await getServerSession()
-  const userId = session?.user?.id ?? null
-  let currentVote: "up" | "down" | null = null
-  if (userId) {
-    const vote = await prisma.concernVote.findUnique({
-      where: { concernId_userId: { concernId: id, userId } },
-    })
-    currentVote = (vote?.voteType as "up" | "down") ?? null
-  }
-
-  const t = d.concerns
-  const tr = d.tracking
-  const statusLabels = {
-    submitted: t.submitted,
-    underReview: t.underReview,
-    resolved: t.resolved,
-    rejected: t.rejected,
-  }
-
-  const displayStatus = concern.status === "UnderReview" ? "Under Review" : concern.status
-  const statusCfg = STATUS_CONFIG[displayStatus as keyof typeof STATUS_CONFIG] ?? STATUS_CONFIG.Submitted
-  const StatusIcon = statusCfg.icon
-
-  const photos = Array.isArray(concern.photos) ? (concern.photos as string[]) : []
-  const updates = Array.isArray(concern.updates)
-    ? ([...concern.updates] as any[]).sort(
-        (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-      )
-    : []
+  // Try store API first (DB-backed or file state), then fall back to mock data
+  const concern =
+    (await getConcern(id).catch(() => null)) ??
+    MOCK_CONCERNS.find((item) => item.id === id) ??
+    null
 
   return (
     <div className="container mx-auto max-w-5xl px-4 py-8">

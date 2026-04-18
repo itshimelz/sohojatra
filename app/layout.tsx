@@ -28,7 +28,7 @@ export default async function RootLayout({
       suppressHydrationWarning
       className={cn("antialiased", fontMono.variable, "font-sans")}
     >
-      <body>
+      <body suppressHydrationWarning>
         <ThemeProvider>
           <div className="flex min-h-svh flex-col bg-background text-foreground">
             {children}

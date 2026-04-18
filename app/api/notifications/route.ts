@@ -1,41 +1,36 @@
+/**
+ * GET/POST /api/notifications — User notifications.
+ *
+ * SECURITY:
+ *   - GET: Requires auth. Users can only see their own notifications.
+ *   - POST: Requires admin or superadmin role (RBAC).
+ *     Creating notifications is a system/admin action, not a citizen one.
+ */
 import { NextResponse } from "next/server"
 
-export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url)
-  const userId = searchParams.get("userId")
-  const channel = searchParams.get("channel")
+import { requireSession, requireRole } from "@/lib/api-guard"
+import { createNotification, listNotifications } from "@/lib/sohojatra/store"
 
-  // In production, filter notifications by userId and channel
-  // For now, return a list of sample notifications
-  const notifications = [
-    {
-      id: "n-1",
-      userId: userId || "all",
-      channel: channel || "in-app",
-      subject: "Your concern has been escalated",
-      body: "Your report about the open manhole near Mirpur 10 has been escalated to the ward commissioner.",
-      status: "sent",
-      createdAt: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-    },
-    {
-      id: "n-2",
-      userId: userId || "all",
-      channel: channel || "email",
-      subject: "New research grant available",
-      body: "New grant opportunity: Flood prediction models. Deadline: 15 May 2026",
-      status: "sent",
-      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
-    },
-    {
-      id: "n-3",
-      userId: userId || "all",
-      channel: channel || "sms",
-      subject: "Proposal voting update",
-      body: "Proposal voting milestone reached. Your votes matter.",
-      status: "pending",
-      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 6).toISOString(),
-    },
-  ]
+export async function GET(request: Request) {
+  // ── Auth: Must be logged in to view notifications ────────
+  const session = await requireSession(request)
+  if (session instanceof Response) return session
+
+  const { searchParams } = new URL(request.url)
+  const channelParam = searchParams.get("channel")
+  const channel =
+    channelParam === "push" ||
+    channelParam === "sms" ||
+    channelParam === "email" ||
+    channelParam === "in-app"
+      ? channelParam
+      : undefined
+
+  // ── Users can only view their OWN notifications ──────────
+  const notifications = await listNotifications({
+    userId: session.userId,
+    channel,
+  })
 
   return NextResponse.json({
     count: notifications.length,
@@ -44,18 +39,34 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const body = await request.json()
+  // ── RBAC: Only admin+ can create notifications ───────────
+  const session = await requireRole(request, ["admin", "superadmin"])
+  if (session instanceof Response) return session
 
-  const notification = {
-    id: `n-${Date.now()}`,
-    userId: body.userId,
-    channel: body.channel || "in-app",
-    subject: body.subject,
-    body: body.body,
-    status: "pending",
-    createdAt: new Date().toISOString(),
+  const body = (await request.json().catch(() => ({}))) as {
+    userId?: string
+    channel?: "push" | "sms" | "email" | "in-app"
+    subject?: string
+    body?: string
+    status?: "pending" | "sent" | "failed"
+    meta?: Record<string, unknown>
   }
 
-  // In production, persist to database and queue for delivery
+  if (!body.userId || !body.subject || !body.body) {
+    return NextResponse.json(
+      { error: "userId, subject, body are required" },
+      { status: 400 }
+    )
+  }
+
+  const notification = await createNotification({
+    userId: body.userId,
+    channel: body.channel ?? "in-app",
+    subject: body.subject,
+    body: body.body,
+    status: body.status,
+    meta: body.meta,
+  })
+
   return NextResponse.json(notification, { status: 201 })
 }

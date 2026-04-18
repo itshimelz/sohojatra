@@ -1,3 +1,10 @@
+/**
+ * POST /api/concerns/sync — Sync offline concern drafts from mobile devices.
+ *
+ * SECURITY:
+ *   - Requires authenticated session (401 if missing).
+ *   - The deviceId is informational only; the user is identified by session.
+ */
 import { NextResponse } from "next/server"
 import { getServerSession } from "@/lib/auth-session"
 import { z } from "zod"
@@ -9,21 +16,29 @@ const syncSchema = z.object({
   voiceNotes: z.array(z.object({ id: z.string(), url: z.string().url() })).optional().default([]),
 })
 
+import { requireSession } from "@/lib/api-guard"
+
 export async function POST(request: Request) {
   try {
-    const session = await getServerSession()
-    if (!session?.user) {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
-    }
+    // ── Auth Guard: Only logged-in users can sync drafts ─────
+    const session = await requireSession(request)
+    if (session instanceof Response) return session
 
     const body = await request.json()
     const validatedBody = syncSchema.parse(body)
 
+    if (!validatedBody.deviceId || !Array.isArray(validatedBody.concerns)) {
+      return NextResponse.json(
+        { error: "deviceId and concerns[] are required" },
+        { status: 400 }
+      )
+    }
+
     // TODO: Actually persist synced data here.
     return NextResponse.json({
       synced: validatedBody.concerns.length,
-      voiceNotes: validatedBody.voiceNotes.length,
-      videos: validatedBody.videos.length,
+      voiceNotes: validatedBody.voiceNotes?.length ?? 0,
+      videos: validatedBody.videos?.length ?? 0,
       status: "ok",
     })
   } catch (error) {

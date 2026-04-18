@@ -131,3 +131,12 @@
     cursor: pointer;
   }
 }
+
+/* Utility: hide scrollbar across all browsers */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}

@@ -1,4 +1,11 @@
+/**
+ * POST /api/ai/sentiment — Analyze text sentiment.
+ *
+ * SECURITY: Requires moderator+ role (internal AI system endpoint).
+ */
 import { NextResponse } from "next/server"
+
+import { requireRole } from "@/lib/api-guard"
 import { sentiment } from "@/lib/sohojatra/ai"
 import { getServerSession } from "@/lib/auth-session"
 import { z } from "zod"
@@ -8,21 +15,9 @@ const sentimentSchema = z.object({
 })
 
 export async function POST(request: Request) {
-  try {
-    const session = await getServerSession()
-    if (!session?.user) {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
-    }
+  const session = await requireRole(request, ["moderator", "admin", "superadmin"])
+  if (session instanceof Response) return session
 
-    const body = await request.json().catch(() => ({}))
-    const validated = sentimentSchema.parse(body)
-
-    return NextResponse.json(sentiment(validated.text))
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-       return NextResponse.json({ message: "Validation error", errors: error.issues }, { status: 400 })
-    }
-    console.error("[API_AI_SENTIMENT]", error)
-    return NextResponse.json({ message: "Internal server error" }, { status: 500 })
-  }
+  const body = await request.json().catch(() => ({}))
+  return NextResponse.json(sentiment(String(body.text ?? "")))
 }

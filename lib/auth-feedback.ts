@@ -49,5 +49,5 @@ export function mapAuthError(
     }
   }
 
-  return { channel: "toast", message: fallback }
+  return { channel: "toast", message: phase === "send" ? message : fallback }
 }

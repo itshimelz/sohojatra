@@ -65,90 +65,88 @@ export default function OpenDataPortalPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="mx-auto max-w-7xl space-y-6 px-4 py-8 sm:px-6">
       <div>
-        <h1 className="text-3xl font-bold">Open Data Portal</h1>
-        <p className="text-gray-600">
+        <p className="text-xs font-semibold uppercase tracking-widest text-primary">Transparency</p>
+        <h1 className="mt-2 text-3xl font-bold tracking-tight">Open Data Portal</h1>
+        <p className="mt-1 text-muted-foreground">
           Access civic data and research datasets under CC BY 4.0 license
         </p>
       </div>
 
       {/* Navigation Tabs */}
-      <div className="flex gap-2 border-b">
-        {["stats", "concerns", "proposals", "research", "awards"].map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab as any)}
-            className={`px-4 py-2 font-medium text-sm transition-colors ${
-              activeTab === tab
-                ? "border-b-2 border-blue-600 text-blue-600"
-                : "text-gray-600 hover:text-gray-900"
-            }`}
-          >
-            {tab.charAt(0).toUpperCase() + tab.slice(1)}
-          </button>
-        ))}
+      <div className="relative">
+        <div
+          className="flex gap-1 border-b overflow-x-auto scrollbar-hide snap-x snap-mandatory"
+          style={{ WebkitOverflowScrolling: "touch", scrollbarWidth: "none", msOverflowStyle: "none" }}
+        >
+          {["stats", "concerns", "proposals", "research", "awards"].map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab as any)}
+              className={`snap-start shrink-0 whitespace-nowrap rounded-t-lg px-5 py-2.5 text-sm font-medium transition-colors ${
+                activeTab === tab
+                  ? "border-b-2 border-primary text-primary bg-primary/5"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+              }`}
+              style={{ minWidth: "6rem" }}
+            >
+              {tab.charAt(0).toUpperCase() + tab.slice(1)}
+            </button>
+          ))}
+        </div>
+        {/* Right-edge fade hint for scroll affordance on small screens */}
+        <div className="pointer-events-none absolute right-0 top-0 h-full w-8 bg-gradient-to-l from-background to-transparent sm:hidden" />
       </div>
 
       {/* Statistics View */}
       {activeTab === "stats" && stats && (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">Total Concerns</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-bold">{stats.totalConcerns}</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">Total Proposals</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-bold">{stats.totalProposals}</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">Research Problems</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-bold">{stats.totalResearch}</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">Total Awards</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-bold">{stats.totalAwards}</p>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      {activeTab === "stats" && stats && (
         <Card>
           <CardHeader>
-            <CardTitle>Top Concerns by Votes</CardTitle>
+            <CardTitle>Platform Statistics</CardTitle>
+            <CardDescription>Overview of all civic engagement metrics</CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {stats.topConcerns.map((concern) => (
-                <div key={concern.rank} className="flex items-center justify-between p-3 border rounded">
-                  <div className="flex items-center gap-3">
-                    <Badge variant="secondary" className="text-lg font-bold">
-                      #{concern.rank}
-                    </Badge>
-                    <span className="text-sm">{concern.title}</span>
-                  </div>
-                  <span className="font-semibold text-green-600">{concern.votes} votes</span>
+          <CardContent className="space-y-6">
+            {/* KPI grid */}
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {[
+                { label: "Total Concerns", value: stats.totalConcerns },
+                { label: "Total Proposals", value: stats.totalProposals },
+                { label: "Research Problems", value: stats.totalResearch },
+                { label: "Total Awards", value: stats.totalAwards },
+              ].map((kpi) => (
+                <div
+                  key={kpi.label}
+                  className="rounded-xl border border-border/60 p-4"
+                >
+                  <p className="text-sm text-muted-foreground">{kpi.label}</p>
+                  <p className="mt-1 text-3xl font-bold tabular-nums">{kpi.value}</p>
                 </div>
               ))}
+            </div>
+
+            {/* Avg votes */}
+            <div className="rounded-xl border border-border/60 p-4">
+              <p className="text-sm text-muted-foreground">Average Concern Votes</p>
+              <p className="mt-1 text-2xl font-bold tabular-nums">{stats.averageConcernVotes}</p>
+            </div>
+
+            {/* Top concerns table */}
+            <div>
+              <h3 className="mb-3 text-sm font-semibold">Top Concerns by Votes</h3>
+              <div className="space-y-2">
+                {stats.topConcerns.map((concern) => (
+                  <div key={concern.rank} className="flex items-center justify-between rounded-lg border border-border/60 p-3">
+                    <div className="flex items-center gap-3">
+                      <Badge variant="secondary" className="text-lg font-bold">
+                        #{concern.rank}
+                      </Badge>
+                      <span className="text-sm">{concern.title}</span>
+                    </div>
+                    <span className="font-semibold text-emerald-500">{concern.votes} votes</span>
+                  </div>
+                ))}
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -180,11 +178,11 @@ export default function OpenDataPortalPage() {
                 </thead>
                 <tbody>
                   {datasets[activeTab].data.slice(0, 10).map((item, idx) => (
-                    <tr key={idx} className="border-b hover:bg-gray-50">
+                    <tr key={idx} className="border-b hover:bg-muted/30">
                       {Object.values(item)
                         .slice(0, 4)
                         .map((val, vidx) => (
-                          <td key={vidx} className="py-2 px-2 text-gray-700">
+                          <td key={vidx} className="py-2 px-2 text-muted-foreground">
                             {typeof val === "object" ? JSON.stringify(val) : String(val).slice(0, 40)}
                           </td>
                         ))}
@@ -194,7 +192,7 @@ export default function OpenDataPortalPage() {
               </table>
             </div>
             {datasets[activeTab].data.length > 10 && (
-              <p className="text-gray-600 text-sm mt-3">
+              <p className="text-muted-foreground text-sm mt-3">
                 Showing 10 of {datasets[activeTab].count} records. Download full dataset as JSON.
               </p>
             )}
@@ -210,30 +208,30 @@ export default function OpenDataPortalPage() {
         <CardContent className="space-y-4 text-sm">
           <div>
             <p className="font-medium mb-2">Endpoints:</p>
-            <ul className="space-y-1 text-gray-600">
+            <ul className="space-y-1 text-muted-foreground">
               <li>
-                <code className="bg-gray-100 px-2 py-1">/api/open-data</code> - Full dataset
+                <code className="bg-muted px-2 py-1 rounded text-xs">/api/open-data</code> - Full dataset
               </li>
               <li>
-                <code className="bg-gray-100 px-2 py-1">/api/open-data?dataset=concerns</code> - Concerns only
+                <code className="bg-muted px-2 py-1 rounded text-xs">/api/open-data?dataset=concerns</code> - Concerns only
               </li>
               <li>
-                <code className="bg-gray-100 px-2 py-1">/api/open-data?dataset=proposals</code> - Proposals only
+                <code className="bg-muted px-2 py-1 rounded text-xs">/api/open-data?dataset=proposals</code> - Proposals only
               </li>
               <li>
-                <code className="bg-gray-100 px-2 py-1">/api/open-data?dataset=research</code> - Research problems
+                <code className="bg-muted px-2 py-1 rounded text-xs">/api/open-data?dataset=research</code> - Research problems
               </li>
               <li>
-                <code className="bg-gray-100 px-2 py-1">/api/open-data?dataset=awards</code> - Awards
+                <code className="bg-muted px-2 py-1 rounded text-xs">/api/open-data?dataset=awards</code> - Awards
               </li>
               <li>
-                <code className="bg-gray-100 px-2 py-1">/api/open-data?dataset=statistics</code> - Statistics only
+                <code className="bg-muted px-2 py-1 rounded text-xs">/api/open-data?dataset=statistics</code> - Statistics only
               </li>
             </ul>
           </div>
           <div>
             <p className="font-medium mb-2">License:</p>
-            <p className="text-gray-600">All data is available under Creative Commons Attribution 4.0 International</p>
+            <p className="text-muted-foreground">All data is available under Creative Commons Attribution 4.0 International</p>
           </div>
         </CardContent>
       </Card>

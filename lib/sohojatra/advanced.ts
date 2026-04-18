@@ -3,7 +3,7 @@ import { join } from "node:path"
 
 type VerificationRecord = {
   id: string
-  type: "nid"
+  type: "nid" | "passport"
   valueHash: string
   status: "verified" | "needs-review" | "rejected"
   trustScore: number
@@ -92,7 +92,7 @@ function tokenize(text: string) {
 }
 
 function embed(text: string) {
-  const vector: number[] = new Array(16).fill(0)
+  const vector = Array.from({ length: 16 }, () => 0)
   tokenize(text).forEach((token, tokenIndex) => {
     const tokenHash = Number(hash(token))
     vector[tokenIndex % 16] += (tokenHash % 1000) / 1000
@@ -177,6 +177,26 @@ export function verifyNid(nid: string) {
   const record: VerificationRecord = {
     id: uid("v"),
     type: "nid",
+    valueHash: hash(clean),
+    status: valid ? "verified" : "needs-review",
+    trustScore,
+    createdAt: new Date().toISOString(),
+  }
+
+  state.verifications.unshift(record)
+  saveState()
+  return record
+}
+
+export function verifyPassport(passport: string) {
+  const clean = passport.trim().toUpperCase()
+  // Generic validation for passports: typical alphanumeric format
+  const valid = /^[A-Z0-9]{7,15}$/.test(clean)
+  const trustScore = valid ? 92 : 25
+
+  const record: VerificationRecord = {
+    id: uid("v"),
+    type: "passport",
     valueHash: hash(clean),
     status: valid ? "verified" : "needs-review",
     trustScore,

@@ -2,32 +2,49 @@ import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 import { getSessionCookie } from "better-auth/cookies"
 
-// ── Rate-limit store (API auth endpoints only) ───────────────
+// ── Rate-limit store (in-memory, per-process) ────────────────
 type Bucket = { count: number; resetAt: number }
 
-const WINDOW_MS = 10 * 60 * 1000 // 10 minutes
-const SEND_OTP_LIMIT = 5
-const VERIFY_OTP_LIMIT = 20
-const DEFAULT_API_LIMIT = 60
+// Rate-limit windows
+const AUTH_WINDOW_MS = 10 * 60 * 1000   // 10 minutes for auth endpoints
+const API_WINDOW_MS = 1 * 60 * 1000     // 1 minute for general API endpoints
+
+// Rate-limit thresholds
+const SEND_OTP_LIMIT = 5                 // 5 OTP sends per 10 minutes
+const VERIFY_OTP_LIMIT = 20              // 20 OTP verifications per 10 minutes
+const DEFAULT_AUTH_LIMIT = 60            // 60 auth requests per 10 minutes
+const API_POST_LIMIT = 30               // 30 POST requests per minute to any /api/* route
+const API_GET_LIMIT = 120               // 120 GET requests per minute to any /api/* route
 
 const rateLimitStore = new Map<string, Bucket>()
 
+/**
+ * Extract the client's IP address from the request headers.
+ * Falls back to "unknown" if no forwarding header is present.
+ */
 function getClientIp(request: NextRequest) {
   return request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown"
 }
 
-function getApiLimit(pathname: string) {
+/**
+ * Determine the rate-limit ceiling for a given auth API pathname.
+ */
+function getAuthLimit(pathname: string) {
   if (pathname.includes("send-otp")) return SEND_OTP_LIMIT
   if (pathname.includes("verify")) return VERIFY_OTP_LIMIT
-  return DEFAULT_API_LIMIT
+  return DEFAULT_AUTH_LIMIT
 }
 
-function isRateLimited(key: string, limit: number) {
+/**
+ * Check and update the rate-limit bucket for a given key.
+ * Returns true if the request should be rejected (limit exceeded).
+ */
+function isRateLimited(key: string, limit: number, windowMs: number) {
   const now = Date.now()
   const bucket = rateLimitStore.get(key)
 
   if (!bucket || now >= bucket.resetAt) {
-    rateLimitStore.set(key, { count: 1, resetAt: now + WINDOW_MS })
+    rateLimitStore.set(key, { count: 1, resetAt: now + windowMs })
     return false
   }
 
@@ -36,6 +53,19 @@ function isRateLimited(key: string, limit: number) {
   bucket.count += 1
   rateLimitStore.set(key, bucket)
   return false
+}
+
+/**
+ * Build a 429 Too Many Requests response with a Retry-After header.
+ */
+function tooManyRequests(retryAfterSeconds: number) {
+  return NextResponse.json(
+    {
+      code: "RATE_LIMITED",
+      message: "Too many requests. Please try again in a few minutes.",
+    },
+    { status: 429, headers: { "Retry-After": String(retryAfterSeconds) } }
+  )
 }
 
 // ── Route definitions ────────────────────────────────────────
@@ -53,32 +83,50 @@ import type { auth } from "@/lib/auth"
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
+  const ip = getClientIp(request)
 
-  // 1. Rate-limit POST requests to the auth API
-  if (pathname.startsWith("/api/auth") && request.method === "POST") {
-    const ip = getClientIp(request)
-    const limit = getApiLimit(pathname)
-    const key = `${ip}:${pathname}`
+  // ─────────────────────────────────────────────────────────────
+  // 1. Rate-limit ALL /api/* routes (auth + business logic)
+  //    This prevents unauthenticated flooding and DDoS on any
+  //    API endpoint, not just the auth endpoints.
+  // ─────────────────────────────────────────────────────────────
+  if (pathname.startsWith("/api/")) {
+    // Auth API gets its own stricter rate-limiting window
+    if (pathname.startsWith("/api/auth") && request.method === "POST") {
+      const limit = getAuthLimit(pathname)
+      const key = `auth:${ip}:${pathname}`
 
-    if (isRateLimited(key, limit)) {
-      return NextResponse.json(
-        {
-          code: "RATE_LIMITED",
-          message: "Too many requests. Please try again in a few minutes.",
-        },
-        { status: 429, headers: { "Retry-After": "600" } }
-      )
+      if (isRateLimited(key, limit, AUTH_WINDOW_MS)) {
+        return tooManyRequests(600) // Retry after 10 minutes
+      }
+
+      return NextResponse.next()
+    }
+
+    // General API POST rate-limiting — prevents spam submissions
+    if (request.method === "POST") {
+      const key = `api-post:${ip}`
+
+      if (isRateLimited(key, API_POST_LIMIT, API_WINDOW_MS)) {
+        return tooManyRequests(60) // Retry after 1 minute
+      }
+    }
+
+    // General API GET rate-limiting — prevents scraping / abuse
+    if (request.method === "GET") {
+      const key = `api-get:${ip}`
+
+      if (isRateLimited(key, API_GET_LIMIT, API_WINDOW_MS)) {
+        return tooManyRequests(60)
+      }
     }
 
     return NextResponse.next()
   }
 
-  // 1.5 Early exit for ALL other API routes to prevent recursive fetches
-  if (pathname.startsWith("/api")) {
-    return NextResponse.next()
-  }
-
-  // 2. Optimistic session check via cookie
+  // ─────────────────────────────────────────────────────────────
+  // 2. Optimistic session check via cookie (for page navigation)
+  // ─────────────────────────────────────────────────────────────
   const sessionCookie = getSessionCookie(request)
   const isAuthPage = authPages.some((p) => pathname === p)
   const isOnboardRoute = pathname === "/onboard"
@@ -129,6 +177,14 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    // Auth API rate-limiting
+    "/api/auth/:path*",
+    // All business logic APIs — rate limiting + session enforcement
+    "/api/:path*",
+    // Auth pages (redirect if logged in)
+    "/login",
+    "/signup",
+    // Protected citizen routes
+    "/concerns/submit",
   ],
 }

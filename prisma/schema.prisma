@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -30,15 +24,27 @@ model User {
   banned     Boolean   @default(false)
   banReason  String?
   banExpires DateTime?
-
   onboarded  Boolean   @default(false)
   dob        DateTime?
   nid        String?
   education  String?
+  nidHash          String?
+  passportNumber   String?
+  institution      String?
+  department       String?
+  ministry         String?
+  specialization   String?
+  trustScore       Float    @default(100)
+  reputationPoints Int      @default(0)
+
+  votes         Vote[]
+  citizenBadges CitizenBadge[]
+  actionLogs    ActionLog[]
+  notifications Notification[]
 
   @@unique([email])
-  @@map("user")
   @@unique([phoneNumber])
+  @@map("user")
 }
 
 model Session {
@@ -94,8 +100,22 @@ model Verification {
 enum ConcernStatus {
   Submitted
   UnderReview
+  ExpertProposed
+  GovtApproved
+  InProgress
   Resolved
-  Rejected
+  Rated
+}
+
+enum ConcernCategory {
+  Infrastructure
+  Health
+  Education
+  Environment
+  Corruption
+  Safety
+  Rights
+  Economy
 }
 
 enum ProposalStatus {
@@ -125,20 +145,35 @@ enum NotificationChannel {
   InApp
 }
 
+enum AwardType {
+  ExpertTake
+  MostActionable
+  BestCited
+  LocalVoice
+}
+
 model Concern {
-  id          String         @id
+  id          String          @id
   title       String
   description String
-  status      ConcernStatus  @default(Submitted)
-  upvotes     Int            @default(0)
-  downvotes   Int            @default(0)
-  hasUpvoted  Boolean        @default(false)
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
+  status      ConcernStatus   @default(Submitted)
+  category    ConcernCategory @default(Infrastructure)
+  upvotes     Int             @default(0)
+  downvotes   Int             @default(0)
+  hasUpvoted  Boolean         @default(false)
+  priorityScore Float         @default(0)
+  urgencyScore  Float         @default(0)
+  isAnonymous   Boolean       @default(false)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
   authorName  String
+  authorId    String?
   locationLat Float
   locationLng Float
   location    String?
+  division    String?
+  district    String?
+  upazila     String?
   photos      Json
   updates     Json
 
@@ -148,6 +183,7 @@ model Concern {
   votes       ConcernVote[]
 
   @@index([status, createdAt])
+  @@index([category, status])
   @@map("concern")
 }
 
@@ -167,21 +203,23 @@ model ConcernVote {
 }
 
 model Proposal {
-  id             String          @id
-  title          String
-  body           String
-  authorName     String
-  category       String
-  votes          Int             @default(0)
-  downvotes      Int             @default(0)
-  status         ProposalStatus  @default(Pending)
-  aiPriorityScore Float          @default(0)
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
-  concernId      String?
-  concern        Concern?        @relation(fields: [concernId], references: [id], onDelete: SetNull)
-  comments       Comment[]
-  awards         Award[]
+  id              String          @id
+  title           String
+  body            String
+  authorName      String
+  authorId        String?
+  category        String
+  votes           Int             @default(0)
+  downvotes       Int             @default(0)
+  status          ProposalStatus  @default(Pending)
+  aiPriorityScore Float           @default(0)
+  isAnonymous     Boolean         @default(false)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  concernId       String?
+  concern         Concern?        @relation(fields: [concernId], references: [id], onDelete: SetNull)
+  comments        Comment[]
+  awards          Award[]
 
   @@index([status, createdAt])
   @@index([concernId])
@@ -192,6 +230,7 @@ model Comment {
   id               String   @id
   body             String
   authorName       String
+  authorId         String?
   aiPriorityScore  Float    @default(0)
   upvotes          Int      @default(0)
   downvotes        Int      @default(0)
@@ -201,6 +240,7 @@ model Comment {
   proposalId       String?
   concernId        String?
   parentCommentId  String?
+  quotedCommentId  String?
   proposal         Proposal? @relation(fields: [proposalId], references: [id], onDelete: SetNull)
   concern          Concern?  @relation(fields: [concernId], references: [id], onDelete: SetNull)
   parentComment    Comment?  @relation("CommentThread", fields: [parentCommentId], references: [id], onDelete: SetNull)
@@ -213,18 +253,74 @@ model Comment {
 }
 
 model Award {
-  id          String   @id
+  id          String    @id
   commentId   String?
   proposalId  String?
   awardType   String
   givenBy     String
-  createdAt   DateTime @default(now())
-  comment     Comment? @relation(fields: [commentId], references: [id], onDelete: SetNull)
+  givenById   String?
+  createdAt   DateTime  @default(now())
+  comment     Comment?  @relation(fields: [commentId], references: [id], onDelete: SetNull)
   proposal    Proposal? @relation(fields: [proposalId], references: [id], onDelete: SetNull)
 
   @@index([commentId])
   @@index([proposalId])
   @@map("award")
+}
+
+model Vote {
+  id         String   @id
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  targetType String   // "concern" | "proposal" | "comment"
+  targetId   String
+  value      Int      // +1 or -1
+  votedAt    DateTime @default(now())
+
+  @@unique([userId, targetType, targetId])
+  @@index([targetId])
+  @@map("vote")
+}
+
+model Badge {
+  id          String         @id
+  name        String         @unique
+  description String
+  criteria    String
+  iconKey     String?
+  createdAt   DateTime       @default(now())
+  earnedBy    CitizenBadge[]
+
+  @@map("badge")
+}
+
+model CitizenBadge {
+  id       String   @id
+  userId   String
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badgeId  String
+  badge    Badge    @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+  earnedAt DateTime @default(now())
+
+  @@unique([userId, badgeId])
+  @@index([userId])
+  @@map("citizen_badge")
+}
+
+model ActionLog {
+  id         String   @id
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  concernId  String?
+  targetType String
+  targetId   String
+  action     String
+  details    Json?
+  loggedAt   DateTime @default(now())
+
+  @@index([targetType, targetId])
+  @@index([userId])
+  @@map("action_log")
 }
 
 model ResearchProblem {
@@ -235,6 +331,8 @@ model ResearchProblem {
   grantAmount  String
   deadline     String
   status       ResearchStatus @default(Open)
+  releasedById String?
+  isOpen       Boolean        @default(true)
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
   applications GrantApplication[]
@@ -244,61 +342,64 @@ model ResearchProblem {
 }
 
 model GrantApplication {
-  id               String   @id
-  researcherName   String
-  institution      String
-  proposalText     String
-  panelScore       Float    @default(0)
-  status           String   @default("submitted")
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  id                String   @id
+  researcherName    String
+  institution       String
+  proposalText      String
+  panelScore        Float    @default(0)
+  status            String   @default("submitted")
+  applicantId       String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
   researchProblemId String
-  researchProblem  ResearchProblem @relation(fields: [researchProblemId], references: [id], onDelete: Cascade)
-  milestones       Milestone[]
+  researchProblem   ResearchProblem @relation(fields: [researchProblemId], references: [id], onDelete: Cascade)
+  milestones        Milestone[]
 
   @@index([researchProblemId])
   @@map("grant_application")
 }
 
 model Milestone {
-  id              String   @id
+  id                 String   @id
   grantApplicationId String
-  title           String
-  dueDate         String
-  status          String
-  deliverableUrl  String?
-  paymentAmount   String?
-  paidAt          String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  grantApplication GrantApplication @relation(fields: [grantApplicationId], references: [id], onDelete: Cascade)
+  title              String
+  dueDate            String
+  status             String
+  deliverableUrl     String?
+  paymentAmount      String?
+  paidAt             String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  grantApplication   GrantApplication @relation(fields: [grantApplicationId], references: [id], onDelete: Cascade)
 
   @@index([grantApplicationId])
   @@map("milestone")
 }
 
 model AssemblyEvent {
-  id            String   @id
-  title         String
-  location      String
-  agenda        String?
-  eventTime     String
-  minutesUrl    String?
-  organizedBy   String
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id          String   @id
+  title       String
+  location    String
+  agenda      String?
+  eventTime   String
+  minutesUrl  String?
+  organizedBy String
+  organizerId String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   @@map("assembly_event")
 }
 
 model Notification {
-  id          String   @id
-  userId      String
-  concernId   String?
-  message     String
-  channel     NotificationChannel
-  isRead      Boolean  @default(false)
-  createdAt   DateTime @default(now())
+  id        String              @id
+  userId    String
+  user      User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  concernId String?
+  message   String
+  channel   NotificationChannel
+  isRead    Boolean             @default(false)
+  createdAt DateTime            @default(now())
 
   @@index([userId, isRead])
   @@map("notification")
@@ -310,6 +411,10 @@ model ModerationFlag {
   reason      String
   severity    String
   status      ModerationStatus  @default(Pending)
+  targetType  String?
+  targetId    String?
+  reportedBy  String?
+  reviewedBy  String?
   createdAt   DateTime          @default(now())
   updatedAt   DateTime          @updatedAt
 

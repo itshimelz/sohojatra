@@ -1,6 +1,17 @@
+/**
+ * POST /api/ai/llama-lora — LLaMA + LoRA inference endpoint.
+ *
+ * SECURITY: Requires admin+ role (expensive AI inference endpoint).
+ */
 import { NextResponse } from "next/server"
 
+import { requireRole } from "@/lib/api-guard"
+
 export async function POST(request: Request) {
+  // ── RBAC: Admin+ only — LLM inference is expensive ───────
+  const session = await requireRole(request, ["admin", "superadmin"])
+  if (session instanceof Response) return session
+
   const body = (await request.json()) as {
     prompt?: string
     adapter?: string
