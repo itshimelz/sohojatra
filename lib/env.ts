@@ -19,6 +19,10 @@ export const env = {
   REDIS_PORT: process.env.REDIS_PORT ? Number(process.env.REDIS_PORT) : 6379,
   REDIS_USERNAME: process.env.REDIS_USERNAME ?? "default",
   REDIS_PASSWORD: process.env.REDIS_PASSWORD ?? "",
+  GROQ_API_KEY: process.env.GROQ_API_KEY ?? "",
+  GROQ_MODEL: process.env.GROQ_MODEL ?? "llama-3.3-70b-versatile",
+  VECTORIZER_API_ID: process.env.VECTORIZER_API_ID ?? "",
+  VECTORIZER_API_SECRET: process.env.VECTORIZER_API_SECRET ?? "",
 }
 
 export function assertAuthEnv() {

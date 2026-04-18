@@ -1,231 +1,275 @@
 "use client"
 
-import { useRef, useState } from "react"
-import { ShieldCheck, BookOpenText, PaperPlaneRight, Robot, ArrowClockwise } from "@phosphor-icons/react"
+import { useEffect, useRef, useState } from "react"
+import { motion } from "framer-motion"
+
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Textarea } from "@/components/ui/textarea"
 
-interface ChatMessage {
+type Message = {
   id: string
-  role: "user" | "assistant"
+  role: "assistant" | "user"
   text: string
-  citation?: string
-  evidence?: string[]
+  citations?: string[]
+  pending?: boolean
+  error?: boolean
 }
 
-const SUGGESTED_PROMPTS = [
-  "How do I submit a concern?",
-  "What are my constitutional rights?",
-  "Can I track my report status?",
-  "How does voting on proposals work?",
-  "What is the co-governance process?",
+const prompts = [
+  "Can I be arrested without being told why?",
+  "Who guarantees freedom of speech in Bangladesh?",
+  "What does Article 27 say?",
+  "আমার ঘরে পুলিশ কি বিনা ওয়ারেন্টে ঢুকতে পারে?",
 ]
 
+const welcome: Message = {
+  id: "welcome",
+  role: "assistant",
+  text: "Ask me about your rights under the Bangladesh Constitution. I'll answer with inline citations like [Article 33].",
+  citations: ["Constitution of Bangladesh, Part III — Fundamental Rights"],
+}
+
 export default function ChatbotPage() {
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      id: "welcome",
-      role: "assistant",
-      text: "আস্সালামুয়ালাইকুম! I'm the Sohojatra Rights Chatbot. I can help you with:\n• Citizen rights and constitutional guidance\n• How to submit and track concerns\n• Platform features and workflows\n• Legal procedures and complaint processes\n\nAsk me anything in English or Bangla.",
-    },
-  ])
+  const [messages, setMessages] = useState<Message[]>([welcome])
   const [input, setInput] = useState("")
-  const [loading, setLoading] = useState(false)
-  const bottomRef = useRef<HTMLDivElement>(null)
+  const [isStreaming, setIsStreaming] = useState(false)
+  const scrollRef = useRef<HTMLDivElement>(null)
 
-  async function sendMessage(text?: string) {
-    const question = (text ?? input).trim()
-    if (!question) return
+  useEffect(() => {
+    scrollRef.current?.scrollTo({
+      top: scrollRef.current.scrollHeight,
+      behavior: "smooth",
+    })
+  }, [messages])
 
-    const userMsg: ChatMessage = {
+  async function send(question: string) {
+    const trimmed = question.trim()
+    if (!trimmed || isStreaming) return
+
+    const userMsg: Message = {
       id: `u-${Date.now()}`,
       role: "user",
-      text: question,
+      text: trimmed,
     }
-    setMessages((prev) => [...prev, userMsg])
+    const assistantId = `a-${Date.now()}`
+    const placeholder: Message = {
+      id: assistantId,
+      role: "assistant",
+      text: "",
+      pending: true,
+    }
+
+    const history = messages
+      .filter((m) => m.id !== "welcome")
+      .map((m) => ({ role: m.role, content: m.text }))
+
+    setMessages((prev) => [...prev, userMsg, placeholder])
     setInput("")
-    setLoading(true)
+    setIsStreaming(true)
 
     try {
-      const res = await fetch("/api/chatbot", {
+      const response = await fetch("/api/chatbot", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: question }),
+        body: JSON.stringify({
+          question: trimmed,
+          messages: history,
+          stream: true,
+        }),
       })
-      const data = (await res.json()) as { reply?: string; citation?: string; evidence?: string[] }
-      const botMsg: ChatMessage = {
-        id: `a-${Date.now()}`,
-        role: "assistant",
-        text: data.reply ?? "I'm sorry, I couldn't find an answer. Please try rephrasing your question.",
-        citation: data.citation,
-        evidence: data.evidence,
-      }
-      setMessages((prev) => [...prev, botMsg])
-    } catch {
-      setMessages((prev) => [
-        ...prev,
-        { id: `err-${Date.now()}`, role: "assistant", text: "Network error. Please try again." },
-      ])
-    } finally {
-      setLoading(false)
-      setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), 100)
-    }
-  }
 
-  function resetChat() {
-    setMessages([
-      {
-        id: "welcome",
-        role: "assistant",
-        text: "আস্সালামুয়ালাইকুম! I'm the Sohojatra Rights Chatbot. Ask me anything about citizen rights, platform features, or civic processes.",
-      },
-    ])
-    setInput("")
+      if (!response.ok || !response.body) {
+        throw new Error(`Chat failed: ${response.status}`)
+      }
+
+      const reader = response.body.getReader()
+      const decoder = new TextDecoder()
+      let buffer = ""
+      let accumulated = ""
+      let citations: string[] = []
+
+      while (true) {
+        const { value, done } = await reader.read()
+        if (done) break
+        buffer += decoder.decode(value, { stream: true })
+
+        const parts = buffer.split("\n\n")
+        buffer = parts.pop() ?? ""
+        for (const part of parts) {
+          const lines = part.split("\n")
+          const event = lines.find((l) => l.startsWith("event: "))?.slice(7)
+          const data = lines.find((l) => l.startsWith("data: "))?.slice(6)
+          if (!event || !data) continue
+          const payload = JSON.parse(data) as {
+            text?: string
+            citations?: string[]
+            message?: string
+          }
+
+          if (event === "citations" && payload.citations) {
+            citations = payload.citations
+            setMessages((prev) =>
+              prev.map((m) => (m.id === assistantId ? { ...m, citations } : m)),
+            )
+          } else if (event === "delta" && payload.text) {
+            accumulated += payload.text
+            setMessages((prev) =>
+              prev.map((m) =>
+                m.id === assistantId
+                  ? { ...m, text: accumulated, pending: true }
+                  : m,
+              ),
+            )
+          } else if (event === "error") {
+            setMessages((prev) =>
+              prev.map((m) =>
+                m.id === assistantId
+                  ? {
+                      ...m,
+                      pending: false,
+                      error: true,
+                      text:
+                        payload.message ??
+                        "The chatbot is offline — check GROQ_API_KEY in .env.",
+                    }
+                  : m,
+              ),
+            )
+            return
+          }
+        }
+      }
+
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === assistantId ? { ...m, pending: false, text: accumulated } : m,
+        ),
+      )
+    } catch (error) {
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === assistantId
+            ? {
+                ...m,
+                pending: false,
+                error: true,
+                text:
+                  error instanceof Error
+                    ? error.message
+                    : "Something went wrong — please try again.",
+              }
+            : m,
+        ),
+      )
+    } finally {
+      setIsStreaming(false)
+    }
   }
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
-      <div className="mb-6 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-widest text-primary">Knowledge</p>
-          <h1 className="mt-1 text-3xl font-bold tracking-tight">Rights Chatbot</h1>
-          <p className="mt-1 text-muted-foreground">Bangla-first constitutional guidance with citations</p>
-        </div>
-        <Button variant="ghost" size="sm" onClick={resetChat} className="w-fit">
-          <ArrowClockwise className="mr-1.5 size-4" />
-          Reset chat
-        </Button>
-      </div>
+    <div className="container mx-auto max-w-7xl px-4 py-8">
+      <div className="mx-auto max-w-4xl">
+        <div className="rounded-3xl border border-border/50 bg-background/50 p-6 sm:p-8 transition-all duration-300 hover:border-primary/20 hover:bg-background hover:shadow-sm">
+          <div className="space-y-3 pb-6 text-center">
+            <Badge variant="secondary" className="mx-auto w-fit rounded-full">
+              Constitutional Chatbot
+            </Badge>
+            <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
+              Bangla-first rights guidance with citations
+            </h1>
+            <p className="mx-auto max-w-2xl text-muted-foreground">
+              Retrieval-augmented answers powered by the Bangladesh Constitution,
+              served through Groq-hosted Llama 3.3 70B.
+            </p>
+          </div>
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1.4fr)_300px]">
-        {/* Chat panel */}
-        <Card className="flex flex-col rounded-2xl" style={{ minHeight: "600px" }}>
-          {/* Messages */}
-          <CardContent className="flex flex-1 flex-col gap-3 overflow-y-auto p-4 sm:p-5">
-            {messages.map((msg) => (
-              <div
-                key={msg.id}
-                className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
-              >
-                {msg.role === "assistant" && (
-                  <span className="mr-2 mt-1 flex size-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-                    <Robot className="size-4" />
-                  </span>
-                )}
+          <div className="space-y-4">
+            <div
+              ref={scrollRef}
+              className="max-h-[520px] space-y-3 overflow-y-auto rounded-3xl border border-border/50 bg-muted/20 p-4 sm:p-6"
+            >
+              {messages.map((message) => (
                 <div
-                  className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
-                    msg.role === "user"
-                      ? "rounded-tr-sm bg-primary text-primary-foreground"
-                      : "rounded-tl-sm border border-border/60 bg-muted/30"
+                  key={message.id}
+                  className={`max-w-[85%] rounded-3xl px-4 py-3 text-sm leading-relaxed ${
+                    message.role === "user"
+                      ? "ml-auto bg-primary text-primary-foreground shadow-sm"
+                      : message.error
+                        ? "border border-destructive/40 bg-destructive/10 text-destructive shadow-sm"
+                        : "bg-background border border-border/60 shadow-sm"
                   }`}
                 >
-                  <p className="whitespace-pre-wrap">{msg.text}</p>
-                  {msg.citation && (
-                    <p className="mt-2 text-xs opacity-70">
-                      <BookOpenText className="mr-1 inline size-3" />
-                      {msg.citation}
-                    </p>
-                  )}
-                  {msg.evidence && msg.evidence.length > 0 && (
-                    <div className="mt-2 space-y-1 border-t border-border/30 pt-2">
-                      {msg.evidence.slice(0, 2).map((e, i) => (
-                        <p key={i} className="text-xs opacity-70">• {e}</p>
+                  <p className="whitespace-pre-wrap">
+                    {message.text}
+                    {message.pending && !message.text ? (
+                      <span className="inline-flex gap-1 align-middle">
+                        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-current" />
+                        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-current [animation-delay:150ms]" />
+                        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-current [animation-delay:300ms]" />
+                      </span>
+                    ) : null}
+                  </p>
+                  {message.citations && message.citations.length > 0 ? (
+                    <div className="mt-2 space-y-1 text-[11px] opacity-80">
+                      {message.citations.map((citation) => (
+                        <p
+                          key={citation}
+                          className="decoration-primary/50 underline underline-offset-2"
+                        >
+                          Cited: {citation}
+                        </p>
                       ))}
                     </div>
-                  )}
+                  ) : null}
                 </div>
-              </div>
-            ))}
-            {loading && (
-              <div className="flex justify-start">
-                <span className="mr-2 flex size-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-                  <Robot className="size-4" />
-                </span>
-                <div className="rounded-2xl rounded-tl-sm border border-border/60 bg-muted/30 px-4 py-3">
-                  <span className="flex gap-1">
-                    <span className="size-2 animate-bounce rounded-full bg-muted-foreground/60 [animation-delay:0ms]" />
-                    <span className="size-2 animate-bounce rounded-full bg-muted-foreground/60 [animation-delay:150ms]" />
-                    <span className="size-2 animate-bounce rounded-full bg-muted-foreground/60 [animation-delay:300ms]" />
-                  </span>
-                </div>
-              </div>
-            )}
-            <div ref={bottomRef} />
-          </CardContent>
-
-          {/* Suggested prompts */}
-          <div className="border-t border-border/60 p-3">
-            <div className="mb-3 flex flex-wrap gap-1.5">
-              {SUGGESTED_PROMPTS.map((p) => (
-                <button
-                  key={p}
-                  onClick={() => void sendMessage(p)}
-                  disabled={loading}
-                  className="rounded-full border border-border/60 px-3 py-1 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50"
-                >
-                  {p}
-                </button>
               ))}
             </div>
 
-            {/* Input */}
-            <div className="flex gap-2">
-              <input
-                className="flex-1 rounded-xl border border-border/60 bg-background px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/30"
-                placeholder="Ask about your rights, concerns, or processes…"
+            <form
+              onSubmit={(event) => {
+                event.preventDefault()
+                void send(input)
+              }}
+              className="flex flex-col gap-2 sm:flex-row"
+            >
+              <Textarea
                 value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && void sendMessage()}
-                disabled={loading}
+                onChange={(event) => setInput(event.target.value)}
+                placeholder="Ask about a right, an Article number, or a situation..."
+                rows={2}
+                className="flex-1 rounded-3xl"
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" && !event.shiftKey) {
+                    event.preventDefault()
+                    void send(input)
+                  }
+                }}
               />
               <Button
-                size="sm"
-                className="rounded-xl px-3"
-                onClick={() => void sendMessage()}
-                disabled={loading || !input.trim()}
+                type="submit"
+                disabled={isStreaming || input.trim().length === 0}
+                className="rounded-full sm:self-end"
               >
-                <PaperPlaneRight className="size-4" />
+                {isStreaming ? "Thinking..." : "Ask"}
               </Button>
+            </form>
+
+            <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
+              {prompts.map((prompt) => (
+                <motion.div key={prompt} whileTap={{ scale: 0.95 }}>
+                  <Button
+                    variant="outline"
+                    disabled={isStreaming}
+                    onClick={() => void send(prompt)}
+                    className="rounded-full text-left whitespace-normal"
+                  >
+                    {prompt}
+                  </Button>
+                </motion.div>
+              ))}
             </div>
           </div>
-        </Card>
-
-        {/* Info sidebar */}
-        <div className="space-y-4">
-          <Card className="rounded-2xl">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base">What I can answer</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2.5 text-sm text-muted-foreground">
-              <p><ShieldCheck className="mr-1.5 inline size-4 text-primary" />Constitutional rights and articles</p>
-              <p><BookOpenText className="mr-1.5 inline size-4 text-primary" />Public procedures and ordinances</p>
-              <p><Robot className="mr-1.5 inline size-4 text-primary" />Platform features and workflows</p>
-              <p>Guided concern submission with context</p>
-            </CardContent>
-          </Card>
-
-          <Card className="rounded-2xl bg-gradient-to-br from-primary/10 to-transparent">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base">Planned sources</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-1.5 text-sm text-muted-foreground">
-              <p>Bangladesh Constitution (1972)</p>
-              <p>RTI Act 2009</p>
-              <p>Anti-Corruption ordinances</p>
-              <p>City Corporation by-laws</p>
-              <p>PDPO 2025 data guidelines</p>
-            </CardContent>
-          </Card>
-
-          <Card className="rounded-2xl">
-            <CardContent className="pt-4 pb-4">
-              <Badge variant="secondary" className="rounded-full">RAG-powered</Badge>
-              <p className="mt-2 text-xs text-muted-foreground">
-                Answers are retrieved from vetted civic documents and annotated with source citations.
-              </p>
-            </CardContent>
-          </Card>
         </div>
       </div>
     </div>
