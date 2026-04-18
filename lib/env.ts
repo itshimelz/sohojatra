@@ -8,6 +8,10 @@ export const env = {
   DIRECT_URL: process.env.DIRECT_URL ?? "",
   BETTER_AUTH_SECRET: process.env.BETTER_AUTH_SECRET ?? "",
   BETTER_AUTH_URL: process.env.BETTER_AUTH_URL ?? "",
+  GROQ_API_KEY: process.env.GROQ_API_KEY ?? "",
+  GROQ_MODEL: process.env.GROQ_MODEL ?? "llama-3.2-3b-preview",
+  VECTORIZER_API_ID: process.env.VECTORIZER_API_ID ?? "",
+  VECTORIZER_API_SECRET: process.env.VECTORIZER_API_SECRET ?? "",
 }
 
 export function assertAuthEnv() {
