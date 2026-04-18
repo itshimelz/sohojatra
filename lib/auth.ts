@@ -39,15 +39,11 @@ function normalizeBangladeshPhoneNumber(phoneNumber: string) {
 async function sendOtpSms(phoneNumber: string, code: string) {
   const hasRealSmsCredentials =
     Boolean(env.SSL_SMS_API_URL && env.SSL_SMS_API_KEY) &&
-    !/^(your-|replace-with-)/i.test(env.SSL_SMS_API_KEY)
+    !/^(your-|replace-with-)/i.test(env.SSL_SMS_API_KEY ?? "")
 
-  if (process.env.NODE_ENV !== "production") {
-    console.info(`[OTP DEV] ${phoneNumber}: ${code}`)
+  if (!hasRealSmsCredentials || process.env.NODE_ENV !== "production") {
+    console.info(`[OTP FALLBACK/DEV] ${phoneNumber}: ${code}`)
     return
-  }
-
-  if (!env.SSL_SMS_API_URL || !env.SSL_SMS_API_KEY) {
-    throw new Error("SMS API is not configured")
   }
 
   const smsMessage = SMS_OTP_MESSAGE.replace("{code}", code)
