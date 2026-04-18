@@ -74,35 +74,7 @@ export default function AdminPage() {
     void load()
   }, [])
 
-  const role = (session?.user as { role?: string } | undefined)?.role
-  const isAdmin = role === "admin" || role === "government_authority"
-
-  if (!session?.user) {
-    return (
-      <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 text-center">
-        <h1 className="text-2xl font-bold mb-4">Admin Panel</h1>
-        <p className="text-muted-foreground mb-6">You must be signed in to access the admin panel.</p>
-        <Link href="/login">
-          <Button>Sign In</Button>
-        </Link>
-      </div>
-    )
-  }
-
-  if (!isAdmin) {
-    return (
-      <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 text-center">
-        <h1 className="text-2xl font-bold mb-4">Access Restricted</h1>
-        <p className="text-muted-foreground mb-6">
-          The admin panel is only accessible to government authorities and admins.
-          Your current role is <strong>{role ?? "citizen"}</strong>.
-        </p>
-        <Link href="/dashboard">
-          <Button variant="outline">Go to Dashboard</Button>
-        </Link>
-      </div>
-    )
-  }
+  const role = session?.user?.role
 
   if (loading) {
     return (
@@ -143,7 +115,7 @@ export default function AdminPage() {
           <p className="text-xs font-semibold uppercase tracking-widest text-primary">Admin Panel</p>
           <h1 className="mt-1 text-3xl font-bold tracking-tight">Platform Management</h1>
           <p className="mt-1 text-muted-foreground">
-            Logged in as <span className="font-medium text-foreground">{session.user.name}</span>
+            Logged in as <span className="font-medium text-foreground">{session?.user?.name}</span>
             {" · "}<span className="capitalize">{role?.replace(/_/g, " ")}</span>
           </p>
         </div>

@@ -14,6 +14,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
+import { hasElevatedRole } from "@/lib/roles"
 
 export function UserMenu({ loginLabel }: { loginLabel: string }) {
   const { session, isPending, signOut } = useAuth()
@@ -35,6 +36,7 @@ export function UserMenu({ loginLabel }: { loginLabel: string }) {
   }
 
   const { name, email, role } = session.user
+  const elevated = hasElevatedRole(role)
   const initials = name
     .split(" ")
     .map((n) => n[0])
@@ -74,6 +76,11 @@ export function UserMenu({ loginLabel }: { loginLabel: string }) {
         <DropdownMenuItem onClick={() => router.push("/dashboard")}>
           Dashboard
         </DropdownMenuItem>
+        {elevated && (
+          <DropdownMenuItem onClick={() => router.push("/admin")}>
+            Admin Panel
+          </DropdownMenuItem>
+        )}
         <DropdownMenuSeparator />
         <DropdownMenuItem
           variant="destructive"
