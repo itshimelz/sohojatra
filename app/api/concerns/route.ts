@@ -12,7 +12,6 @@ import { NextResponse } from "next/server"
 
 import { requireSession } from "@/lib/api-guard"
 import { createConcern, listConcerns } from "@/lib/sohojatra/store"
-import { getServerSession } from "@/lib/auth-session"
 import { createConcernSchema } from "@/lib/validation/concerns"
 import { z } from "zod"
 

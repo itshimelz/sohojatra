@@ -26,7 +26,7 @@ export async function submitConcernAction(data: {
   const windowStart = new Date(Date.now() - RATE_LIMIT_WINDOW_MS)
   const recentCount = await prisma.concern.count({
     where: {
-      authorName: user.name,
+      authorName: user?.name ?? "Citizen",
       createdAt: { gte: windowStart },
     },
   })
@@ -46,14 +46,14 @@ export async function submitConcernAction(data: {
       locationLng: data.locationLng,
       location: data.address,
       photos: data.photos,
-      authorName: user.name,
+      authorName: user?.name ?? "Citizen",
       status: "Submitted",
       updates: [
         {
           id: crypto.randomUUID(),
           status: "Submitted",
           timestamp: new Date().toISOString(),
-          author: user.name,
+          author: user?.name ?? "Citizen",
           note: data.category ? `Category: ${getCategoryLabel(data.category)}` : undefined,
         },
       ],

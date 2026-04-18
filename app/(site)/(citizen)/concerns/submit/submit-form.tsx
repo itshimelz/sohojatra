@@ -198,7 +198,6 @@ export function SubmitConcernForm({ dictionary: t }: { dictionary: Dictionary })
     [detailAddress, area, thana, district, division].filter(Boolean).join(", ")
 
   const step1Valid = title.trim().length >= 5
-  const step2Valid = !!(division && district && gpsCoords)
   const availableDistricts = division ? (DISTRICTS[division] ?? []) : []
 
   // ── Step navigation ───────────────────────────────────────────────────────────

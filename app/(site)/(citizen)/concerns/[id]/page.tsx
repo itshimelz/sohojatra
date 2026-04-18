@@ -1,10 +1,27 @@
 import type { Metadata } from "next"
+import Link from "next/link"
+import Image from "next/image"
 
 import { getConcern } from "@/lib/sohojatra/store"
 import { MOCK_CONCERNS } from "@/lib/concerns/mock"
 import { getDictionary } from "@/lib/i18n/server"
-import { ConcernDetailView } from "@/components/concern-detail-view"
 import { SITE_URL } from "@/lib/seo"
+import { getServerSession } from "@/lib/auth-session"
+import { getStatusLabel } from "@/lib/concerns/presentation"
+import { UpvoteButton } from "@/components/upvote-button"
+import { buttonVariants } from "@/components/ui/button-variants"
+import { AspectRatio } from "@/components/ui/aspect-ratio"
+import {
+  CaretLeft,
+  Images,
+  User,
+  Clock,
+  MapPin,
+  PaperPlaneTilt,
+  MagnifyingGlass,
+  CheckCircle,
+  XCircle,
+} from "@phosphor-icons/react/dist/ssr"
 
 type DetailParams = { params: Promise<{ id: string }> }
 
@@ -50,6 +67,30 @@ export default async function ConcernDetailPage({
     (await getConcern(id).catch(() => null)) ??
     MOCK_CONCERNS.find((item) => item.id === id) ??
     null
+
+  if (!concern) {
+    return (
+      <div className="container mx-auto max-w-5xl px-4 py-32 text-center text-muted-foreground font-medium">
+        Concern not found. It may have been removed or does not exist.
+      </div>
+    )
+  }
+
+  const session = await getServerSession()
+  const userId = session?.user?.id ?? null
+  const currentVote = null
+  const photos = concern.photos ?? []
+  const updates = concern.updates ?? []
+  const displayStatus = concern.status
+  const statusCfg = STATUS_CONFIG[displayStatus as keyof typeof STATUS_CONFIG] ?? STATUS_CONFIG.Submitted
+  const StatusIcon = statusCfg.icon
+  const statusLabels = {
+    submitted: d.concerns.submitted,
+    underReview: d.concerns.underReview,
+    resolved: d.concerns.resolved,
+    rejected: d.concerns.rejected,
+  }
+  const tr = d.tracking
 
   return (
     <div className="container mx-auto max-w-5xl px-4 py-8">
@@ -139,12 +180,12 @@ export default async function ConcernDetailPage({
             <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2.5 border-t border-border/50 pt-5 text-sm text-muted-foreground">
               <div className="flex items-center gap-1.5">
                 <User className="size-4" weight="duotone" />
-                <span className="font-medium text-foreground">{concern.authorName}</span>
+                <span className="font-medium text-foreground">{concern.author.name}</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <Clock className="size-4" weight="duotone" />
-                <time dateTime={concern.createdAt.toISOString()}>
-                  {concern.createdAt.toLocaleDateString(undefined, {
+                <time dateTime={new Date(concern.createdAt).toISOString()}>
+                  {new Date(concern.createdAt).toLocaleDateString(undefined, {
                     day: "numeric",
                     month: "long",
                     year: "numeric",
@@ -154,8 +195,8 @@ export default async function ConcernDetailPage({
               <div className="flex items-center gap-1.5">
                 <MapPin className="size-4" weight="duotone" />
                 <span>
-                  {concern.location ||
-                    `${concern.locationLat.toFixed(4)}, ${concern.locationLng.toFixed(4)}`}
+                  {concern.location.address ||
+                    `${concern.location.lat.toFixed(4)}, ${concern.location.lng.toFixed(4)}`}
                 </span>
               </div>
             </div>

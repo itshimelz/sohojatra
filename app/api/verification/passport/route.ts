@@ -27,6 +27,6 @@ export async function POST(request: Request) {
   }
 
   return NextResponse.json({
-    verification: verifyPassport(body.passport, body.country ?? "BD"),
+    verification: verifyPassport(body.passport),
   })
 }

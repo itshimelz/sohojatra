@@ -13,6 +13,7 @@ type SessionPayload = {
     image?: string | null
     role?: string | null
     phoneNumber?: string | null
+    onboarded?: boolean | null
   }
 }
 
@@ -49,10 +50,14 @@ export async function getServerSession(): Promise<SessionPayload | null> {
 /**
  * Require an authenticated session. Redirects to /login if not authenticated.
  */
-export async function requireServerSession() {
+export async function requireServerSession(): Promise<
+  SessionPayload & { user: NonNullable<SessionPayload["user"]> }
+> {
   const session = await getServerSession()
   if (!session?.user) {
     redirect("/login")
   }
-  return session
+  return session as SessionPayload & {
+    user: NonNullable<SessionPayload["user"]>
+  }
 }

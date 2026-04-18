@@ -6,7 +6,6 @@
  *   - The deviceId is informational only; the user is identified by session.
  */
 import { NextResponse } from "next/server"
-import { getServerSession } from "@/lib/auth-session"
 import { z } from "zod"
 
 const syncSchema = z.object({

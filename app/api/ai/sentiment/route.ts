@@ -7,17 +7,33 @@ import { NextResponse } from "next/server"
 
 import { requireRole } from "@/lib/api-guard"
 import { sentiment } from "@/lib/sohojatra/ai"
-import { getServerSession } from "@/lib/auth-session"
 import { z } from "zod"
 
 const sentimentSchema = z.object({
-  text: z.string().min(1, "Text is required for sentiment analysis."),
+  text: z
+    .string()
+    .trim()
+    .min(1, "Text is required for sentiment analysis.")
+    .max(2000),
 })
 
 export async function POST(request: Request) {
-  const session = await requireRole(request, ["moderator", "admin", "superadmin"])
+  const session = await requireRole(request, [
+    "moderator",
+    "admin",
+    "superadmin",
+  ])
   if (session instanceof Response) return session
 
   const body = await request.json().catch(() => ({}))
-  return NextResponse.json(sentiment(String(body.text ?? "")))
+  const parsedBody = sentimentSchema.safeParse(body)
+
+  if (!parsedBody.success) {
+    return NextResponse.json(
+      { message: "Validation error", errors: parsedBody.error.issues },
+      { status: 400 }
+    )
+  }
+
+  return NextResponse.json(sentiment(parsedBody.data.text))
 }

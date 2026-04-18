@@ -13,12 +13,12 @@ import { Calendar } from "@/components/ui/calendar"
 import { CheckCircle, CaretRight, CaretLeft, CalendarBlank } from "@phosphor-icons/react/dist/ssr"
 import { completeOnboarding } from "@/app/(site)/onboard/actions"
 import { toast } from "sonner"
-import { type User } from "better-auth"
+
 import { format } from "date-fns"
 import { cn } from "@/lib/utils"
 
 interface OnboardWizardProps {
-  user: User
+  user: { name?: string | null; email?: string | null }
 }
 
 export function OnboardWizard({ user }: OnboardWizardProps) {
