@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import {
@@ -34,6 +34,8 @@ import { cn } from "@/lib/utils"
 import { LanguageSwitcher } from "@/components/language-switcher"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { UserMenu } from "@/components/user-menu"
+import { useAuth } from "@/components/auth-provider"
+import { hasElevatedRole } from "@/lib/roles"
 import type { Locale } from "@/lib/i18n/config"
 import type { Dictionary } from "@/lib/i18n/dictionaries/en"
 
@@ -47,6 +49,8 @@ type NavItem = {
   label: string
   desc: string
   Icon: Icon
+  /** If true, this item is only visible to elevated roles (admin, moderator, etc.) */
+  elevated?: boolean
 }
 
 type NavGroup = {
@@ -96,7 +100,7 @@ function buildNavGroups(nav: Dictionary["nav"]): NavGroup[] {
       items: [
         { href: "/dashboard", label: nav.analytics, desc: nav.analyticsDesc, Icon: Buildings },
         { href: "/open-data", label: nav.openData, desc: nav.openDataDesc, Icon: Database },
-        { href: "/admin", label: nav.adminPanel, desc: nav.adminPanelDesc, Icon: Gear },
+        { href: "/admin", label: nav.adminPanel, desc: nav.adminPanelDesc, Icon: Gear, elevated: true },
       ],
     },
   ]
@@ -121,7 +125,21 @@ function NavDropdownItem({ href, label, desc, Icon }: NavItem) {
 
 export function SiteHeader({ nav, locale }: Props) {
   const [mobileOpen, setMobileOpen] = useState(false)
-  const navGroups = buildNavGroups(nav)
+  const { session } = useAuth()
+  const userRole = session?.user?.role
+  const elevated = hasElevatedRole(userRole)
+  const allGroups = buildNavGroups(nav)
+
+  // Filter out elevated-only items for citizens & unauthenticated users
+  const navGroups = useMemo(() => {
+    if (elevated) return allGroups
+    return allGroups
+      .map((group) => ({
+        ...group,
+        items: group.items.filter((item) => !item.elevated),
+      }))
+      .filter((group) => group.items.length > 0)
+  }, [elevated, allGroups])
 
   return (
     <>
