@@ -219,127 +219,13 @@ const stateFilePath = join(process.cwd(), ".sohojatra-state.json")
 
 const defaultState: StateFile = {
   concerns: [...MOCK_CONCERNS],
-  proposals: [
-    {
-      id: "p-101",
-      title: "Create ward-level drainage status board",
-      body:
-        "Every ward should publish a live drainage map with blocked lines, cleaning status, and the next maintenance date.",
-      author: "Dr. Rafiq Hasan",
-      category: "Infrastructure",
-      votes: 421,
-      downvotes: 12,
-      status: "Active",
-      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 8).toISOString(),
-      comments: [
-        {
-          id: "pc-1",
-          author: "Amina Noor",
-          body: "Add photo proof and the ward engineer name so follow-up becomes measurable.",
-          createdAt: new Date(Date.now() - 1000 * 60 * 45).toISOString(),
-          points: 92,
-          upvotes: 92,
-          downvotes: 2,
-        },
-      ],
-    },
-  ],
-  researchProblems: [
-    {
-      id: "rp-11",
-      title: "Flood-prone intersection prediction in Dhaka South",
-      ministry: "Ministry of Local Government",
-      grant: "BDT 12,00,000",
-      deadline: "15 May 2026",
-      summary:
-        "Build a model that predicts flood-prone intersections using rainfall, drainage status, and past complaint density.",
-    },
-  ],
-  moderation: [
-    {
-      id: "mq-1",
-      title: "Proposal: anti-dumping zone near school",
-      reason: "Needs source citations and contractor references",
-      severity: "Medium",
-      status: "Pending",
-    },
-  ],
-  awards: [
-    {
-      id: "a-1",
-      proposalId: "p-101",
-      title: "Infrastructure Innovation Award",
-      description: "Awarded for excellence in civic infrastructure planning",
-      awardedTo: "Dr. Rafiq Hasan",
-      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
-      value: "BDT 50,000",
-    },
-  ],
-  solutionPlans: [
-    {
-      id: "sp-1",
-      concernId: MOCK_CONCERNS[0]?.id ?? "c-1",
-      title: "Rapid drainage sweep + contractor accountability plan",
-      summary: "Immediate cleaning plus a weekly public status board with contractor IDs.",
-      technicalDocs: [],
-      budgetEstimateBdt: 1200000,
-      timeline: "2 weeks for cleanup, 6 weeks for full audit",
-      riskNotes: "Risk: contractor non-compliance; mitigate with public weekly audits.",
-      status: "UnderReview",
-      submittedBy: "Dr. Rafiq Hasan",
-      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
-      updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 6).toISOString(),
-    },
-  ],
-  projects: [
-    {
-      id: "pt-1",
-      title: "Drainage system rehabilitation - Mirpur Zone",
-      ministry: "Ministry of Local Government",
-      department: "Dhaka City Corporation",
-      owner: "Eng. Karim Hossain",
-      status: "In Progress",
-      progress: 65,
-      deadline: "30 Jun 2026",
-      budgetAllocatedBdt: 4500000,
-      budgetSpentBdt: 2800000,
-      milestones: [
-        {
-          id: "ms-1",
-          title: "Contractor mobilization",
-          dueDate: "15 Apr 2026",
-          status: "Verified",
-          verifiedBy: "Gov Liaison",
-          verifiedAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3).toISOString(),
-        },
-        {
-          id: "ms-2",
-          title: "Primary line clearance",
-          dueDate: "10 May 2026",
-          status: "InProgress",
-        },
-      ],
-      updates: [],
-      followers: [],
-      comments: [],
-    },
-  ],
-  assemblyEvents: [
-    {
-      id: "ae-1",
-      title: "Ward 50 Town Hall - Infrastructure Planning",
-      date: "2026-04-20",
-      time: "18:00 - 20:00",
-      location: "Community Center, Mirpur 10",
-      organizer: "DMC Ward Commissioner",
-      topic: "Drainage & Street Maintenance Budget Review",
-      agenda: "Budget review, citizen Q&A, next steps",
-      minutesUrl: undefined,
-      status: "Upcoming",
-      rsvps: [],
-      linkedConcernIds: [],
-    },
-  ],
+  proposals: [],
+  researchProblems: [],
+  moderation: [],
+  awards: [],
+  solutionPlans: [],
+  projects: [],
+  assemblyEvents: [],
   notifications: [],
   actionLog: [],
   userVotes: [],
@@ -379,17 +265,15 @@ function loadState(): StateFile {
 
     return {
       concerns: Array.isArray(parsed.concerns) ? parsed.concerns : cloneState(defaultState.concerns),
-      proposals: Array.isArray(parsed.proposals) ? parsed.proposals : cloneState(defaultState.proposals),
-      researchProblems: Array.isArray(parsed.researchProblems)
-        ? parsed.researchProblems
-        : cloneState(defaultState.researchProblems),
-      moderation: Array.isArray(parsed.moderation) ? parsed.moderation : cloneState(defaultState.moderation),
-      awards: Array.isArray(parsed.awards) ? parsed.awards : cloneState(defaultState.awards),
-      solutionPlans: Array.isArray(parsed.solutionPlans) ? parsed.solutionPlans : cloneState(defaultState.solutionPlans),
-      projects: Array.isArray(parsed.projects) ? parsed.projects : cloneState(defaultState.projects),
-      assemblyEvents: Array.isArray(parsed.assemblyEvents) ? parsed.assemblyEvents : cloneState(defaultState.assemblyEvents),
-      notifications: Array.isArray(parsed.notifications) ? parsed.notifications : cloneState(defaultState.notifications),
-      actionLog: Array.isArray(parsed.actionLog) ? parsed.actionLog : cloneState(defaultState.actionLog),
+      proposals: Array.isArray(parsed.proposals) ? parsed.proposals : [],
+      researchProblems: Array.isArray(parsed.researchProblems) ? parsed.researchProblems : [],
+      moderation: Array.isArray(parsed.moderation) ? parsed.moderation : [],
+      awards: Array.isArray(parsed.awards) ? parsed.awards : [],
+      solutionPlans: Array.isArray(parsed.solutionPlans) ? parsed.solutionPlans : [],
+      projects: Array.isArray(parsed.projects) ? parsed.projects : [],
+      assemblyEvents: Array.isArray(parsed.assemblyEvents) ? parsed.assemblyEvents : [],
+      notifications: Array.isArray(parsed.notifications) ? parsed.notifications : [],
+      actionLog: Array.isArray(parsed.actionLog) ? parsed.actionLog : [],
       userVotes: Array.isArray(parsed.userVotes) ? parsed.userVotes : [],
       reputationEvents: Array.isArray(parsed.reputationEvents) ? parsed.reputationEvents : [],
       earnedBadges: Array.isArray(parsed.earnedBadges) ? parsed.earnedBadges : [],
@@ -467,13 +351,76 @@ function mapResearchRow(row: any) {
   }
 }
 
-function mapModerationRow(row: any) {
+function mapModerationRow(row: any): ModerationFlag {
   return {
     id: row.id,
     title: row.title,
     reason: row.reason,
-    severity: row.severity,
-    status: row.status,
+    severity: row.severity as ModerationFlag["severity"],
+    status: row.status as ModerationFlag["status"],
+    reviewedBy: row.reviewedBy ?? undefined,
+  }
+}
+
+function mapProjectRow(row: any): ProjectTracker {
+  return {
+    id: row.id,
+    title: row.title,
+    ministry: row.ministry,
+    department: row.department,
+    owner: row.owner,
+    status: row.status as ProjectTracker["status"],
+    progress: row.progress ?? 0,
+    deadline: row.deadline,
+    budgetAllocatedBdt: Number(row.budgetAllocatedBdt ?? 0),
+    budgetSpentBdt: Number(row.budgetSpentBdt ?? 0),
+    milestones: Array.isArray(row.milestones) ? row.milestones : [],
+    updates: Array.isArray(row.updates) ? row.updates : [],
+    followers: Array.isArray(row.followers) ? row.followers : [],
+    comments: Array.isArray(row.comments) ? row.comments : [],
+  }
+}
+
+function mapSolutionPlanRow(row: any): SolutionPlan {
+  return {
+    id: row.id,
+    concernId: row.concernId,
+    title: row.title,
+    summary: row.summary,
+    technicalDocs: Array.isArray(row.technicalDocs) ? row.technicalDocs : [],
+    budgetEstimateBdt: Number(row.budgetEstimateBdt ?? 0),
+    timeline: row.timeline,
+    riskNotes: row.riskNotes,
+    status: row.status as SolutionPlan["status"],
+    submittedBy: row.submittedBy,
+    governmentComments: row.governmentComments ?? undefined,
+    assignedDepartment: row.assignedDepartment ?? undefined,
+    createdAt: new Date(row.createdAt).toISOString(),
+    updatedAt: new Date(row.updatedAt).toISOString(),
+  }
+}
+
+function mapAssemblyEventRow(row: any): AssemblyEvent {
+  let date = ""
+  let time = ""
+  if (row.eventTime) {
+    const parts = String(row.eventTime).split("T")
+    date = parts[0] ?? row.eventTime
+    time = parts[1] ? parts[1].slice(0, 5) : ""
+  }
+  return {
+    id: row.id,
+    title: row.title,
+    date,
+    time,
+    location: row.location,
+    organizer: row.organizedBy,
+    topic: row.agenda ?? row.title,
+    agenda: row.agenda ?? undefined,
+    minutesUrl: row.minutesUrl ?? undefined,
+    status: row.minutesUrl ? "Completed" : "Upcoming",
+    rsvps: [],
+    linkedConcernIds: [],
   }
 }
 
@@ -485,7 +432,7 @@ export async function listConcerns(): Promise<Concern[]> {
       })) as unknown[]
       return rows.map(mapConcernRow)
     } catch {
-      // Fall through to the file-backed state.
+      // Fall through to file-backed state.
     }
   }
 
@@ -498,7 +445,7 @@ export async function getConcern(concernId: string) {
       const row = await db.concern.findUnique({ where: { id: concernId } })
       return row ? mapConcernRow(row) : null
     } catch {
-      // Fall through to the file-backed state.
+      // Fall through to file-backed state.
     }
   }
 
@@ -509,6 +456,7 @@ export async function createConcern(input: {
   title: string
   description: string
   authorName?: string
+  authorId?: string
   locationLat: number
   locationLng: number
   location?: string
@@ -554,6 +502,7 @@ export async function createConcern(input: {
           downvotes: concern.downvotes,
           hasUpvoted: concern.hasUpvoted,
           authorName: concern.author.name,
+          authorId: input.authorId ?? null,
           locationLat: concern.location.lat,
           locationLng: concern.location.lng,
           location: concern.location.address ?? null,
@@ -582,7 +531,7 @@ export async function listProposals() {
 
       return rows.map(mapProposalRow)
     } catch {
-      // Fall through to the file-backed state.
+      // Fall through to file-backed state.
     }
   }
 
@@ -593,6 +542,7 @@ export async function createProposal(input: {
   title: string
   body: string
   author: string
+  authorId?: string
   category?: string
 }) {
   const proposal: ProposalRecord = {
@@ -615,6 +565,7 @@ export async function createProposal(input: {
           title: proposal.title,
           body: proposal.body,
           authorName: proposal.author,
+          authorId: input.authorId ?? null,
           category: proposal.category,
           votes: proposal.votes,
           downvotes: proposal.downvotes,
@@ -695,7 +646,7 @@ export async function listResearchProblems(): Promise<ResearchProblem[]> {
       })) as unknown[]
       return rows.map(mapResearchRow)
     } catch {
-      // Fall through to the file-backed state.
+      // Fall through to file-backed state.
     }
   }
 
@@ -710,7 +661,7 @@ export async function listModerationQueue(): Promise<ModerationFlag[]> {
       })) as unknown[]
       return rows.map(mapModerationRow)
     } catch {
-      // Fall through to the file-backed state.
+      // Fall through to file-backed state.
     }
   }
 
@@ -746,6 +697,17 @@ export async function getDashboardSnapshot() {
         )
       : null
 
+  let assemblyEventCount = 0
+  if (hasModel("assemblyEvent")) {
+    try {
+      assemblyEventCount = await db.assemblyEvent.count()
+    } catch {
+      assemblyEventCount = state.assemblyEvents.length
+    }
+  } else {
+    assemblyEventCount = state.assemblyEvents.length
+  }
+
   return {
     kpis: [
       {
@@ -759,13 +721,13 @@ export async function getDashboardSnapshot() {
         detail: "Public issue backlog based on current concern statuses",
       },
       {
-        label: "Citizen satisfaction",
-        value: "4.3/5",
-        detail: "Placeholder until post-resolution rating capture is enabled",
+        label: "Total concerns",
+        value: String(concerns.length),
+        detail: "Total civic issues submitted on the platform",
       },
       {
         label: "Assembly events held",
-        value: String(state.assemblyEvents.length),
+        value: String(assemblyEventCount),
         detail: "Town halls published in the public schedule",
       },
     ],
@@ -777,6 +739,18 @@ export async function getDashboardSnapshot() {
 // --- Voting Operations ---
 
 export async function voteOnProposal(proposalId: string, increment: number = 1) {
+  if (hasModel("proposal")) {
+    try {
+      const updated = await db.proposal.update({
+        where: { id: proposalId },
+        data: { votes: { increment } },
+      })
+      return mapProposalRow({ ...updated, comments: [] })
+    } catch {
+      // Fall through.
+    }
+  }
+
   const proposal = state.proposals.find((p) => p.id === proposalId)
   if (!proposal) return null
 
@@ -786,6 +760,18 @@ export async function voteOnProposal(proposalId: string, increment: number = 1) 
 }
 
 export async function downvoteProposal(proposalId: string, increment: number = 1) {
+  if (hasModel("proposal")) {
+    try {
+      const updated = await db.proposal.update({
+        where: { id: proposalId },
+        data: { downvotes: { increment } },
+      })
+      return mapProposalRow({ ...updated, comments: [] })
+    } catch {
+      // Fall through.
+    }
+  }
+
   const proposal = state.proposals.find((p) => p.id === proposalId)
   if (!proposal) return null
 
@@ -795,6 +781,26 @@ export async function downvoteProposal(proposalId: string, increment: number = 1
 }
 
 export async function voteOnComment(proposalId: string, commentId: string, increment: number = 1) {
+  if (hasModel("comment")) {
+    try {
+      const updated = await db.comment.update({
+        where: { id: commentId },
+        data: { upvotes: { increment } },
+      })
+      return {
+        id: updated.id,
+        author: updated.authorName,
+        body: updated.body,
+        createdAt: new Date(updated.createdAt).toISOString(),
+        upvotes: updated.upvotes,
+        downvotes: updated.downvotes,
+        points: (updated.upvotes ?? 0) - (updated.downvotes ?? 0),
+      }
+    } catch {
+      // Fall through.
+    }
+  }
+
   const proposal = state.proposals.find((p) => p.id === proposalId)
   if (!proposal) return null
 
@@ -808,6 +814,26 @@ export async function voteOnComment(proposalId: string, commentId: string, incre
 }
 
 export async function downvoteComment(proposalId: string, commentId: string, increment: number = 1) {
+  if (hasModel("comment")) {
+    try {
+      const updated = await db.comment.update({
+        where: { id: commentId },
+        data: { downvotes: { increment } },
+      })
+      return {
+        id: updated.id,
+        author: updated.authorName,
+        body: updated.body,
+        createdAt: new Date(updated.createdAt).toISOString(),
+        upvotes: updated.upvotes,
+        downvotes: updated.downvotes,
+        points: (updated.upvotes ?? 0) - (updated.downvotes ?? 0),
+      }
+    } catch {
+      // Fall through.
+    }
+  }
+
   const proposal = state.proposals.find((p) => p.id === proposalId)
   if (!proposal) return null
 
@@ -823,6 +849,18 @@ export async function downvoteComment(proposalId: string, commentId: string, inc
 // --- Moderation Operations ---
 
 export async function approveModerationFlag(flagId: string, reviewedBy: string = "System Admin") {
+  if (hasModel("moderationFlag")) {
+    try {
+      const updated = await db.moderationFlag.update({
+        where: { id: flagId },
+        data: { status: "Resolved", reviewedBy },
+      })
+      return mapModerationRow(updated)
+    } catch {
+      // Fall through.
+    }
+  }
+
   const flag = state.moderation.find((f) => f.id === flagId)
   if (!flag) return null
 
@@ -833,6 +871,18 @@ export async function approveModerationFlag(flagId: string, reviewedBy: string =
 }
 
 export async function rejectModerationFlag(flagId: string, reviewedBy: string = "System Admin") {
+  if (hasModel("moderationFlag")) {
+    try {
+      const updated = await db.moderationFlag.update({
+        where: { id: flagId },
+        data: { status: "Resolved", reviewedBy },
+      })
+      return mapModerationRow(updated)
+    } catch {
+      // Fall through.
+    }
+  }
+
   const flag = state.moderation.find((f) => f.id === flagId)
   if (!flag) return null
 
@@ -843,6 +893,18 @@ export async function rejectModerationFlag(flagId: string, reviewedBy: string = 
 }
 
 export async function escalateModerationFlag(flagId: string) {
+  if (hasModel("moderationFlag")) {
+    try {
+      const updated = await db.moderationFlag.update({
+        where: { id: flagId },
+        data: { status: "Escalated" },
+      })
+      return mapModerationRow(updated)
+    } catch {
+      // Fall through.
+    }
+  }
+
   const flag = state.moderation.find((f) => f.id === flagId)
   if (!flag) return null
 
@@ -859,15 +921,15 @@ export async function listAwards() {
       const rows = await db.award.findMany({ orderBy: [{ createdAt: "desc" }] })
       return rows.map((row: any) => ({
         id: row.id,
-        proposalId: row.proposalId,
-        title: row.title,
-        description: row.description,
-        awardedTo: row.awardedTo,
+        proposalId: row.proposalId ?? "",
+        title: row.title ?? row.awardType ?? "Award",
+        description: row.description ?? "",
+        awardedTo: row.awardedTo ?? row.givenBy ?? "",
         createdAt: new Date(row.createdAt).toISOString(),
         value: row.value ?? undefined,
       }))
     } catch {
-      // Fall through to the file-backed state.
+      // Fall through to file-backed state.
     }
   }
 
@@ -896,7 +958,9 @@ export async function createAward(input: {
       await db.award.create({
         data: {
           id: award.id,
-          proposalId: award.proposalId,
+          proposalId: award.proposalId || null,
+          awardType: "ExpertTake",
+          givenBy: award.awardedTo,
           title: award.title,
           description: award.description,
           awardedTo: award.awardedTo,
@@ -914,9 +978,21 @@ export async function createAward(input: {
   return award
 }
 
-// --- Concern Operations ---
+// --- Concern Voting ---
 
 export async function voteOnConcern(concernId: string, increment: number = 1) {
+  if (hasModel("concern")) {
+    try {
+      const updated = await db.concern.update({
+        where: { id: concernId },
+        data: { upvotes: { increment } },
+      })
+      return mapConcernRow(updated)
+    } catch {
+      // Fall through.
+    }
+  }
+
   const concern = state.concerns.find((c) => c.id === concernId)
   if (!concern) return null
 
@@ -927,6 +1003,18 @@ export async function voteOnConcern(concernId: string, increment: number = 1) {
 }
 
 export async function downvoteConcern(concernId: string, increment: number = 1) {
+  if (hasModel("concern")) {
+    try {
+      const updated = await db.concern.update({
+        where: { id: concernId },
+        data: { downvotes: { increment } },
+      })
+      return mapConcernRow(updated)
+    } catch {
+      // Fall through.
+    }
+  }
+
   const concern = state.concerns.find((c) => c.id === concernId)
   if (!concern) return null
 
@@ -939,6 +1027,29 @@ export async function updateConcernStatus(
   concernId: string,
   newStatus: string
 ): Promise<Concern | null> {
+  if (hasModel("concern")) {
+    try {
+      const existing = await db.concern.findUnique({ where: { id: concernId } })
+      if (existing) {
+        const updates = Array.isArray(existing.updates) ? existing.updates : []
+        updates.push({
+          id: uniqueId("u"),
+          status: newStatus,
+          timestamp: new Date().toISOString(),
+          author: "System",
+          note: `Status updated to ${newStatus}`,
+        })
+        const updated = await db.concern.update({
+          where: { id: concernId },
+          data: { status: newStatus, updates },
+        })
+        return mapConcernRow(updated)
+      }
+    } catch {
+      // Fall through.
+    }
+  }
+
   const concern = state.concerns.find((c) => c.id === concernId)
   if (!concern) return null
 
@@ -957,12 +1068,12 @@ export async function updateConcernStatus(
 // --- Duplicate Detection ---
 
 export async function detectDuplicateConcerns(concernId: string, similarityThreshold: number = 0.8) {
-  const concern = state.concerns.find((c) => c.id === concernId)
+  const allConcerns = await listConcerns()
+  const concern = allConcerns.find((c) => c.id === concernId)
   if (!concern) return []
 
-  // Simple keyword matching for now (deterministic for testing)
   const keywords = concern.title.toLowerCase().split(/\s+/)
-  return state.concerns
+  return allConcerns
     .filter((c) => c.id !== concernId)
     .filter((c) => {
       const match = keywords.filter((kw) => c.title.toLowerCase().includes(kw)).length / keywords.length
@@ -971,7 +1082,7 @@ export async function detectDuplicateConcerns(concernId: string, similarityThres
     .slice(0, 5)
 }
 
-// --- Research Matching ---
+// --- Research ---
 
 export async function createResearchProblem(input: {
   title: string
@@ -1016,16 +1127,17 @@ export async function matchResearchWithConcerns(
   researchId: string,
   topK: number = 3
 ) {
-  const research = state.researchProblems.find((r) => r.id === researchId)
+  const allResearch = await listResearchProblems()
+  const research = allResearch.find((r) => r.id === researchId)
   if (!research) return []
 
-  // Keyword matching between research and concerns
+  const allConcerns = await listConcerns()
   const keywords = research.title
     .toLowerCase()
     .split(/\s+/)
     .filter((kw) => kw.length > 3)
 
-  return state.concerns
+  return allConcerns
     .map((concern) => {
       const matchCount = keywords.filter((kw) =>
         concern.title.toLowerCase().includes(kw) ||
@@ -1048,6 +1160,21 @@ function appendActionLog(entry: Omit<ActionLogEntry, "id" | "createdAt">) {
 
   state.actionLog.unshift(record)
   saveState()
+
+  // Also persist to DB if available
+  if (hasModel("actionLog")) {
+    db.actionLog.create({
+      data: {
+        id: record.id,
+        targetType: record.entityType,
+        targetId: record.entityId,
+        action: record.action,
+        details: record.metadata ?? null,
+        loggedAt: new Date(record.createdAt),
+      },
+    }).catch(() => {})
+  }
+
   return record
 }
 
@@ -1056,6 +1183,31 @@ export async function listActionLog(filter?: {
   entityId?: string
   limit?: number
 }) {
+  if (hasModel("actionLog")) {
+    try {
+      const rows = await db.actionLog.findMany({
+        where: {
+          ...(filter?.entityType ? { targetType: filter.entityType } : {}),
+          ...(filter?.entityId ? { targetId: filter.entityId } : {}),
+        },
+        orderBy: { loggedAt: "desc" },
+        take: filter?.limit ?? 200,
+      })
+      return rows.map((row: any) => ({
+        id: row.id,
+        entityType: row.targetType,
+        entityId: row.targetId,
+        action: row.action,
+        actorName: row.userId ?? "System",
+        actorRole: "System" as const,
+        metadata: row.details ?? undefined,
+        createdAt: new Date(row.loggedAt).toISOString(),
+      }))
+    } catch {
+      // Fall through.
+    }
+  }
+
   const filtered = state.actionLog.filter((entry) => {
     if (filter?.entityType && entry.entityType !== filter.entityType) return false
     if (filter?.entityId && entry.entityId !== filter.entityId) return false
@@ -1064,6 +1216,8 @@ export async function listActionLog(filter?: {
 
   return cloneState(filtered.slice(0, filter?.limit ?? 200))
 }
+
+// --- Notifications ---
 
 export async function createNotification(input: Omit<NotificationItem, "id" | "createdAt" | "status"> & { status?: NotificationItem["status"] }) {
   const notification: NotificationItem = {
@@ -1077,12 +1231,65 @@ export async function createNotification(input: Omit<NotificationItem, "id" | "c
     meta: input.meta,
   }
 
+  if (hasModel("notification")) {
+    try {
+      const channelMap: Record<string, string> = {
+        "push": "Push",
+        "sms": "Sms",
+        "email": "Email",
+        "in-app": "InApp",
+      }
+      await db.notification.create({
+        data: {
+          id: notification.id,
+          userId: notification.userId,
+          message: `${notification.subject}: ${notification.body}`,
+          channel: channelMap[notification.channel] ?? "InApp",
+          isRead: false,
+        },
+      })
+      return notification
+    } catch {
+      // Fall through to local persistence.
+    }
+  }
+
   state.notifications.unshift(notification)
   saveState()
   return notification
 }
 
 export async function listNotifications(filter?: { userId?: string; channel?: NotificationItem["channel"] }) {
+  if (hasModel("notification") && filter?.userId) {
+    try {
+      const channelMap: Record<string, string> = {
+        "push": "Push",
+        "sms": "Sms",
+        "email": "Email",
+        "in-app": "InApp",
+      }
+      const rows = await db.notification.findMany({
+        where: {
+          userId: filter.userId,
+          ...(filter.channel ? { channel: channelMap[filter.channel] } : {}),
+        },
+        orderBy: { createdAt: "desc" },
+        take: 100,
+      })
+      return rows.map((row: any) => ({
+        id: row.id,
+        userId: row.userId,
+        channel: (Object.entries(channelMap).find(([, v]) => v === row.channel)?.[0] ?? "in-app") as NotificationItem["channel"],
+        subject: row.message.split(":")[0] ?? row.message,
+        body: row.message,
+        status: row.isRead ? "sent" as const : "pending" as const,
+        createdAt: new Date(row.createdAt).toISOString(),
+      }))
+    } catch {
+      // Fall through.
+    }
+  }
+
   const items = state.notifications.filter((item) => {
     if (filter?.userId && item.userId !== filter.userId) return false
     if (filter?.channel && item.channel !== filter.channel) return false
@@ -1092,7 +1299,24 @@ export async function listNotifications(filter?: { userId?: string; channel?: No
   return cloneState(items)
 }
 
+// --- Solution Plans ---
+
 export async function listSolutionPlans(filter?: { concernId?: string; status?: SolutionPlan["status"] }) {
+  if (hasModel("solutionPlan")) {
+    try {
+      const rows = await db.solutionPlan.findMany({
+        where: {
+          ...(filter?.concernId ? { concernId: filter.concernId } : {}),
+          ...(filter?.status ? { status: filter.status } : {}),
+        },
+        orderBy: { createdAt: "desc" },
+      })
+      return rows.map(mapSolutionPlanRow)
+    } catch {
+      // Fall through.
+    }
+  }
+
   const plans = state.solutionPlans.filter((plan) => {
     if (filter?.concernId && plan.concernId !== filter.concernId) return false
     if (filter?.status && plan.status !== filter.status) return false
@@ -1102,6 +1326,15 @@ export async function listSolutionPlans(filter?: { concernId?: string; status?: 
 }
 
 export async function getSolutionPlan(planId: string) {
+  if (hasModel("solutionPlan")) {
+    try {
+      const row = await db.solutionPlan.findUnique({ where: { id: planId } })
+      return row ? mapSolutionPlanRow(row) : null
+    } catch {
+      // Fall through.
+    }
+  }
+
   return cloneState(state.solutionPlans.find((plan) => plan.id === planId) ?? null)
 }
 
@@ -1130,6 +1363,48 @@ export async function createSolutionPlan(input: {
     submittedBy: input.submittedBy.trim() || "Expert",
     createdAt: now,
     updatedAt: now,
+  }
+
+  if (hasModel("solutionPlan")) {
+    try {
+      await db.solutionPlan.create({
+        data: {
+          id: plan.id,
+          concernId: plan.concernId,
+          title: plan.title,
+          summary: plan.summary,
+          technicalDocs: plan.technicalDocs,
+          budgetEstimateBdt: BigInt(plan.budgetEstimateBdt),
+          timeline: plan.timeline,
+          riskNotes: plan.riskNotes,
+          status: plan.status,
+          submittedBy: plan.submittedBy,
+        },
+      })
+
+      appendActionLog({
+        entityType: "solutionPlan",
+        entityId: plan.id,
+        action: "submitted",
+        actorName: plan.submittedBy,
+        actorRole: "Expert",
+        metadata: { concernId: plan.concernId },
+      })
+
+      if (input.notifyUserId) {
+        await createNotification({
+          userId: input.notifyUserId,
+          channel: "in-app",
+          subject: "New solution proposal submitted",
+          body: `A new solution proposal was submitted for concern ${input.concernId}.`,
+          meta: { concernId: input.concernId, solutionPlanId: plan.id },
+        })
+      }
+
+      return plan
+    } catch {
+      // Fall through to local persistence.
+    }
   }
 
   state.solutionPlans.unshift(plan)
@@ -1164,11 +1439,60 @@ export async function reviewSolutionPlan(input: {
   comments?: string
   notifyUserId?: string
 }) {
+  const actorName = input.actorName.trim() || "Government Authority"
+  const now = new Date()
+
+  const statusMap = {
+    approve: "Approved",
+    reject: "Rejected",
+    requestRevision: "RevisionRequested",
+    assignDepartment: "UnderReview",
+  }
+  const newStatus = statusMap[input.action]
+
+  if (hasModel("solutionPlan")) {
+    try {
+      const updated = await db.solutionPlan.update({
+        where: { id: input.planId },
+        data: {
+          status: newStatus,
+          ...(input.comments ? { governmentComments: input.comments.trim() } : {}),
+          ...(input.action === "assignDepartment" && input.department
+            ? { assignedDepartment: input.department.trim() }
+            : {}),
+          updatedAt: now,
+        },
+      })
+
+      const plan = mapSolutionPlanRow(updated)
+
+      appendActionLog({
+        entityType: "solutionPlan",
+        entityId: plan.id,
+        action: input.action,
+        actorName,
+        actorRole: "Government",
+        metadata: { status: plan.status, comments: plan.governmentComments },
+      })
+
+      if (input.notifyUserId) {
+        await createNotification({
+          userId: input.notifyUserId,
+          channel: "in-app",
+          subject: "Solution proposal updated",
+          body: `The solution proposal for concern ${plan.concernId} is now ${plan.status}.`,
+          meta: { concernId: plan.concernId, solutionPlanId: plan.id, status: plan.status },
+        })
+      }
+
+      return plan
+    } catch {
+      // Fall through.
+    }
+  }
+
   const plan = state.solutionPlans.find((p) => p.id === input.planId)
   if (!plan) return null
-
-  const now = new Date().toISOString()
-  const actorName = input.actorName.trim() || "Government Authority"
 
   if (input.action === "assignDepartment") {
     plan.assignedDepartment = input.department?.trim() || plan.assignedDepartment
@@ -1185,7 +1509,7 @@ export async function reviewSolutionPlan(input: {
     plan.governmentComments = input.comments.trim()
   }
 
-  plan.updatedAt = now
+  plan.updatedAt = now.toISOString()
 
   appendActionLog({
     entityType: "solutionPlan",
@@ -1214,7 +1538,20 @@ export async function reviewSolutionPlan(input: {
   return cloneState(plan)
 }
 
+// --- Projects ---
+
 export async function listProjects() {
+  if (hasModel("project")) {
+    try {
+      const rows = await db.project.findMany({
+        orderBy: { createdAt: "desc" },
+      })
+      return rows.map(mapProjectRow)
+    } catch {
+      // Fall through.
+    }
+  }
+
   return cloneState(state.projects)
 }
 
@@ -1243,6 +1580,42 @@ export async function createProject(input: {
     comments: [],
   }
 
+  if (hasModel("project")) {
+    try {
+      await db.project.create({
+        data: {
+          id: project.id,
+          title: project.title,
+          ministry: project.ministry,
+          department: project.department,
+          owner: project.owner,
+          status: project.status,
+          progress: project.progress,
+          deadline: project.deadline,
+          budgetAllocatedBdt: BigInt(project.budgetAllocatedBdt),
+          budgetSpentBdt: BigInt(0),
+          milestones: [],
+          updates: [],
+          followers: [],
+          comments: [],
+        },
+      })
+
+      appendActionLog({
+        entityType: "project",
+        entityId: project.id,
+        action: "created",
+        actorName: project.owner,
+        actorRole: "Government",
+        metadata: { ministry: project.ministry, department: project.department },
+      })
+
+      return cloneState(project)
+    } catch {
+      // Fall through to local persistence.
+    }
+  }
+
   state.projects.unshift(project)
   appendActionLog({
     entityType: "project",
@@ -1257,19 +1630,55 @@ export async function createProject(input: {
 }
 
 export async function getProject(projectId: string) {
+  if (hasModel("project")) {
+    try {
+      const row = await db.project.findUnique({ where: { id: projectId } })
+      return row ? mapProjectRow(row) : null
+    } catch {
+      // Fall through.
+    }
+  }
+
   return cloneState(state.projects.find((project) => project.id === projectId) ?? null)
 }
 
 export async function addProjectComment(input: { projectId: string; author: string; body: string }) {
-  const project = state.projects.find((p) => p.id === input.projectId)
-  if (!project) return null
-
   const comment: ProjectComment = {
     id: uniqueId("pcmt"),
     author: input.author.trim() || "Citizen",
     body: input.body.trim(),
     createdAt: new Date().toISOString(),
   }
+
+  if (hasModel("project")) {
+    try {
+      const existing = await db.project.findUnique({ where: { id: input.projectId } })
+      if (existing) {
+        const comments = Array.isArray(existing.comments) ? existing.comments : []
+        comments.unshift(comment)
+        await db.project.update({
+          where: { id: input.projectId },
+          data: { comments },
+        })
+
+        appendActionLog({
+          entityType: "project",
+          entityId: input.projectId,
+          action: "commented",
+          actorName: comment.author,
+          actorRole: "Citizen",
+          metadata: { commentId: comment.id },
+        })
+
+        return cloneState(comment)
+      }
+    } catch {
+      // Fall through.
+    }
+  }
+
+  const project = state.projects.find((p) => p.id === input.projectId)
+  if (!project) return null
 
   project.comments.unshift(comment)
   appendActionLog({
@@ -1286,11 +1695,41 @@ export async function addProjectComment(input: { projectId: string; author: stri
 }
 
 export async function toggleProjectFollow(input: { projectId: string; followerId: string }) {
-  const project = state.projects.find((p) => p.id === input.projectId)
-  if (!project) return null
-
   const followerId = input.followerId.trim()
   if (!followerId) return null
+
+  if (hasModel("project")) {
+    try {
+      const existing = await db.project.findUnique({ where: { id: input.projectId } })
+      if (existing) {
+        const followers: string[] = Array.isArray(existing.followers) ? existing.followers : []
+        const alreadyFollowing = followers.includes(followerId)
+        const newFollowers = alreadyFollowing
+          ? followers.filter((id: string) => id !== followerId)
+          : [followerId, ...followers]
+
+        await db.project.update({
+          where: { id: input.projectId },
+          data: { followers: newFollowers },
+        })
+
+        appendActionLog({
+          entityType: "project",
+          entityId: input.projectId,
+          action: alreadyFollowing ? "unfollowed" : "followed",
+          actorName: followerId,
+          actorRole: "Citizen",
+        })
+
+        return cloneState({ followers: newFollowers, following: !alreadyFollowing })
+      }
+    } catch {
+      // Fall through.
+    }
+  }
+
+  const project = state.projects.find((p) => p.id === input.projectId)
+  if (!project) return null
 
   const existing = project.followers.includes(followerId)
   project.followers = existing
@@ -1316,6 +1755,41 @@ export async function updateProjectMilestone(input: {
   actorName: string
   verify?: boolean
 }) {
+  if (hasModel("project")) {
+    try {
+      const existing = await db.project.findUnique({ where: { id: input.projectId } })
+      if (existing) {
+        const milestones: ProjectMilestone[] = Array.isArray(existing.milestones) ? existing.milestones : []
+        const milestone = milestones.find((m) => m.id === input.milestoneId)
+        if (!milestone) return null
+
+        milestone.status = input.verify ? "Verified" : input.status
+        if (input.verify) {
+          milestone.verifiedBy = input.actorName.trim() || "Gov Liaison"
+          milestone.verifiedAt = new Date().toISOString()
+        }
+
+        await db.project.update({
+          where: { id: input.projectId },
+          data: { milestones },
+        })
+
+        appendActionLog({
+          entityType: "project",
+          entityId: input.projectId,
+          action: "milestone-updated",
+          actorName: input.actorName.trim() || "System",
+          actorRole: input.verify ? "Government" : "System",
+          metadata: { milestoneId: milestone.id, status: milestone.status },
+        })
+
+        return cloneState(milestone)
+      }
+    } catch {
+      // Fall through.
+    }
+  }
+
   const project = state.projects.find((p) => p.id === input.projectId)
   if (!project) return null
 
@@ -1351,9 +1825,6 @@ export async function addProjectUpdate(input: {
   createdBy: string
   budgetSpentDeltaBdt?: number
 }) {
-  const project = state.projects.find((p) => p.id === input.projectId)
-  if (!project) return null
-
   const update: ProjectUpdate = {
     id: uniqueId("pu"),
     text: input.text.trim(),
@@ -1362,6 +1833,45 @@ export async function addProjectUpdate(input: {
     createdBy: input.createdBy.trim() || "Implementing Team",
     createdAt: new Date().toISOString(),
   }
+
+  if (hasModel("project")) {
+    try {
+      const existing = await db.project.findUnique({ where: { id: input.projectId } })
+      if (existing) {
+        const updates: ProjectUpdate[] = Array.isArray(existing.updates) ? existing.updates : []
+        updates.unshift(update)
+
+        let newBudgetSpent = Number(existing.budgetSpentBdt ?? 0)
+        if (typeof input.budgetSpentDeltaBdt === "number" && Number.isFinite(input.budgetSpentDeltaBdt)) {
+          newBudgetSpent = Math.max(0, newBudgetSpent + Math.round(input.budgetSpentDeltaBdt))
+        }
+
+        await db.project.update({
+          where: { id: input.projectId },
+          data: {
+            updates,
+            budgetSpentBdt: BigInt(newBudgetSpent),
+          },
+        })
+
+        appendActionLog({
+          entityType: "project",
+          entityId: input.projectId,
+          action: "progress-update",
+          actorName: update.createdBy,
+          actorRole: "Government",
+          metadata: { updateId: update.id },
+        })
+
+        return cloneState(update)
+      }
+    } catch {
+      // Fall through.
+    }
+  }
+
+  const project = state.projects.find((p) => p.id === input.projectId)
+  if (!project) return null
 
   project.updates.unshift(update)
 
@@ -1383,7 +1893,20 @@ export async function addProjectUpdate(input: {
   return cloneState(update)
 }
 
+// --- Assembly Events ---
+
 export async function listAssemblyEvents() {
+  if (hasModel("assemblyEvent")) {
+    try {
+      const rows = await db.assemblyEvent.findMany({
+        orderBy: { createdAt: "desc" },
+      })
+      return rows.map(mapAssemblyEventRow)
+    } catch {
+      // Fall through.
+    }
+  }
+
   return cloneState(state.assemblyEvents)
 }
 
@@ -1412,6 +1935,34 @@ export async function createAssemblyEvent(input: {
     linkedConcernIds: Array.isArray(input.linkedConcernIds) ? input.linkedConcernIds : [],
   }
 
+  if (hasModel("assemblyEvent")) {
+    try {
+      const eventTime = `${input.date}T${input.time.split(" ")[0] ?? "00:00"}:00`
+      await db.assemblyEvent.create({
+        data: {
+          id: event.id,
+          title: event.title,
+          location: event.location,
+          agenda: event.agenda ?? null,
+          eventTime,
+          organizedBy: event.organizer,
+        },
+      })
+
+      appendActionLog({
+        entityType: "assemblyEvent",
+        entityId: event.id,
+        action: "scheduled",
+        actorName: event.organizer,
+        actorRole: "Government",
+      })
+
+      return cloneState(event)
+    } catch {
+      // Fall through to local persistence.
+    }
+  }
+
   state.assemblyEvents.unshift(event)
   appendActionLog({
     entityType: "assemblyEvent",
@@ -1425,11 +1976,40 @@ export async function createAssemblyEvent(input: {
 }
 
 export async function rsvpAssemblyEvent(input: { eventId: string; userId: string }) {
-  const event = state.assemblyEvents.find((e) => e.id === input.eventId)
-  if (!event) return null
-
   const userId = input.userId.trim()
   if (!userId) return null
+
+  // RSVPs are tracked in ActionLog since AssemblyEvent model has no rsvp list
+  if (hasModel("actionLog")) {
+    try {
+      const existing = await db.actionLog.findFirst({
+        where: { targetType: "assemblyEvent", targetId: input.eventId, userId, action: "rsvp" },
+      })
+
+      if (existing) {
+        await db.actionLog.delete({ where: { id: existing.id } })
+        return { attending: false }
+      }
+
+      await db.actionLog.create({
+        data: {
+          id: uniqueId("al"),
+          userId,
+          targetType: "assemblyEvent",
+          targetId: input.eventId,
+          action: "rsvp",
+          loggedAt: new Date(),
+        },
+      })
+
+      return { attending: true }
+    } catch {
+      // Fall through.
+    }
+  }
+
+  const event = state.assemblyEvents.find((e) => e.id === input.eventId)
+  if (!event) return null
 
   const already = event.rsvps.includes(userId)
   event.rsvps = already ? event.rsvps.filter((id) => id !== userId) : [userId, ...event.rsvps]
@@ -1447,6 +2027,28 @@ export async function rsvpAssemblyEvent(input: { eventId: string; userId: string
 }
 
 export async function publishAssemblyMinutes(input: { eventId: string; minutesUrl: string; actorName: string }) {
+  if (hasModel("assemblyEvent")) {
+    try {
+      const updated = await db.assemblyEvent.update({
+        where: { id: input.eventId },
+        data: { minutesUrl: input.minutesUrl.trim() },
+      })
+
+      appendActionLog({
+        entityType: "assemblyEvent",
+        entityId: input.eventId,
+        action: "minutes-published",
+        actorName: input.actorName.trim() || "Government",
+        actorRole: "Government",
+        metadata: { minutesUrl: input.minutesUrl },
+      })
+
+      return mapAssemblyEventRow(updated)
+    } catch {
+      // Fall through.
+    }
+  }
+
   const event = state.assemblyEvents.find((e) => e.id === input.eventId)
   if (!event) return null
 
@@ -1474,6 +2076,46 @@ export async function castVote(input: {
   targetId: string
   value: 1 | -1
 }) {
+  if (hasModel("vote")) {
+    try {
+      const existing = await db.vote.findUnique({
+        where: {
+          userId_targetType_targetId: {
+            userId: input.userId,
+            targetType: input.targetType,
+            targetId: input.targetId,
+          },
+        },
+      })
+
+      if (existing) {
+        return { alreadyVoted: true, vote: existing }
+      }
+
+      const vote = await db.vote.create({
+        data: {
+          id: uniqueId("v"),
+          userId: input.userId,
+          targetType: input.targetType,
+          targetId: input.targetId,
+          value: input.value,
+        },
+      })
+
+      if (input.targetType === "concern") {
+        if (input.value === 1) await voteOnConcern(input.targetId)
+        else await downvoteConcern(input.targetId)
+      } else if (input.targetType === "proposal") {
+        if (input.value === 1) await voteOnProposal(input.targetId)
+        else await downvoteProposal(input.targetId)
+      }
+
+      return { alreadyVoted: false, vote }
+    } catch {
+      // Fall through.
+    }
+  }
+
   const existing = state.userVotes.find(
     (v) => v.userId === input.userId && v.targetType === input.targetType && v.targetId === input.targetId
   )
@@ -1503,6 +2145,25 @@ export async function castVote(input: {
 }
 
 export async function getUserVotes(userId: string) {
+  if (hasModel("vote")) {
+    try {
+      const rows = await db.vote.findMany({
+        where: { userId },
+        orderBy: { votedAt: "desc" },
+      })
+      return rows.map((row: any) => ({
+        id: row.id,
+        userId: row.userId,
+        targetType: row.targetType as UserVote["targetType"],
+        targetId: row.targetId,
+        value: row.value as 1 | -1,
+        votedAt: new Date(row.votedAt).toISOString(),
+      }))
+    } catch {
+      // Fall through.
+    }
+  }
+
   return cloneState(state.userVotes.filter((v) => v.userId === userId))
 }
 
@@ -1530,6 +2191,37 @@ export async function awardReputation(input: {
       ? REPUTATION_EVENTS[input.reason as keyof typeof REPUTATION_EVENTS]
       : 1)
 
+  if (hasModel("reputationEvent")) {
+    try {
+      const event = await db.reputationEvent.create({
+        data: {
+          id: uniqueId("rep"),
+          userId: input.userId,
+          delta,
+          reason: input.reason,
+        },
+      })
+
+      // Also update User.reputationPoints
+      if (hasModel("user")) {
+        await db.user.update({
+          where: { id: input.userId },
+          data: { reputationPoints: { increment: delta } },
+        }).catch(() => {})
+      }
+
+      return {
+        id: event.id,
+        userId: event.userId,
+        delta: event.delta,
+        reason: event.reason,
+        createdAt: new Date(event.createdAt).toISOString(),
+      }
+    } catch {
+      // Fall through.
+    }
+  }
+
   const event: ReputationEvent = {
     id: uniqueId("rep"),
     userId: input.userId,
@@ -1544,6 +2236,36 @@ export async function awardReputation(input: {
 }
 
 export async function getUserReputation(userId: string) {
+  if (hasModel("reputationEvent")) {
+    try {
+      const events = await db.reputationEvent.findMany({
+        where: { userId },
+        orderBy: { createdAt: "desc" },
+        take: 100,
+      })
+
+      const total = events.reduce((sum: number, e: any) => sum + e.delta, 0)
+      const weightMultiplier =
+        total >= 5000 ? 1.8 : total >= 2000 ? 1.5 : total >= 500 ? 1.2 : 1.0
+
+      return {
+        userId,
+        totalPoints: Math.max(0, total),
+        weightMultiplier,
+        tier: total >= 5000 ? "Champion" : total >= 2000 ? "Expert" : total >= 500 ? "Active" : "Newcomer",
+        events: events.slice(0, 20).map((e: any) => ({
+          id: e.id,
+          userId: e.userId,
+          delta: e.delta,
+          reason: e.reason,
+          createdAt: new Date(e.createdAt).toISOString(),
+        })),
+      }
+    } catch {
+      // Fall through.
+    }
+  }
+
   const events = state.reputationEvents.filter((e) => e.userId === userId)
   const total = events.reduce((sum, e) => sum + e.delta, 0)
   const weightMultiplier =
@@ -1578,18 +2300,78 @@ export async function awardBadge(input: {
   label?: string
   description?: string
 }) {
+  const catalog = BADGE_CATALOG.find((b) => b.key === input.badgeKey)
+  const label = input.label ?? catalog?.label ?? input.badgeKey
+  const description = input.description ?? catalog?.description ?? ""
+
+  if (hasModel("badge") && hasModel("citizenBadge")) {
+    try {
+      // Ensure badge definition exists in DB
+      let badge = await db.badge.findFirst({ where: { name: input.badgeKey } })
+      if (!badge) {
+        badge = await db.badge.create({
+          data: {
+            id: uniqueId("bdg"),
+            name: input.badgeKey,
+            description,
+            criteria: label,
+            iconKey: input.badgeKey,
+          },
+        })
+      }
+
+      const existing = await db.citizenBadge.findFirst({
+        where: { userId: input.userId, badgeId: badge.id },
+      })
+
+      if (existing) {
+        return {
+          alreadyHeld: true,
+          badge: {
+            id: existing.id,
+            userId: existing.userId,
+            badgeKey: input.badgeKey,
+            label,
+            description,
+            earnedAt: new Date(existing.earnedAt).toISOString(),
+          },
+        }
+      }
+
+      const citizenBadge = await db.citizenBadge.create({
+        data: {
+          id: uniqueId("cb"),
+          userId: input.userId,
+          badgeId: badge.id,
+        },
+      })
+
+      const earned: EarnedBadge = {
+        id: citizenBadge.id,
+        userId: input.userId,
+        badgeKey: input.badgeKey,
+        label,
+        description,
+        earnedAt: new Date(citizenBadge.earnedAt).toISOString(),
+      }
+
+      return { alreadyHeld: false, badge: earned }
+    } catch {
+      // Fall through.
+    }
+  }
+
   const existing = state.earnedBadges.find(
     (b) => b.userId === input.userId && b.badgeKey === input.badgeKey
   )
   if (existing) return { alreadyHeld: true, badge: existing }
 
-  const catalog = BADGE_CATALOG.find((b) => b.key === input.badgeKey)
   const badge: EarnedBadge = {
     id: uniqueId("eb"),
     userId: input.userId,
     badgeKey: input.badgeKey,
-    label: input.label ?? catalog?.label ?? input.badgeKey,
-    description: input.description ?? catalog?.description ?? "",
+    label,
+    description,
     earnedAt: new Date().toISOString(),
   }
 
@@ -1599,6 +2381,27 @@ export async function awardBadge(input: {
 }
 
 export async function getUserBadges(userId: string) {
+  if (hasModel("citizenBadge")) {
+    try {
+      const rows = await db.citizenBadge.findMany({
+        where: { userId },
+        include: { badge: true },
+        orderBy: { earnedAt: "desc" },
+      })
+
+      return rows.map((row: any) => ({
+        id: row.id,
+        userId: row.userId,
+        badgeKey: row.badge.name,
+        label: row.badge.criteria ?? row.badge.name,
+        description: row.badge.description ?? "",
+        earnedAt: new Date(row.earnedAt).toISOString(),
+      }))
+    } catch {
+      // Fall through.
+    }
+  }
+
   return cloneState(state.earnedBadges.filter((b) => b.userId === userId))
 }
 
@@ -1639,11 +2442,9 @@ export async function addConcernComment(input: {
   quoted?: string
   parentCommentId?: string
 }) {
-  const concern = state.concerns.find((c) => c.id === input.concernId)
-
   if (hasModel("comment")) {
     try {
-      const dbConcern = concern ?? await db.concern.findUnique({ where: { id: input.concernId } })
+      const dbConcern = await db.concern.findUnique({ where: { id: input.concernId } })
       if (dbConcern) {
         const row = await db.comment.create({
           data: {
@@ -1673,6 +2474,7 @@ export async function addConcernComment(input: {
     }
   }
 
+  const concern = state.concerns.find((c) => c.id === input.concernId)
   if (!concern) return null
 
   const comment: ConcernComment = {
@@ -1700,8 +2502,29 @@ export async function getFullUserProfile(userId: string) {
   const reputation = await getUserReputation(userId)
   const badges = await getUserBadges(userId)
   const votes = await getUserVotes(userId)
-  const userConcerns = state.concerns.filter((c) => c.author?.name === userId || (c as any).authorId === userId).length
-  const userComments = state.concernComments.filter((c) => c.authorId === userId).length
+
+  let totalConcerns = 0
+  let totalComments = 0
+
+  if (hasModel("concern")) {
+    try {
+      totalConcerns = await db.concern.count({ where: { authorId: userId } })
+    } catch {
+      totalConcerns = state.concerns.filter((c) => (c as any).authorId === userId).length
+    }
+  } else {
+    totalConcerns = state.concerns.filter((c) => (c as any).authorId === userId).length
+  }
+
+  if (hasModel("comment")) {
+    try {
+      totalComments = await db.comment.count({ where: { authorId: userId } })
+    } catch {
+      totalComments = state.concernComments.filter((c) => c.authorId === userId).length
+    }
+  } else {
+    totalComments = state.concernComments.filter((c) => c.authorId === userId).length
+  }
 
   return {
     userId,
@@ -1709,8 +2532,8 @@ export async function getFullUserProfile(userId: string) {
     badges,
     stats: {
       totalVotes: votes.length,
-      totalConcerns: userConcerns,
-      totalComments: userComments,
+      totalConcerns,
+      totalComments,
     },
   }
 }

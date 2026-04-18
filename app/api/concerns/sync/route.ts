@@ -8,6 +8,18 @@
 import { NextResponse } from "next/server"
 import { z } from "zod"
 
+import { requireSession } from "@/lib/api-guard"
+import { createConcern } from "@/lib/sohojatra/store"
+
+const concernDraftSchema = z.object({
+  title: z.string().min(1),
+  description: z.string().min(1),
+  locationLat: z.number(),
+  locationLng: z.number(),
+  location: z.string().optional(),
+  photos: z.array(z.string()).optional().default([]),
+})
+
 const syncSchema = z.object({
   deviceId: z.string().min(1, "deviceId is required"),
   concerns: z.array(z.unknown()),
@@ -15,11 +27,8 @@ const syncSchema = z.object({
   voiceNotes: z.array(z.object({ id: z.string(), url: z.string().url() })).optional().default([]),
 })
 
-import { requireSession } from "@/lib/api-guard"
-
 export async function POST(request: Request) {
   try {
-    // ── Auth Guard: Only logged-in users can sync drafts ─────
     const session = await requireSession(request)
     if (session instanceof Response) return session
 
@@ -33,12 +42,43 @@ export async function POST(request: Request) {
       )
     }
 
-    // TODO: Actually persist synced data here.
+    let persisted = 0
+    let failed = 0
+    const errors: string[] = []
+
+    for (const rawConcern of validatedBody.concerns) {
+      const parsed = concernDraftSchema.safeParse(rawConcern)
+      if (!parsed.success) {
+        failed++
+        errors.push(parsed.error.issues[0]?.message ?? "invalid concern")
+        continue
+      }
+
+      try {
+        await createConcern({
+          title: parsed.data.title,
+          description: parsed.data.description,
+          authorName: session.userName,
+          authorId: session.userId,
+          locationLat: parsed.data.locationLat,
+          locationLng: parsed.data.locationLng,
+          location: parsed.data.location,
+          photos: parsed.data.photos,
+        })
+        persisted++
+      } catch {
+        failed++
+        errors.push(`Failed to persist concern: ${parsed.data.title}`)
+      }
+    }
+
     return NextResponse.json({
-      synced: validatedBody.concerns.length,
+      synced: persisted,
+      failed,
       voiceNotes: validatedBody.voiceNotes?.length ?? 0,
       videos: validatedBody.videos?.length ?? 0,
-      status: "ok",
+      status: failed === 0 ? "ok" : "partial",
+      ...(errors.length > 0 ? { errors } : {}),
     })
   } catch (error) {
     if (error instanceof z.ZodError) {
