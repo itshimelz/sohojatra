@@ -31,14 +31,16 @@ model User {
   banExpires DateTime?
 
   // Extended fields per spec (Part 6: TABLE 1)
-  nidHash          String?
-  passportNumber   String?
-  institution      String?
-  department       String?
-  ministry         String?
-  specialization   String?
-  trustScore       Float    @default(100)
-  reputationPoints Int      @default(0)
+  nidHash                String?
+  birthCertificateNoHash String?
+  address                String?
+  passportNumber         String?
+  institution            String?
+  department             String?
+  ministry               String?
+  specialization         String?
+  trustScore             Float    @default(100)
+  reputationPoints       Int      @default(0)
 
   votes         Vote[]
   citizenBadges CitizenBadge[]
