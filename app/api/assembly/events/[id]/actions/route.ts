@@ -1,6 +1,18 @@
+/**
+ * POST /api/assembly/events/[id]/actions — RSVP or publish minutes.
+ *
+ * SECURITY:
+ *   - rsvp: Requires authenticated session. userId from session.
+ *   - publishMinutes: Requires admin+ role (RBAC).
+ *     actorName from session.
+ */
 import { NextResponse } from "next/server"
 
-import { publishAssemblyMinutes, rsvpAssemblyEvent } from "@/lib/sohojatra/store"
+import { requireSession, requireRole } from "@/lib/api-guard"
+import {
+  publishAssemblyMinutes,
+  rsvpAssemblyEvent,
+} from "@/lib/sohojatra/store"
 
 export async function POST(
   request: Request,
@@ -9,30 +21,49 @@ export async function POST(
   const { id: eventId } = await params
   const body = (await request.json().catch(() => ({}))) as {
     action?: "rsvp" | "publishMinutes"
-    userId?: string
     minutesUrl?: string
-    actorName?: string
   }
 
   if (body.action === "rsvp") {
-    if (!body.userId) {
-      return NextResponse.json({ error: "userId is required" }, { status: 400 })
-    }
-    const result = await rsvpAssemblyEvent({ eventId, userId: body.userId })
-    if (!result) return NextResponse.json({ error: "Event not found" }, { status: 404 })
+    // ── Auth: Any citizen can RSVP ─────────────────────────
+    const session = await requireSession(request)
+    if (session instanceof Response) return session
+
+    // userId from session, not body
+    const result = await rsvpAssemblyEvent({
+      eventId,
+      userId: session.userId,
+    })
+    if (!result)
+      return NextResponse.json(
+        { error: "Event not found" },
+        { status: 404 }
+      )
     return NextResponse.json(result)
   }
 
   if (body.action === "publishMinutes") {
+    // ── RBAC: Only admin+ can publish minutes ──────────────
+    const session = await requireRole(request, ["admin", "superadmin"])
+    if (session instanceof Response) return session
+
     if (!body.minutesUrl) {
-      return NextResponse.json({ error: "minutesUrl is required" }, { status: 400 })
+      return NextResponse.json(
+        { error: "minutesUrl is required" },
+        { status: 400 }
+      )
     }
+    // actorName from session
     const updated = await publishAssemblyMinutes({
       eventId,
       minutesUrl: body.minutesUrl,
-      actorName: body.actorName ?? "Government",
+      actorName: session.userName,
     })
-    if (!updated) return NextResponse.json({ error: "Event not found" }, { status: 404 })
+    if (!updated)
+      return NextResponse.json(
+        { error: "Event not found" },
+        { status: 404 }
+      )
     return NextResponse.json(updated)
   }
 

@@ -1,7 +1,17 @@
+/**
+ * GET/POST /api/solution-plans — List or create solution plans.
+ *
+ * SECURITY:
+ *   - GET: Public (transparency — anyone can view plans).
+ *   - POST: Requires authenticated session.
+ *     The submittedBy field is derived from the session.
+ */
 import { NextResponse } from "next/server"
 
+import { requireSession } from "@/lib/api-guard"
 import { createSolutionPlan, listSolutionPlans } from "@/lib/sohojatra/store"
 
+// GET is public — solution plans are transparent
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
   const concernId = searchParams.get("concernId") ?? undefined
@@ -23,6 +33,10 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  // ── Auth Guard: Must be logged in to submit plans ────────
+  const session = await requireSession(request)
+  if (session instanceof Response) return session
+
   const body = (await request.json().catch(() => ({}))) as {
     concernId?: string
     title?: string
@@ -31,7 +45,6 @@ export async function POST(request: Request) {
     budgetEstimateBdt?: number
     timeline?: string
     riskNotes?: string
-    submittedBy?: string
     notifyUserId?: string
   }
 
@@ -52,6 +65,7 @@ export async function POST(request: Request) {
     )
   }
 
+  // ── submittedBy comes from the session ───────────────────
   const plan = await createSolutionPlan({
     concernId: body.concernId,
     title: body.title,
@@ -60,7 +74,7 @@ export async function POST(request: Request) {
     budgetEstimateBdt: body.budgetEstimateBdt,
     timeline: body.timeline,
     riskNotes: body.riskNotes,
-    submittedBy: body.submittedBy ?? "Expert",
+    submittedBy: session.userName,
     notifyUserId: body.notifyUserId,
   })
 

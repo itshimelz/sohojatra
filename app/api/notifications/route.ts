@@ -1,10 +1,22 @@
+/**
+ * GET/POST /api/notifications — User notifications.
+ *
+ * SECURITY:
+ *   - GET: Requires auth. Users can only see their own notifications.
+ *   - POST: Requires admin or superadmin role (RBAC).
+ *     Creating notifications is a system/admin action, not a citizen one.
+ */
 import { NextResponse } from "next/server"
 
+import { requireSession, requireRole } from "@/lib/api-guard"
 import { createNotification, listNotifications } from "@/lib/sohojatra/store"
 
 export async function GET(request: Request) {
+  // ── Auth: Must be logged in to view notifications ────────
+  const session = await requireSession(request)
+  if (session instanceof Response) return session
+
   const { searchParams } = new URL(request.url)
-  const userId = searchParams.get("userId") ?? undefined
   const channelParam = searchParams.get("channel")
   const channel =
     channelParam === "push" ||
@@ -14,8 +26,9 @@ export async function GET(request: Request) {
       ? channelParam
       : undefined
 
+  // ── Users can only view their OWN notifications ──────────
   const notifications = await listNotifications({
-    userId,
+    userId: session.userId,
     channel,
   })
 
@@ -26,6 +39,10 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  // ── RBAC: Only admin+ can create notifications ───────────
+  const session = await requireRole(request, ["admin", "superadmin"])
+  if (session instanceof Response) return session
+
   const body = (await request.json().catch(() => ({}))) as {
     userId?: string
     channel?: "push" | "sms" | "email" | "in-app"

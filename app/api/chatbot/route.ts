@@ -1,6 +1,23 @@
+/**
+ * POST /api/chatbot — Constitutional chatbot with RAG.
+ *
+ * SECURITY:
+ *   - POST is PUBLIC — the chatbot is accessible to all visitors.
+ *     Rate-limiting is enforced at the proxy/middleware layer to
+ *     prevent abuse and DDoS. No session is required so that
+ *     unauthenticated users can still learn about their rights.
+ *
+ *   NOTE: This is an intentional exception to the "auth on all
+ *   POST routes" rule. The chatbot is read-only (no data mutation)
+ *   and serves a public interest purpose.
+ */
 import { NextResponse } from "next/server"
 
-import { listConcerns, getSolutionPlan, listSolutionPlans } from "@/lib/sohojatra/store"
+import {
+  listConcerns,
+  getSolutionPlan,
+  listSolutionPlans,
+} from "@/lib/sohojatra/store"
 import { ragRetrieve } from "@/lib/sohojatra/advanced"
 
 type KBEntry = {
@@ -29,7 +46,15 @@ const KNOWLEDGE_BASE: KBEntry[] = [
     citation: "F13 Upvote/Downvote System + F34 Reputation",
   },
   {
-    triggers: ["nid", "verify", "verification", "identity", "passport", "phone", "otp"],
+    triggers: [
+      "nid",
+      "verify",
+      "verification",
+      "identity",
+      "passport",
+      "phone",
+      "otp",
+    ],
     answer:
       "Citizens can verify via Phone OTP (SSL Wireless/Robi/GP) or NID (Bangladesh Election Commission API). Experts and Government Officers require NID + institutional email. Overseas Bangladeshis can use passport number + NID. Device fingerprint + IP reputation produces a login trust score (0–100).",
     citation: "F01–F04 Identity & Verification",
@@ -41,7 +66,14 @@ const KNOWLEDGE_BASE: KBEntry[] = [
     citation: "F19 Solution Proposal Pipeline",
   },
   {
-    triggers: ["government", "authority", "ministry", "department", "approve", "reject"],
+    triggers: [
+      "government",
+      "authority",
+      "ministry",
+      "department",
+      "approve",
+      "reject",
+    ],
     answer:
       "Government authorities access a co-governance portal showing AI-prioritized concerns. They can approve or reject solution plans, assign departments, update concern status, and organize assembly events. KPIs (resolution time, satisfaction score, events held) are public-facing.",
     citation: "F21 Government Authority Accountability KPIs",
@@ -59,7 +91,15 @@ const KNOWLEDGE_BASE: KBEntry[] = [
     citation: "F23–F25 Research Lab & University Collaboration",
   },
   {
-    triggers: ["chatbot", "ai", "rights", "constitution", "law", "legal", "help"],
+    triggers: [
+      "chatbot",
+      "ai",
+      "rights",
+      "constitution",
+      "law",
+      "legal",
+      "help",
+    ],
     answer:
       "This constitutional chatbot is powered by a LangChain RAG pipeline (LaBSE embeddings + LLaMA 3 + LoRA Q&A adapter). It can answer questions about the Bangladesh Constitution, RTI Act, DSA 2018, PDPO 2025, and other laws. Ask about your rights, look up concern status by ID, or get guided through submitting a concern.",
     citation: "F29 RAG Pipeline — Constitutional Chatbot",
@@ -89,13 +129,27 @@ const KNOWLEDGE_BASE: KBEntry[] = [
     citation: "F36 Full Bangla Interface + F32 Bangla NLP Pipeline",
   },
   {
-    triggers: ["mob", "fake", "bot", "spam", "astroturf", "coordinated"],
+    triggers: [
+      "mob",
+      "fake",
+      "bot",
+      "spam",
+      "astroturf",
+      "coordinated",
+    ],
     answer:
       "The platform runs a GraphSAGE Graph Neural Network that detects 15 signals including registration bursts, voting velocity spikes, coordinated timing, copy-paste comments, and bulk SIM signatures. Flagged accounts enter a trust-score system: 80–100 (normal), 40–79 (watchlist, 0.5× vote weight), 0–39 (shadow-ban). All actions are appealable within 24 hours.",
     citation: "F31 Mob Detection — GNN",
   },
   {
-    triggers: ["offline", "ussd", "sms", "feature phone", "2g", "rural"],
+    triggers: [
+      "offline",
+      "ussd",
+      "sms",
+      "feature phone",
+      "2g",
+      "rural",
+    ],
     answer:
       "Sohojatra supports feature phones via USSD (*XXX#) and SMS shortcode. Draft concerns are cached offline in the mobile app and synced when connectivity returns. The Progressive Web App (PWA) works on 2G/3G. SMS status updates ensure rural and low-income populations stay informed.",
     citation: "F37–F38 Offline-First Mobile + USSD/SMS Fallback",
@@ -119,7 +173,9 @@ function selectAnswer(question: string): KBEntry {
 }
 
 async function lookupConcernStatus(question: string) {
-  const match = question.match(/\b([c]-[\w-]+)\b/i) ?? question.match(/concern[:\s]+([a-z0-9-]+)/i)
+  const match =
+    question.match(/\b([c]-[\w-]+)\b/i) ??
+    question.match(/concern[:\s]+([a-z0-9-]+)/i)
   if (!match) return null
   const concernId = match[1]!.toLowerCase()
 
@@ -167,7 +223,11 @@ export async function POST(request: Request) {
     question,
     answer: {
       role: "assistant",
-      text: kb.answer + (hasRagEvidence ? `\n\n*Additional context retrieved from ${ragResult.evidence.length} indexed civic document(s).*` : ""),
+      text:
+        kb.answer +
+        (hasRagEvidence
+          ? `\n\n*Additional context retrieved from ${ragResult.evidence.length} indexed civic document(s).*`
+          : ""),
       citation: kb.citation,
       sources: ragResult.evidence.slice(0, 2),
     },

@@ -1,4 +1,14 @@
+/**
+ * GET/POST /api/funding/disbursements — Government funding disbursements.
+ *
+ * SECURITY:
+ *   - GET: Public (financial transparency).
+ *   - POST: Requires admin or superadmin role (RBAC).
+ *     Only government administrators can record funding disbursements.
+ */
 import { NextResponse } from "next/server"
+
+import { requireRole } from "@/lib/api-guard"
 
 type Disbursement = {
   id: string
@@ -20,11 +30,16 @@ const disbursements: Disbursement[] = [
   },
 ]
 
+// GET is public — financial transparency
 export async function GET() {
   return NextResponse.json({ disbursements })
 }
 
 export async function POST(request: Request) {
+  // ── RBAC: Only admin+ can record disbursements ───────────
+  const session = await requireRole(request, ["admin", "superadmin"])
+  if (session instanceof Response) return session
+
   const body = (await request.json()) as {
     project?: string
     ministry?: string
@@ -32,7 +47,10 @@ export async function POST(request: Request) {
   }
 
   if (!body.project || !body.ministry || body.amountBdt === undefined) {
-    return NextResponse.json({ error: "project, ministry, amountBdt are required" }, { status: 400 })
+    return NextResponse.json(
+      { error: "project, ministry, amountBdt are required" },
+      { status: 400 }
+    )
   }
 
   const record: Disbursement = {

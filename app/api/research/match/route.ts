@@ -1,5 +1,19 @@
-import { listResearchProblems, createResearchProblem, matchResearchWithConcerns } from "@/lib/sohojatra/store"
+/**
+ * GET/POST /api/research/match — Match research problems with concerns.
+ *
+ * SECURITY:
+ *   - GET: Public (transparency — research matching results are open).
+ *   - POST: Requires admin or superadmin role (RBAC).
+ *     Only administrators can create new research problems via this endpoint.
+ */
+import { requireRole } from "@/lib/api-guard"
+import {
+  listResearchProblems,
+  createResearchProblem,
+  matchResearchWithConcerns,
+} from "@/lib/sohojatra/store"
 
+// GET is public — research matching is transparent
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
   const researchId = searchParams.get("researchId")
@@ -15,6 +29,10 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  // ── RBAC: Only admin+ can create research problems ───────
+  const session = await requireRole(request, ["admin", "superadmin"])
+  if (session instanceof Response) return session
+
   const body = await request.json()
 
   const problem = await createResearchProblem({
