@@ -99,13 +99,25 @@ async function sendOtpSms(phoneNumber: string, code: string) {
 }
 
 function getRateLimitKey(phoneNumber: string, request: unknown) {
-  const headers =
-    request && typeof request === "object" && "headers" in request
-      ? (request as { headers?: Headers }).headers
-      : undefined
-  const forwardedFor = headers?.get("x-forwarded-for")
-  const ip = forwardedFor?.split(",")[0]?.trim() || "unknown"
-  return `${ip}:${phoneNumber}`
+  try {
+    const reqObj = request as any;
+    const headers = reqObj?.headers || reqObj?.request?.headers;
+    let ip = "unknown";
+    
+    if (headers) {
+      const forwardedFor = typeof headers.get === "function" 
+        ? headers.get("x-forwarded-for") 
+        : headers["x-forwarded-for"];
+        
+      if (typeof forwardedFor === "string") {
+        ip = forwardedFor.split(",")[0].trim();
+      }
+    }
+    
+    return `${ip}:${phoneNumber}`;
+  } catch (err) {
+    return `fallback-${Date.now()}:${phoneNumber}`;
+  }
 }
 
 function isRateLimitedMemory(key: string) {
