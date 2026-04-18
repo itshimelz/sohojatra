@@ -168,8 +168,8 @@ npm run dev
 | Name | Role | Contact |
 |---|---|---|
 | **Md Shahadat Hossain** | Lead Architect | [Email](mailto:mdsahadathossainemon@gmail.com) |
-| **Ahmad Jamil** | Core Developer | [Email](mailto:ahmadjamilwork2001@gmail.com) |
-| **Rahat Hossain Himel** | UI/UX Developer | [Email](mailto:himelhasan1215@gmail.com) |
+| **Ahmad Jamil** | UI/UX Developer | [Email](mailto:ahmadjamilwork2001@gmail.com) |
+| **Rahat Hossain Himel** | Core Developer | [Email](mailto:himelhasan1215@gmail.com) |
 
 ---
 
