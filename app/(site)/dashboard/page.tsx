@@ -26,10 +26,10 @@ export default async function DashboardPage() {
     return acc
   }, {})
 
-  const approvedPlans = plans.filter((p) => p.status === "Approved").length
-  const pendingPlans = plans.filter((p) => p.status === "Submitted" || p.status === "UnderReview").length
-  const activeProjects = projects.filter((p) => p.status === "In Progress").length
-  const completedProjects = projects.filter((p) => p.status === "Completed").length
+  const approvedPlans = plans.filter((p: any) => p.status === "Approved").length
+  const pendingPlans = plans.filter((p: any) => p.status === "Submitted" || p.status === "UnderReview").length
+  const activeProjects = projects.filter((p: any) => p.status === "In Progress").length
+  const completedProjects = projects.filter((p: any) => p.status === "Completed").length
 
   const extendedKpis = [
     ...snapshot.kpis,
@@ -176,7 +176,7 @@ export default async function DashboardPage() {
             {projects.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-4">No projects yet.</p>
             ) : (
-              projects.slice(0, 4).map((project) => (
+              projects.slice(0, 4).map((project: any) => (
                 <div key={project.id} className="space-y-1">
                   <div className="flex justify-between text-sm">
                     <span className="font-medium truncate max-w-50">{project.title}</span>
@@ -219,7 +219,7 @@ export default async function DashboardPage() {
               </div>
               <div className="rounded-2xl bg-muted/30 p-3 text-center">
                 <p className="text-2xl font-bold">
-                  {events.filter((e) => e.status === "Upcoming").length}
+                  {events.filter((e: any) => e.status === "Upcoming").length}
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">Upcoming events</p>
               </div>

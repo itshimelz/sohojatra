@@ -17,7 +17,7 @@ import {
 
 // GET is public — threads are open for reading
 export async function GET() {
-  return NextResponse.json({ threads: listThreads() })
+  return NextResponse.json({ threads: await listThreads() })
 }
 
 export async function POST(request: Request) {
@@ -41,7 +41,7 @@ export async function POST(request: Request) {
     }
 
     // ── Author from session, not body ──────────────────────
-    const message = postThreadMessage(
+    const message = await postThreadMessage(
       body.threadId,
       session.userName,
       body.text
@@ -56,6 +56,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ message }, { status: 201 })
   }
 
-  const thread = createThread(body.title ?? "Untitled collaborative thread")
+  const thread = await createThread(body.title ?? "Untitled collaborative thread")
   return NextResponse.json({ thread }, { status: 201 })
 }
