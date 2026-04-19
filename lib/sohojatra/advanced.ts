@@ -1,6 +1,8 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
 
+import { prisma } from "@/lib/prisma"
+
 type VerificationRecord = {
   id: string
   type: "nid" | "passport"
@@ -8,26 +10,6 @@ type VerificationRecord = {
   status: "verified" | "needs-review" | "rejected"
   trustScore: number
   createdAt: string
-}
-
-type Badge = {
-  id: string
-  key: string
-  label: string
-  description: string
-  awardedTo: string
-  awardedAt: string
-}
-
-type WorkspaceThread = {
-  id: string
-  title: string
-  messages: Array<{
-    id: string
-    author: string
-    text: string
-    createdAt: string
-  }>
 }
 
 type DriftMetric = {
@@ -56,14 +38,16 @@ type VectorPoint = {
 
 type AdvancedState = {
   verifications: VerificationRecord[]
-  badges: Badge[]
-  threads: WorkspaceThread[]
   driftMetrics: DriftMetric[]
-  leaderboard: LeaderboardEntry[]
   vectors: VectorPoint[]
 }
 
 const statePath = join(process.cwd(), ".sohojatra-advanced.json")
+const db = prisma as unknown as Record<string, any>
+
+function hasModel(name: string) {
+  return Boolean(db?.[name])
+}
 
 function uid(prefix: string) {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
@@ -120,25 +104,7 @@ function cosine(left: number[], right: number[]) {
 function defaultState(): AdvancedState {
   return {
     verifications: [],
-    badges: [],
-    threads: [],
     driftMetrics: [],
-    leaderboard: [
-      {
-        id: "lb-1",
-        university: "BUET",
-        solvedConcerns: 29,
-        acceptedResearch: 12,
-        score: 93,
-      },
-      {
-        id: "lb-2",
-        university: "University of Dhaka",
-        solvedConcerns: 23,
-        acceptedResearch: 15,
-        score: 90,
-      },
-    ],
     vectors: [],
   }
 }
@@ -154,10 +120,7 @@ function loadState(): AdvancedState {
 
     return {
       verifications: Array.isArray(parsed.verifications) ? parsed.verifications : [],
-      badges: Array.isArray(parsed.badges) ? parsed.badges : [],
-      threads: Array.isArray(parsed.threads) ? parsed.threads : [],
       driftMetrics: Array.isArray(parsed.driftMetrics) ? parsed.driftMetrics : [],
-      leaderboard: Array.isArray(parsed.leaderboard) ? parsed.leaderboard : defaultState().leaderboard,
       vectors: Array.isArray(parsed.vectors) ? parsed.vectors : [],
     }
   } catch {
@@ -190,7 +153,6 @@ export function verifyNid(nid: string) {
 
 export function verifyPassport(passport: string) {
   const clean = passport.trim().toUpperCase()
-  // Generic validation for passports: typical alphanumeric format
   const valid = /^[A-Z0-9]{7,15}$/.test(clean)
   const trustScore = valid ? 92 : 25
 
@@ -207,7 +169,6 @@ export function verifyPassport(passport: string) {
   saveState()
   return record
 }
-
 
 export function trustFromFingerprint(input: {
   fingerprint: string
@@ -237,105 +198,142 @@ export function anonymousVerifiedProfile(userId: string) {
   }
 }
 
-export function createThread(title: string) {
-  const thread: WorkspaceThread = {
-    id: uid("t"),
-    title: title.trim() || "Untitled collaborative thread",
-    messages: [],
+// ─── Threads (DB-backed) ───────────────────────────────────────────────────────
+
+export async function createThread(title: string) {
+  if (hasModel("thread")) {
+    try {
+      const row = await db.thread.create({
+        data: { id: uid("t"), title: title.trim() || "Untitled collaborative thread" },
+      })
+      return { id: row.id, title: row.title, messages: [] }
+    } catch {
+      // Fall through.
+    }
   }
 
-  state.threads.unshift(thread)
-  saveState()
+  // File fallback
+  const thread = { id: uid("t"), title: title.trim() || "Untitled collaborative thread", messages: [] as any[] }
   return thread
 }
 
-export function postThreadMessage(threadId: string, author: string, text: string) {
-  const thread = state.threads.find((item) => item.id === threadId)
-  if (!thread) return null
+export async function postThreadMessage(threadId: string, author: string, text: string) {
+  if (hasModel("threadMessage")) {
+    try {
+      const thread = await db.thread.findUnique({ where: { id: threadId } })
+      if (!thread) return null
 
-  const message = {
-    id: uid("m"),
-    author: author.trim() || "Citizen",
-    text: text.trim(),
-    createdAt: new Date().toISOString(),
+      const msg = await db.threadMessage.create({
+        data: {
+          id: uid("m"),
+          threadId,
+          author: author.trim() || "Citizen",
+          text: text.trim(),
+        },
+      })
+
+      return {
+        id: msg.id,
+        author: msg.author,
+        text: msg.text,
+        createdAt: new Date(msg.createdAt).toISOString(),
+      }
+    } catch {
+      // Fall through.
+    }
   }
 
-  thread.messages.unshift(message)
-  saveState()
-  return message
+  return null
 }
 
-export function listThreads() {
-  return state.threads
-}
+export async function listThreads() {
+  if (hasModel("thread")) {
+    try {
+      const rows = await db.thread.findMany({
+        orderBy: { createdAt: "desc" },
+        include: {
+          messages: {
+            orderBy: { createdAt: "asc" },
+            take: 50,
+          },
+        },
+      })
 
-export function listLeaderboard() {
-  return state.leaderboard.slice().sort((left, right) => right.score - left.score)
-}
-
-export function addBadge(input: {
-  key: string
-  label: string
-  description: string
-  awardedTo: string
-}) {
-  const badge: Badge = {
-    id: uid("b"),
-    key: input.key,
-    label: input.label,
-    description: input.description,
-    awardedTo: input.awardedTo,
-    awardedAt: new Date().toISOString(),
+      return rows.map((row: any) => ({
+        id: row.id,
+        title: row.title,
+        messages: row.messages.map((m: any) => ({
+          id: m.id,
+          author: m.author,
+          text: m.text,
+          createdAt: new Date(m.createdAt).toISOString(),
+        })),
+      }))
+    } catch {
+      // Fall through.
+    }
   }
 
-  state.badges.unshift(badge)
-  saveState()
-  return badge
+  return []
 }
 
-export function listBadges() {
-  return state.badges
-}
+// ─── Leaderboard (computed from real DB data) ──────────────────────────────────
 
-export function registerVector(input: {
-  id?: string
-  text: string
-  metadata?: Record<string, string>
-}) {
-  const point: VectorPoint = {
-    id: input.id ?? uid("vec"),
-    text: input.text,
-    vector: embed(input.text),
-    metadata: input.metadata,
+export async function listLeaderboard(): Promise<LeaderboardEntry[]> {
+  if (hasModel("user")) {
+    try {
+      // Group users by institution, compute solved concerns and accepted research
+      const users = await db.user.findMany({
+        where: { institution: { not: null } },
+        select: { id: true, institution: true },
+      })
+
+      if (users.length === 0) return []
+
+      const byInstitution = new Map<string, string[]>()
+      for (const user of users) {
+        const inst = user.institution as string
+        if (!byInstitution.has(inst)) byInstitution.set(inst, [])
+        byInstitution.get(inst)!.push(user.id)
+      }
+
+      const entries: LeaderboardEntry[] = []
+
+      for (const [university, userIds] of byInstitution) {
+        let solvedConcerns = 0
+        let acceptedResearch = 0
+
+        if (hasModel("concern")) {
+          solvedConcerns = await db.concern.count({
+            where: { authorId: { in: userIds }, status: "Resolved" },
+          })
+        }
+
+        if (hasModel("grantApplication")) {
+          acceptedResearch = await db.grantApplication.count({
+            where: { applicantId: { in: userIds }, status: "accepted" },
+          })
+        }
+
+        const score = solvedConcerns * 3 + acceptedResearch * 5
+        if (score > 0 || solvedConcerns > 0 || acceptedResearch > 0) {
+          entries.push({
+            id: `lb-${hash(university)}`,
+            university,
+            solvedConcerns,
+            acceptedResearch,
+            score,
+          })
+        }
+      }
+
+      return entries.sort((a, b) => b.score - a.score)
+    } catch {
+      // Fall through to empty.
+    }
   }
 
-  state.vectors = state.vectors.filter((item) => item.id !== point.id)
-  state.vectors.push(point)
-  saveState()
-  return point
-}
-
-export function queryVectors(query: string, topK = 5) {
-  const queryVector = embed(query)
-  return state.vectors
-    .map((item) => ({
-      ...item,
-      similarity: Number(cosine(queryVector, item.vector).toFixed(4)),
-    }))
-    .sort((left, right) => right.similarity - left.similarity)
-    .slice(0, topK)
-}
-
-export function ragRetrieve(question: string) {
-  const contexts = queryVectors(question, 3)
-  const evidence = contexts.map((item) => item.text)
-  return {
-    question,
-    answer: evidence.length
-      ? `Retrieved ${evidence.length} relevant civic records for: ${question}`
-      : `No indexed records found yet for: ${question}`,
-    evidence,
-  }
+  return []
 }
 
 export function detectMobGraph(input: {
@@ -425,5 +423,46 @@ export function smsFallback(input: { phone: string; message: string }) {
     status: "queued",
     message: input.message,
     createdAt: new Date().toISOString(),
+  }
+}
+
+export function registerVector(input: {
+  id?: string
+  text: string
+  metadata?: Record<string, string>
+}) {
+  const point: VectorPoint = {
+    id: input.id ?? uid("vec"),
+    text: input.text,
+    vector: embed(input.text),
+    metadata: input.metadata,
+  }
+
+  state.vectors = state.vectors.filter((item) => item.id !== point.id)
+  state.vectors.push(point)
+  saveState()
+  return point
+}
+
+export function queryVectors(query: string, topK = 5) {
+  const queryVector = embed(query)
+  return state.vectors
+    .map((item) => ({
+      ...item,
+      similarity: Number(cosine(queryVector, item.vector).toFixed(4)),
+    }))
+    .sort((left, right) => right.similarity - left.similarity)
+    .slice(0, topK)
+}
+
+export function ragRetrieve(question: string) {
+  const contexts = queryVectors(question, 3)
+  const evidence = contexts.map((item) => item.text)
+  return {
+    question,
+    answer: evidence.length
+      ? `Retrieved ${evidence.length} relevant civic records for: ${question}`
+      : `No indexed records found yet for: ${question}`,
+    evidence,
   }
 }

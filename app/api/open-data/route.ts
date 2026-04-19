@@ -74,7 +74,7 @@ export async function GET(request: Request) {
       },
       projects: {
         count: projects.length,
-        data: projects.map((p) => ({
+        data: projects.map((p: any) => ({
           id: p.id,
           title: p.title,
           ministry: p.ministry,
@@ -85,12 +85,12 @@ export async function GET(request: Request) {
           budgetAllocatedBdt: p.budgetAllocatedBdt,
           budgetSpentBdt: p.budgetSpentBdt,
           milestoneCount: p.milestones.length,
-          completedMilestones: p.milestones.filter((m) => m.status === "Verified").length,
+          completedMilestones: p.milestones.filter((m: any) => m.status === "Verified").length,
         })),
       },
       solutionPlans: {
         count: plans.length,
-        data: plans.map((p) => ({
+        data: plans.map((p: any) => ({
           id: p.id,
           concernId: p.concernId,
           title: p.title,
@@ -106,7 +106,7 @@ export async function GET(request: Request) {
       },
       assemblyEvents: {
         count: events.length,
-        data: events.map((e) => ({
+        data: events.map((e: any) => ({
           id: e.id,
           title: e.title,
           date: e.date,
@@ -121,7 +121,7 @@ export async function GET(request: Request) {
       },
       actionLog: {
         count: actionLog.length,
-        data: actionLog.map((entry) => ({
+        data: actionLog.map((entry: any) => ({
           id: entry.id,
           entityType: entry.entityType,
           entityId: entry.entityId,
@@ -138,8 +138,8 @@ export async function GET(request: Request) {
         totalProjects: projects.length,
         totalSolutionPlans: plans.length,
         totalAssemblyEvents: events.length,
-        activeProjects: projects.filter((p) => p.status === "In Progress").length,
-        approvedPlans: plans.filter((p) => p.status === "Approved").length,
+        activeProjects: projects.filter((p: any) => p.status === "In Progress").length,
+        approvedPlans: plans.filter((p: any) => p.status === "Approved").length,
         resolvedConcerns: concerns.filter((c: Concern) => c.status === "Resolved").length,
         averageConcernVotes:
           concerns.length > 0

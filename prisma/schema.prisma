@@ -259,6 +259,10 @@ model Award {
   awardType   String
   givenBy     String
   givenById   String?
+  title       String?
+  description String?
+  awardedTo   String?
+  value       String?
   createdAt   DateTime  @default(now())
   comment     Comment?  @relation(fields: [commentId], references: [id], onDelete: SetNull)
   proposal    Proposal? @relation(fields: [proposalId], references: [id], onDelete: SetNull)
@@ -420,6 +424,106 @@ model ModerationFlag {
 
   @@index([status, severity])
   @@map("moderation_flag")
+}
+
+model Project {
+  id                 String   @id
+  title              String
+  ministry           String
+  department         String
+  owner              String
+  status             String   @default("Planning")
+  progress           Int      @default(0)
+  deadline           String
+  budgetAllocatedBdt BigInt   @default(0)
+  budgetSpentBdt     BigInt   @default(0)
+  milestones         Json     @default("[]")
+  updates            Json     @default("[]")
+  followers          Json     @default("[]")
+  comments           Json     @default("[]")
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@index([status])
+  @@map("project")
+}
+
+model SolutionPlan {
+  id                 String   @id
+  concernId          String
+  title              String
+  summary            String
+  technicalDocs      Json     @default("[]")
+  budgetEstimateBdt  BigInt   @default(0)
+  timeline           String
+  riskNotes          String
+  status             String   @default("Submitted")
+  submittedBy        String
+  governmentComments String?
+  assignedDepartment String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@index([concernId])
+  @@index([status])
+  @@map("solution_plan")
+}
+
+model ReputationEvent {
+  id        String   @id
+  userId    String
+  delta     Int
+  reason    String
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@map("reputation_event")
+}
+
+model Thread {
+  id        String          @id
+  title     String
+  createdAt DateTime        @default(now())
+  messages  ThreadMessage[]
+
+  @@map("thread")
+}
+
+model ThreadMessage {
+  id        String   @id
+  threadId  String
+  thread    Thread   @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  author    String
+  text      String
+  createdAt DateTime @default(now())
+
+  @@index([threadId, createdAt])
+  @@map("thread_message")
+}
+
+model Disbursement {
+  id         String   @id
+  project    String
+  ministry   String
+  amountBdt  BigInt
+  status     String   @default("pending")
+  releasedAt DateTime @default(now())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([status])
+  @@map("disbursement")
+}
+
+model AuthorityMetric {
+  id        String   @id
+  agency    String
+  metric    String
+  value     String
+  updatedAt DateTime @updatedAt
+
+  @@unique([agency, metric])
+  @@map("authority_metric")
 }
 
 model AiAnalysisResult {
