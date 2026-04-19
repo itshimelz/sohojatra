@@ -4,6 +4,21 @@ import Link from "next/link"
 import { motion } from "framer-motion"
 import { useEffect, useState } from "react"
 
+// ─── Locale hook — reads NEXT_LOCALE cookie outside the site layout ───────────
+const nf404 = {
+  en: { error: "Error", oops: "Oops!", subtitle: "Page Not Found", description: "The page you're looking for has wandered off. Let's get you back on track.", goHome: "Go Home", goBack: "Go Back" },
+  bn: { error: "ত্রুটি", oops: "ওহ!", subtitle: "পৃষ্ঠা পাওয়া যায়নি", description: "আপনি যে পৃষ্ঠাটি খুঁজছেন তা হারিয়ে গেছে। চলুন আপনাকে সঠিক পথে ফিরিয়ে দিই।", goHome: "হোমে যান", goBack: "পিছনে যান" },
+} as const
+
+function useNotFoundT() {
+  const [t] = useState(() => {
+    if (typeof document === "undefined") return nf404.en
+    const match = document.cookie.match(/(?:^|;\s*)NEXT_LOCALE=([^;]+)/)
+    return match?.[1] === "bn" ? nf404.bn : nf404.en
+  })
+  return t
+}
+
 // ─── Dark-mode hook (watches html.dark class — works with Tailwind class strategy) ──
 function useDarkMode(): boolean {
   const [dark, setDark] = useState(false)
@@ -277,6 +292,7 @@ function Tumbleweed() {
 
 // ─── Main 404 page ────────────────────────────────────────────────────────────
 export default function NotFound() {
+  const t = useNotFoundT()
   return (
     <div className="min-h-screen bg-[#f0f0f0] dark:bg-zinc-950 flex flex-col items-center justify-center font-sans overflow-hidden relative transition-colors duration-300">
 
@@ -313,7 +329,7 @@ export default function NotFound() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          Error
+          {t.error}
         </motion.p>
 
         {/* 404 glitch number */}
@@ -336,14 +352,13 @@ export default function NotFound() {
           className="mb-2"
         >
           <h2 className="text-[#4b8a08] dark:text-green-400 text-2xl sm:text-3xl font-black tracking-widest uppercase">
-            Oops!
+            {t.oops}
           </h2>
           <h3 className="text-[#4b8a08] dark:text-green-400 text-lg sm:text-xl font-semibold uppercase tracking-tight mt-1">
-            Page Not Found
+            {t.subtitle}
           </h3>
           <p className="text-zinc-500 dark:text-zinc-400 text-sm mt-2 max-w-xs mx-auto">
-            The page you&apos;re looking for has wandered off. Let&apos;s get
-            you back on track.
+            {t.description}
           </p>
         </motion.div>
 
@@ -359,7 +374,7 @@ export default function NotFound() {
               href="/"
               className="bg-[#76c025] dark:bg-lime-500 text-white px-8 py-3 rounded-2xl font-bold shadow-md hover:bg-[#65a321] dark:hover:bg-lime-600 transition-colors inline-block"
             >
-              Go Home
+              {t.goHome}
             </Link>
           </motion.div>
           <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
@@ -367,7 +382,7 @@ export default function NotFound() {
               onClick={() => window.history.back()}
               className="bg-white dark:bg-zinc-800 text-[#4b8a08] dark:text-green-400 border-2 border-[#76c025] dark:border-lime-500 px-8 py-3 rounded-2xl font-bold shadow-sm hover:bg-[#f0fce8] dark:hover:bg-zinc-700 transition-colors"
             >
-              Go Back
+              {t.goBack}
             </button>
           </motion.div>
         </motion.div>

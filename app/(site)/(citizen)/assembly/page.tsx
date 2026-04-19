@@ -5,6 +5,7 @@ import { CalendarCheck, Clock, MapPin, Users, ArrowRight, FileText } from "@phos
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { useT } from "@/lib/i18n/context"
 
 interface AssemblyEvent {
   id: string
@@ -27,6 +28,7 @@ const statusStyles: Record<string, string> = {
 }
 
 export default function AssemblyEventsPage() {
+  const t = useT().assembly
   const [events, setEvents] = useState<AssemblyEvent[]>([])
   const [filter, setFilter] = useState<"all" | "Upcoming" | "Ongoing" | "Completed">("all")
   const [isLoading, setIsLoading] = useState(true)
@@ -79,21 +81,25 @@ export default function AssemblyEventsPage() {
     Completed: events.filter((e) => e.status === "Completed").length,
   }
 
+  const filterOptions = [
+    ["all", t.filterAll, events.length],
+    ["Upcoming", t.filterUpcoming, counts.Upcoming],
+    ["Ongoing", t.filterLive, counts.Ongoing],
+    ["Completed", t.filterCompleted, counts.Completed],
+  ] as const
+
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
       {/* Header */}
       <div className="mb-8">
-        <p className="text-xs font-semibold uppercase tracking-widest text-primary">Assemblies</p>
-        <h1 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">Civic Assembly Events</h1>
-        <p className="mt-2 max-w-2xl text-muted-foreground">
-          Town halls, ward meetings, and government consultations. RSVP to participate and
-          access published minutes.
-        </p>
+        <p className="text-xs font-semibold uppercase tracking-widest text-primary">{t.label}</p>
+        <h1 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">{t.title}</h1>
+        <p className="mt-2 max-w-2xl text-muted-foreground">{t.description}</p>
       </div>
 
       {/* Stats + filter */}
       <div className="mb-6 flex flex-wrap items-center gap-2">
-        {([["all", "All Events", events.length], ["Upcoming", "Upcoming", counts.Upcoming], ["Ongoing", "Live Now", counts.Ongoing], ["Completed", "Completed", counts.Completed]] as const).map(([key, label, count]) => (
+        {filterOptions.map(([key, label, count]) => (
           <button
             key={key}
             onClick={() => setFilter(key)}
@@ -103,7 +109,7 @@ export default function AssemblyEventsPage() {
                 : "bg-muted text-muted-foreground hover:bg-muted/80"
             }`}
           >
-            {label} {count > 0 && <span className="ml-1 opacity-70">({count})</span>}
+            {label} {(count as number) > 0 && <span className="ml-1 opacity-70">({count})</span>}
           </button>
         ))}
       </div>
@@ -118,7 +124,7 @@ export default function AssemblyEventsPage() {
       ) : filtered.length === 0 ? (
         <Card className="rounded-2xl">
           <CardContent className="py-12 text-center text-sm text-muted-foreground">
-            No {filter !== "all" ? filter.toLowerCase() + " " : ""}events found.
+            {t.noEvents}
           </CardContent>
         </Card>
       ) : (
@@ -151,13 +157,13 @@ export default function AssemblyEventsPage() {
                     </div>
                     <div className="flex items-center gap-1.5 text-muted-foreground">
                       <Users className="size-3.5 shrink-0" />
-                      <span>{event.rsvps.length} registered</span>
+                      <span>{event.rsvps.length} {t.registered}</span>
                     </div>
                   </div>
 
                   {event.agenda && (
                     <div className="rounded-xl bg-muted/40 px-3 py-2 text-sm">
-                      <p className="font-medium text-foreground/80">Agenda</p>
+                      <p className="font-medium text-foreground/80">{t.agenda}</p>
                       <p className="text-muted-foreground">{event.agenda}</p>
                     </div>
                   )}
@@ -171,7 +177,7 @@ export default function AssemblyEventsPage() {
                         onClick={() => window.open(event.minutesUrl, "_blank", "noopener,noreferrer")}
                       >
                         <FileText className="mr-1.5 size-4" />
-                        View Minutes
+                        {t.viewMinutes}
                       </Button>
                     ) : event.status !== "Completed" ? (
                       <Button
@@ -180,10 +186,10 @@ export default function AssemblyEventsPage() {
                         className="flex-1 rounded-full"
                         onClick={() => void toggleRsvp(event.id)}
                       >
-                        {isAttending ? "Cancel RSVP" : "Register / RSVP"}
+                        {isAttending ? t.cancelRsvp : t.registerRsvp}
                       </Button>
                     ) : (
-                      <p className="text-xs text-muted-foreground">Minutes not published yet</p>
+                      <p className="text-xs text-muted-foreground">{t.minutesNotPublished}</p>
                     )}
                   </div>
                 </CardContent>

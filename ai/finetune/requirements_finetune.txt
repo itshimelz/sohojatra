@@ -1,0 +1,20 @@
+# Fine-tuning dependencies — install on the GPU machine only
+# CUDA 12.1+ required (T4 / A10 / A100 all supported)
+
+# Unsloth — 2x faster LoRA training with 60% less VRAM
+unsloth[colab-new] @ git+https://github.com/unslothai/unsloth.git
+
+# Core training stack
+trl>=0.8.6
+transformers>=4.40.0
+accelerate>=0.28.0
+peft>=0.10.0
+bitsandbytes>=0.43.0
+
+# Data
+datasets>=2.18.0
+
+# Evaluation / utilities
+torch>=2.2.0
+sentencepiece
+protobuf

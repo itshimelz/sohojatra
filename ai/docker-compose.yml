@@ -1,0 +1,127 @@
+version: "3.9"
+
+services:
+  api:
+    build: .
+    container_name: nagarik-api
+    ports:
+      - "8001:8001"
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/1
+      - CELERY_RESULT_BACKEND=redis://redis:6379/2
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+    env_file: .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./src:/app/src
+      - model_cache:/root/.cache/huggingface
+    restart: unless-stopped
+    networks:
+      - nagarik-net
+
+  worker:
+    build: .
+    container_name: nagarik-worker
+    command: celery -A src.workers.celery_app worker --loglevel=info --concurrency=4
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/1
+      - CELERY_RESULT_BACKEND=redis://redis:6379/2
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+    env_file: .env
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - ./src:/app/src
+      - model_cache:/root/.cache/huggingface
+    restart: unless-stopped
+    networks:
+      - nagarik-net
+
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: nagarik-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-nagarik_ai}
+      POSTGRES_USER: ${POSTGRES_USER:-nagarik}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-secret}
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-nagarik}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - nagarik-net
+
+  redis:
+    image: redis:7-alpine
+    container_name: nagarik-redis
+    ports:
+      - "6380:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - nagarik-net
+
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: nagarik-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - nagarik-net
+
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:v2.18.0
+    container_name: nagarik-mlflow
+    ports:
+      - "5000:5000"
+    command: >
+      mlflow server
+      --host 0.0.0.0
+      --port 5000
+      --backend-store-uri postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      --default-artifact-root /mlflow/artifacts
+    volumes:
+      - mlflow_data:/mlflow/artifacts
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - nagarik-net
+
+volumes:
+  postgres_data:
+  redis_data:
+  rabbitmq_data:
+  mlflow_data:
+  model_cache:
+
+networks:
+  nagarik-net:
+    driver: bridge
