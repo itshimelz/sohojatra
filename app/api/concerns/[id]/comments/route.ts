@@ -57,5 +57,15 @@ export async function POST(
     return NextResponse.json({ error: "Concern not found" }, { status: 404 })
   }
 
+  // Fire-and-forget: send comment text to AI for training feedback collection
+  const railwayUrl = process.env.RAILWAY_AI_URL
+  if (railwayUrl && body.body) {
+    void fetch(`${railwayUrl}/collect-feedback`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ comment_id: comment.id, text: body.body }),
+    }).catch(() => undefined)
+  }
+
   return NextResponse.json({ comment }, { status: 201 })
 }

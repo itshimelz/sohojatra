@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
+  provider = "postgresql"
 }
 
 model User {
@@ -538,4 +538,42 @@ model AiAnalysisResult {
 
   @@index([concernId, analyzedAt])
   @@map("ai_analysis_result")
+}
+
+model TrainingFeedback {
+  id                String   @id @default(cuid())
+  text              String
+  predictedUrgency  String?
+  predictedEmotions Json?
+  correctedUrgency  String?
+  source            String   @default("comment")
+  sourceId          String?
+  used              Boolean  @default(false)
+  createdAt         DateTime @default(now())
+
+  @@index([used, createdAt])
+  @@map("training_feedback")
+}
+
+/// Stores comment embeddings for duplicate detection (pgvector).
+/// The `embedding` column uses vector(384) — managed outside Prisma migrations.
+model CommentEmbedding {
+  commentId BigInt                     @id @map("comment_id")
+  embedding Unsupported("vector(384)")
+  createdAt DateTime                   @default(now()) @map("created_at")
+
+  @@map("comment_embeddings")
+}
+
+/// Stores research document embeddings for RAG (pgvector).
+/// The `embedding` column uses vector(384) — managed outside Prisma migrations.
+model ResearchDocument {
+  id        Int                         @id @default(autoincrement())
+  title     String
+  content   String
+  embedding Unsupported("vector(384)")?
+  metadata  Json                        @default("{}")
+  createdAt DateTime                    @default(now()) @map("created_at")
+
+  @@map("research_documents")
 }

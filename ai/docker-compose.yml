@@ -1,5 +1,9 @@
 version: "3.9"
 
+# PostgreSQL is hosted on Supabase — no local postgres container needed.
+# Run scripts/init.sql once in the Supabase SQL Editor to create the
+# comment_embeddings and research_documents tables with pgvector indexes.
+
 services:
   api:
     build: .
@@ -7,16 +11,15 @@ services:
     ports:
       - "8001:8001"
     environment:
-      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      # Direct Supabase connection — asyncpg requires direct, not pooler
+      - DATABASE_URL=${AI_DATABASE_URL}
       - REDIS_URL=redis://redis:6379/0
       - CELERY_BROKER_URL=redis://redis:6379/1
       - CELERY_RESULT_BACKEND=redis://redis:6379/2
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
       - MLFLOW_TRACKING_URI=http://mlflow:5000
-    env_file: .env
+    env_file: ../.env
     depends_on:
-      postgres:
-        condition: service_healthy
       redis:
         condition: service_healthy
     volumes:
@@ -24,48 +27,27 @@ services:
       - model_cache:/root/.cache/huggingface
     restart: unless-stopped
     networks:
-      - nagarik-net
+      - sohojatra-net
 
   worker:
     build: .
     container_name: nagarik-worker
     command: celery -A src.workers.celery_app worker --loglevel=info --concurrency=4
     environment:
-      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      - DATABASE_URL=${AI_DATABASE_URL}
       - REDIS_URL=redis://redis:6379/0
       - CELERY_BROKER_URL=redis://redis:6379/1
       - CELERY_RESULT_BACKEND=redis://redis:6379/2
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
-    env_file: .env
+    env_file: ../.env
     depends_on:
-      - postgres
       - redis
     volumes:
       - ./src:/app/src
       - model_cache:/root/.cache/huggingface
     restart: unless-stopped
     networks:
-      - nagarik-net
-
-  postgres:
-    image: pgvector/pgvector:pg16
-    container_name: nagarik-postgres
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB:-nagarik_ai}
-      POSTGRES_USER: ${POSTGRES_USER:-nagarik}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-secret}
-    ports:
-      - "5433:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-nagarik}"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
-    networks:
-      - nagarik-net
+      - sohojatra-net
 
   redis:
     image: redis:7-alpine
@@ -80,7 +62,7 @@ services:
       timeout: 3s
       retries: 5
     networks:
-      - nagarik-net
+      - sohojatra-net
 
   rabbitmq:
     image: rabbitmq:3.13-management-alpine
@@ -94,7 +76,7 @@ services:
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
     networks:
-      - nagarik-net
+      - sohojatra-net
 
   mlflow:
     image: ghcr.io/mlflow/mlflow:v2.18.0
@@ -105,23 +87,22 @@ services:
       mlflow server
       --host 0.0.0.0
       --port 5000
-      --backend-store-uri postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      --backend-store-uri postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
       --default-artifact-root /mlflow/artifacts
     volumes:
       - mlflow_data:/mlflow/artifacts
     depends_on:
-      postgres:
+      redis:
         condition: service_healthy
     networks:
-      - nagarik-net
+      - sohojatra-net
 
 volumes:
-  postgres_data:
   redis_data:
   rabbitmq_data:
   mlflow_data:
   model_cache:
 
 networks:
-  nagarik-net:
+  sohojatra-net:
     driver: bridge

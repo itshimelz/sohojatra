@@ -34,6 +34,7 @@ import {
 import { submitConcernAction } from "./actions"
 import { supabase } from "@/lib/supabase"
 import { CONCERN_CATEGORIES } from "@/lib/concerns/categories"
+import { AiInsightPanel } from "@/components/ai/AiInsightPanel"
 
 // ─── Bangladesh administrative data ───────────────────────────────────────────
 const DIVISIONS = [
@@ -560,6 +561,14 @@ export function SubmitConcernForm({ dictionary: t }: { dictionary: Dictionary })
                 <button type="button" onClick={() => goToStep(3)} className="shrink-0 text-xs text-primary hover:underline">Edit</button>
               </div>
             </div>
+
+            {/* AI preview — user can run analysis before submitting */}
+            {(description || title).length >= 10 && (
+              <AiInsightPanel
+                text={description || title}
+                autoFetch={false}
+              />
+            )}
           </div>
         )}
       </div>

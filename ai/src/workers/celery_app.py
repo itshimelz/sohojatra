@@ -5,7 +5,7 @@ celery_app = Celery(
     "nagarik",
     broker=settings.celery_broker_url,
     backend=settings.celery_result_backend,
-    include=["src.workers.duplicate_worker"],
+    include=["src.workers.duplicate_worker", "src.workers.retrain_worker"],
 )
 
 celery_app.conf.update(
@@ -17,4 +17,10 @@ celery_app.conf.update(
     task_track_started=True,
     result_expires=3600,
     worker_prefetch_multiplier=1,
+    beat_schedule={
+        "check-retrain-every-6h": {
+            "task": "src.workers.retrain_worker.check_retrain_threshold",
+            "schedule": 21600,  # 6 hours in seconds
+        },
+    },
 )

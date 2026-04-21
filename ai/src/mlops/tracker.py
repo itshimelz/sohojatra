@@ -60,11 +60,14 @@ def log_call(model_name: str) -> Callable:
 
 
 def _extract_score(result: Any) -> float | None:
-    """Pull a representative numeric score out of the response dict."""
-    if isinstance(result, dict):
-        for key in ("score", "sentiment", "urgency", "confidence", "relevance_score"):
-            if key in result and isinstance(result[key], (int, float)):
-                return float(result[key])
+    """Pull a representative numeric score from a dict or Pydantic model."""
+    for key in ("score", "sentiment", "urgency", "confidence", "relevance_score"):
+        # Pydantic BaseModel
+        val = getattr(result, key, None)
+        if val is None and isinstance(result, dict):
+            val = result.get(key)
+        if isinstance(val, (int, float)):
+            return float(val)
     return None
 
 
@@ -104,7 +107,7 @@ async def check_and_trigger_retraining(
     mean_accuracy = sum(scores) / len(scores)
 
     if mean_accuracy < threshold:
-        from src.workers.duplicate_worker import celery_app  # avoid circular import
+        from src.workers.celery_app import celery_app  # avoid circular import
         celery_app.send_task("src.workers.duplicate_worker.retrain_models")
         return {
             "triggered": True,

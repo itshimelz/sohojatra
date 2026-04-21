@@ -19,6 +19,7 @@ from src.endpoints.score_user import router as score_user_router
 from src.endpoints.rank_comment import router as rank_router
 from src.endpoints.match_research import router as match_router
 from src.endpoints.mob_detect import router as mob_router
+from src.endpoints.collect_feedback import router as feedback_router
 
 logging.basicConfig(
     level=settings.log_level.upper(),
@@ -66,6 +67,7 @@ app.include_router(score_user_router)
 app.include_router(rank_router)
 app.include_router(match_router)
 app.include_router(mob_router)
+app.include_router(feedback_router)
 
 
 # ── Health ────────────────────────────────────────────────────────────────────
@@ -85,5 +87,6 @@ async def root() -> dict:
             "POST /rank_comment",
             "POST /match_research",
             "POST /detect_mob",
+            "POST /collect-feedback",
         ],
     }

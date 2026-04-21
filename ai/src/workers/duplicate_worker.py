@@ -80,9 +80,7 @@ def detect_duplicate(self: Task, comment_id: int, text_content: str) -> dict[str
     try:
         embedder = _get_embedder()
         embedding: list[float] = embedder.encode(text_content, normalize_embeddings=True).tolist()
-        return asyncio.get_event_loop().run_until_complete(
-            _upsert_and_query(comment_id, embedding)
-        )
+        return asyncio.run(_upsert_and_query(comment_id, embedding))
     except Exception as exc:
         logger.exception("detect_duplicate failed for comment_id=%s", comment_id)
         raise self.retry(exc=exc, countdown=10)

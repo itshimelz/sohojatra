@@ -10,6 +10,8 @@ import { getServerSession } from "@/lib/auth-session"
 import { getStatusLabel } from "@/lib/concerns/presentation"
 import { UpvoteButton } from "@/components/upvote-button"
 import { buttonVariants } from "@/components/ui/button-variants"
+import { CommentSection } from "@/components/comments/CommentSection"
+import { AiInsightPanel } from "@/components/ai/AiInsightPanel"
 import { AspectRatio } from "@/components/ui/aspect-ratio"
 import {
   CaretLeft,
@@ -78,6 +80,9 @@ export default async function ConcernDetailPage({
 
   const session = await getServerSession()
   const userId = session?.user?.id ?? null
+  const currentUser = session?.user
+    ? { id: session.user.id, name: session.user.name ?? "Anonymous" }
+    : null
   const currentVote = null
   const photos = concern.photos ?? []
   const updates = concern.updates ?? []
@@ -202,6 +207,11 @@ export default async function ConcernDetailPage({
             </div>
           </div>
 
+          {/* AI analysis panel */}
+          {concern.description.length >= 10 && (
+            <AiInsightPanel text={concern.description} />
+          )}
+
           {/* Vote bar — compact FB-style */}
           <div className="flex items-center justify-between rounded-2xl border border-border/60 bg-card px-5 py-3">
             <span className="text-xs font-medium text-muted-foreground">
@@ -279,6 +289,14 @@ export default async function ConcernDetailPage({
             </div>
           )}
         </div>
+      </div>
+
+      {/* ── Comment section ── */}
+      <div className="mt-8">
+        <CommentSection
+          apiPath={`/api/concerns/${concern.id}/comments`}
+          currentUser={currentUser}
+        />
       </div>
     </div>
   )

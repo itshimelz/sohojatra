@@ -16,6 +16,7 @@ from pydantic import BaseModel, Field
 
 from src.config import settings
 from src.mlops.tracker import log_call
+from src.models import finetuned_analyzer
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/analyze", tags=["nlp"])
@@ -100,7 +101,18 @@ async def analyze(req: AnalyzeRequest) -> AnalyzeResponse:
     except Exception:
         language = "unknown"
 
-    # 2. Sentiment + urgency via Claude Haiku
+    # 2. Sentiment + urgency — prefer fine-tuned Modal endpoint, fall back to Claude Haiku
+    if finetuned_analyzer.is_available():
+        try:
+            ft_result = await finetuned_analyzer.analyze(req.text)
+            return AnalyzeResponse(
+                sentiment=ft_result["sentiment"],
+                urgency=ft_result["urgency"],
+                language=language,
+            )
+        except Exception as exc:
+            logger.warning("Fine-tuned model failed (%s), falling back to Claude", exc)
+
     try:
         sentiment, urgency = await _claude_scores(req.text)
     except (json.JSONDecodeError, KeyError, IndexError) as exc:
