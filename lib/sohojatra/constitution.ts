@@ -72,12 +72,20 @@ export async function retrieve(
 ): Promise<Array<{ article: ConstitutionArticle; score: number }>> {
   const index = await ensureIndex()
   const queryTokens = tokenize(query)
-  if (queryTokens.length === 0) return []
+
+  // Pure Bangla/no-Latin query → tokenizer yields nothing.
+  // Return top Part III articles so the model has grounded context.
+  if (queryTokens.length === 0) {
+    return index.articles
+      .filter((a) => /Fundamental Rights/i.test(a.part))
+      .slice(0, topK)
+      .map((article) => ({ article, score: 0.01 }))
+  }
 
   const k1 = 1.5
   const b = 0.75
   const N = index.articles.length
-  const scores = new Array(N).fill(0)
+  const scores = new Array<number>(N).fill(0)
 
   for (const tok of queryTokens) {
     const postings = index.tokens.get(tok)
@@ -85,10 +93,10 @@ export async function retrieve(
     const df = postings.size
     const idf = Math.log(1 + (N - df + 0.5) / (df + 0.5))
     for (const docId of postings) {
-      const docLen = index.docLengths[docId]
-      // tf = frequency of token in doc — approximated from postings hit count
+      const docLen = index.docLengths[docId] ?? 1
       const tf = 1
-      const norm = tf * (k1 + 1) /
+      const norm =
+        (tf * (k1 + 1)) /
         (tf + k1 * (1 - b + (b * docLen) / (index.avgDocLength || 1)))
       scores[docId] += idf * norm
     }
@@ -97,29 +105,27 @@ export async function retrieve(
   // Boost exact article-number matches ("Article 33", "33")
   const numberMatch = query.match(/\b(?:article\s*)?(\d{1,3}[A-Za-z]?)\b/i)
   if (numberMatch) {
-    const wanted = numberMatch[1].toLowerCase()
+    const wanted = numberMatch[1]!.toLowerCase()
     index.articles.forEach((a, i) => {
       if (a.number.toLowerCase() === wanted) scores[i] += 10
     })
   }
 
   const ranked = scores
-    .map((score, docId) => ({ article: index.articles[docId], score }))
+    .map((score, docId) => ({ article: index.articles[docId]!, score }))
     .filter((r) => r.score > 0)
     .sort((a, b) => b.score - a.score)
     .slice(0, topK)
 
-  // Fallback: if nothing matched (e.g. Bangla query against English-only data),
-  // seed the model with Part III Fundamental Rights articles so it still has
-  // grounded context instead of hallucinating or looping.
-  if (ranked.length === 0) {
-    const fundamentalRights = index.articles
-      .filter((a) => /Fundamental Rights/i.test(a.part))
-      .slice(0, topK)
-      .map((article) => ({ article, score: 0.01 }))
-    return fundamentalRights
-  }
+  // If the English query produced scores but ALL below threshold, it means
+  // the question is about something outside the 21 loaded articles. Return
+  // empty — the system prompt will tell the model to say so honestly.
+  const MIN_SCORE = 0.3
+  const meaningful = ranked.filter((r) => r.score >= MIN_SCORE)
+  if (meaningful.length > 0) return meaningful
 
+  // Low-confidence fallback: return the top BM25 hits even if weak, so the
+  // model has some context. Score is preserved so groq.ts can filter citations.
   return ranked
 }
 

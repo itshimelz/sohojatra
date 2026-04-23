@@ -1,5 +1,5 @@
 /**
- * POST /api/chatbot — Constitutional chatbot with RAG.
+ * POST /api/chatbot — Constitutional RAG chatbot.
  *
  * PUBLIC endpoint — read-only, no data mutation.
  * Rate-limiting enforced at proxy/middleware layer.
@@ -61,21 +61,46 @@ export async function POST(request: Request) {
     )
   }
 
-  // Streaming mode: SSE back to the browser.
+  // ── Streaming SSE ─────────────────────────────────────────────────────────
   if (body.stream) {
     const encoder = new TextEncoder()
+
+    // Guard flag: once the stream is closed or cancelled we must not call
+    // controller.enqueue() again — that throws a TypeError which becomes
+    // the unhandledRejection "[object Event]" in the browser.
+    let streamDone = false
+
     const stream = new ReadableStream({
       async start(controller) {
         const send = (event: string, data: unknown) => {
-          controller.enqueue(
-            encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`),
-          )
+          if (streamDone) return
+          try {
+            controller.enqueue(
+              encoder.encode(
+                `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`,
+              ),
+            )
+          } catch {
+            // controller already closed (client disconnected)
+            streamDone = true
+          }
+        }
+
+        const closeStream = () => {
+          if (streamDone) return
+          streamDone = true
+          try {
+            controller.close()
+          } catch {
+            // already closed — safe to ignore
+          }
         }
 
         send("citations", { citations: prompt.citations })
 
         try {
           for await (const delta of groqStream(prompt.messages)) {
+            if (streamDone) break
             send("delta", { text: delta })
           }
           send("done", { ok: true })
@@ -85,11 +110,17 @@ export async function POST(request: Request) {
               ? error.message
               : error instanceof Error
                 ? error.message
-                : "Unknown error"
+                : "Groq API error — please try again."
           send("error", { message })
         } finally {
-          controller.close()
+          closeStream()
         }
+      },
+
+      // Called when the browser cancels the fetch (navigation, abort signal).
+      // Set the flag so in-flight enqueue calls are silently skipped.
+      cancel() {
+        streamDone = true
       },
     })
 
@@ -102,7 +133,7 @@ export async function POST(request: Request) {
     })
   }
 
-  // Non-streaming JSON response.
+  // ── Non-streaming JSON ────────────────────────────────────────────────────
   try {
     const text = await groqComplete(prompt.messages)
     return NextResponse.json({

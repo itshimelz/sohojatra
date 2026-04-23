@@ -245,6 +245,9 @@ async function dispatchOtp(phone: string, code: string, ctx: unknown): Promise<v
 // ─── Better Auth Configuration ────────────────────────────────────────────────
 
 export const auth = betterAuth({
+  emailAndPassword: {
+    enabled: true,
+  },
   database: prismaAdapter(prisma, {
     provider: "postgresql",
   }),
