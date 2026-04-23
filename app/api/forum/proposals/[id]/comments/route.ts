@@ -1,14 +1,33 @@
 /**
- * POST /api/forum/proposals/[id]/comments — Add a comment to a forum proposal.
+ * GET/POST /api/forum/proposals/[id]/comments — List and add proposal comments.
  *
  * SECURITY:
- *   - Requires authenticated session.
- *   - Author comes from the session, not the request body.
+ *   - GET: Public.
+ *   - POST: Requires authenticated session; author comes from session.
  */
 import { NextResponse } from "next/server"
 
 import { requireSession } from "@/lib/api-guard"
-import { addProposalComment } from "@/lib/sohojatra/store"
+import { addProposalComment, listProposals } from "@/lib/sohojatra/store"
+
+export async function GET(
+  _request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params
+  const proposals = await listProposals()
+  const proposal = proposals.find((p) => p.id === id)
+  const comments = (proposal?.comments ?? []).map((c) => ({
+    id: c.id,
+    authorName: c.author,
+    body: c.body,
+    upvotes: c.points ?? 0,
+    downvotes: 0,
+    createdAt: c.createdAt,
+    quoted: c.quote,
+  }))
+  return NextResponse.json({ proposalId: id, comments })
+}
 
 export async function POST(
   request: Request,

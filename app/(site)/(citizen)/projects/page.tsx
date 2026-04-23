@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react"
 import { ChartBar, Clock, Buildings, Star, ArrowRight } from "@phosphor-icons/react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { useT } from "@/lib/i18n/context"
 
 interface ProjectMilestone {
   id: string
@@ -42,6 +43,7 @@ const progressBarColor: Record<string, string> = {
 }
 
 export default function ProjectTrackerPage() {
+  const t = useT().projects
   const [projects, setProjects] = useState<ProjectDeliverable[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [filter, setFilter] = useState<"all" | "Planning" | "In Progress" | "On Hold" | "Completed">("all")
@@ -92,7 +94,6 @@ export default function ProjectTrackerPage() {
   }
 
   const filtered = filter === "all" ? projects : projects.filter((p) => p.status === filter)
-
   const stats = {
     total: projects.length,
     active: projects.filter((p) => p.status === "In Progress").length,
@@ -102,26 +103,31 @@ export default function ProjectTrackerPage() {
       : 0,
   }
 
+  const filterOptions = [
+    { key: "all" as const,          label: t.filterAll },
+    { key: "Planning" as const,     label: t.statusPlanning },
+    { key: "In Progress" as const,  label: t.statusInProgress },
+    { key: "On Hold" as const,      label: t.statusOnHold },
+    { key: "Completed" as const,    label: t.statusCompleted },
+  ]
+
+  const kpiCards = [
+    { label: t.totalProjects, value: stats.total,              Icon: ChartBar },
+    { label: t.active,        value: stats.active,             Icon: Clock },
+    { label: t.completed,     value: stats.completed,          Icon: Buildings },
+    { label: t.avgProgress,   value: `${stats.avgProgress}%`,  Icon: ArrowRight },
+  ]
+
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
-      {/* Header */}
       <div className="mb-8">
-        <p className="text-xs font-semibold uppercase tracking-widest text-primary">Government</p>
-        <h1 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">Project Tracker</h1>
-        <p className="mt-2 max-w-2xl text-muted-foreground">
-          Monitor ongoing civic infrastructure projects — budgets, milestones, and real-time
-          progress across all government departments.
-        </p>
+        <p className="text-xs font-semibold uppercase tracking-widest text-primary">{t.label}</p>
+        <h1 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">{t.title}</h1>
+        <p className="mt-2 max-w-2xl text-muted-foreground">{t.description}</p>
       </div>
 
-      {/* KPI row */}
       <div className="mb-6 grid gap-4 sm:grid-cols-4">
-        {[
-          { label: "Total Projects", value: stats.total, Icon: ChartBar },
-          { label: "Active", value: stats.active, Icon: Clock },
-          { label: "Completed", value: stats.completed, Icon: Buildings },
-          { label: "Avg Progress", value: `${stats.avgProgress}%`, Icon: ArrowRight },
-        ].map((s) => (
+        {kpiCards.map((s) => (
           <Card key={s.label} className="rounded-2xl">
             <CardContent className="flex items-center gap-3 pt-5">
               <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
@@ -136,9 +142,8 @@ export default function ProjectTrackerPage() {
         ))}
       </div>
 
-      {/* Filters */}
       <div className="mb-6 flex flex-wrap gap-2">
-        {(["all", "Planning", "In Progress", "On Hold", "Completed"] as const).map((key) => (
+        {filterOptions.map(({ key, label }) => (
           <button
             key={key}
             onClick={() => setFilter(key)}
@@ -148,12 +153,11 @@ export default function ProjectTrackerPage() {
                 : "bg-muted text-muted-foreground hover:bg-muted/80"
             }`}
           >
-            {key === "all" ? "All" : key}
+            {label}
           </button>
         ))}
       </div>
 
-      {/* Projects grid */}
       {isLoading ? (
         <div className="grid gap-4 sm:grid-cols-2">
           {[...Array(4)].map((_, i) => (
@@ -163,7 +167,7 @@ export default function ProjectTrackerPage() {
       ) : filtered.length === 0 ? (
         <Card className="rounded-2xl">
           <CardContent className="py-12 text-center text-sm text-muted-foreground">
-            No projects found.
+            {t.noProjects}
           </CardContent>
         </Card>
       ) : (
@@ -182,7 +186,7 @@ export default function ProjectTrackerPage() {
                       className={`flex size-8 items-center justify-center rounded-full transition-colors ${
                         isFollowing ? "text-amber-500 hover:text-amber-600" : "text-muted-foreground hover:text-amber-500"
                       }`}
-                      title={isFollowing ? "Unfollow" : "Follow project"}
+                      title={isFollowing ? t.unfollow : t.follow}
                     >
                       <Star className="size-4" weight={isFollowing ? "fill" : "regular"} />
                     </button>
@@ -191,10 +195,9 @@ export default function ProjectTrackerPage() {
                   <CardDescription>{project.ministry}{project.department ? ` · ${project.department}` : ""}</CardDescription>
                 </CardHeader>
                 <CardContent className="flex flex-1 flex-col gap-4">
-                  {/* Progress bar */}
                   <div>
                     <div className="mb-1.5 flex justify-between text-sm">
-                      <span className="text-muted-foreground">Progress</span>
+                      <span className="text-muted-foreground">{t.progress}</span>
                       <span className="font-semibold">{project.progress}%</span>
                     </div>
                     <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
@@ -207,21 +210,21 @@ export default function ProjectTrackerPage() {
 
                   <div className="grid grid-cols-2 gap-y-2 text-sm">
                     <div>
-                      <p className="text-xs text-muted-foreground">Owner</p>
+                      <p className="text-xs text-muted-foreground">{t.owner}</p>
                       <p className="font-medium">{project.owner}</p>
                     </div>
                     <div>
-                      <p className="text-xs text-muted-foreground">Deadline</p>
+                      <p className="text-xs text-muted-foreground">{t.deadline}</p>
                       <p className="font-medium">{project.deadline}</p>
                     </div>
                     {typeof project.budgetAllocatedBdt === "number" && (
                       <>
                         <div>
-                          <p className="text-xs text-muted-foreground">Allocated</p>
+                          <p className="text-xs text-muted-foreground">{t.allocated}</p>
                           <p className="font-medium">৳ {project.budgetAllocatedBdt.toLocaleString()}</p>
                         </div>
                         <div>
-                          <p className="text-xs text-muted-foreground">Spent</p>
+                          <p className="text-xs text-muted-foreground">{t.spent}</p>
                           <p className="font-medium">৳ {(project.budgetSpentBdt ?? 0).toLocaleString()}</p>
                         </div>
                       </>
@@ -231,8 +234,8 @@ export default function ProjectTrackerPage() {
                   {totalMilestones > 0 && (
                     <div className="rounded-xl bg-muted/40 px-3 py-2 text-sm">
                       <div className="flex items-center justify-between">
-                        <span className="text-muted-foreground">Milestones</span>
-                        <span className="font-medium">{verifiedMilestones}/{totalMilestones} verified</span>
+                        <span className="text-muted-foreground">{t.milestones}</span>
+                        <span className="font-medium">{verifiedMilestones}/{totalMilestones} {t.verified}</span>
                       </div>
                       <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-muted">
                         <div

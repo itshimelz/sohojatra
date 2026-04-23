@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/components/auth-provider"
+import { useT } from "@/lib/i18n/context"
 
 interface ReputationData {
   totalPoints: number
@@ -27,29 +28,6 @@ interface ProfileData {
   stats: { totalVotes: number; totalConcerns: number; totalComments: number }
 }
 
-const ROLE_PERMISSIONS: Record<string, { label: string; permissions: string[] }> = {
-  citizen: {
-    label: "Citizen",
-    permissions: ["Submit concerns", "Vote on proposals", "Comment and quote-reply", "Attend assembly events"],
-  },
-  expert: {
-    label: "Expert / Professor",
-    permissions: ["All citizen permissions", "Submit solution proposals", "Apply for research grants", "Access AI-prioritized concern list"],
-  },
-  govt_authority: {
-    label: "Government Authority",
-    permissions: ["All citizen permissions", "Approve/reject solution plans", "Assign departments", "Publish assembly minutes", "View accountability KPIs"],
-  },
-  ngo: {
-    label: "NGO / Civil Society",
-    permissions: ["All citizen permissions", "Co-sponsor concerns", "Organize events", "Submit proposals"],
-  },
-  admin: {
-    label: "Platform Admin",
-    permissions: ["Full platform access", "User management", "Content moderation queue", "Crime flag review", "Trigger model retraining"],
-  },
-}
-
 const TIER_COLORS: Record<string, string> = {
   Champion: "bg-purple-100 text-purple-800",
   Expert: "bg-blue-100 text-blue-800",
@@ -59,6 +37,7 @@ const TIER_COLORS: Record<string, string> = {
 
 export default function UserProfilePage() {
   const { session } = useAuth()
+  const tp = useT().profile
   const user = session?.user
   const [profileData, setProfileData] = useState<ProfileData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -90,25 +69,51 @@ export default function UserProfilePage() {
     }
     if (userId !== "anonymous") void load()
     else setIsLoading(false)
-    return () => {
-      cancelled = true
-    }
+    return () => { cancelled = true }
   }, [userId])
 
   const role = (user as { role?: string } | undefined)?.role ?? "citizen"
-  const roleConfig = ROLE_PERMISSIONS[role] ?? ROLE_PERMISSIONS.citizen!
+
+  const roleConfig: { label: string; permissions: string[] } = {
+    citizen: {
+      label: tp.roleCitizen,
+      permissions: [tp.permCitizenP1, tp.permCitizenP2, tp.permCitizenP3, tp.permCitizenP4],
+    },
+    expert: {
+      label: tp.roleExpert,
+      permissions: [tp.permExpertP1, tp.permExpertP2, tp.permExpertP3, tp.permExpertP4],
+    },
+    govt_authority: {
+      label: tp.roleGovt,
+      permissions: [tp.permGovtP1, tp.permGovtP2, tp.permGovtP3, tp.permGovtP4, tp.permGovtP5],
+    },
+    ngo: {
+      label: tp.roleNgo,
+      permissions: [tp.permNgoP1, tp.permNgoP2, tp.permNgoP3, tp.permNgoP4],
+    },
+    admin: {
+      label: tp.roleAdmin,
+      permissions: [tp.permAdminP1, tp.permAdminP2, tp.permAdminP3, tp.permAdminP4, tp.permAdminP5],
+    },
+  }[role] ?? {
+    label: tp.roleCitizen,
+    permissions: [tp.permCitizenP1, tp.permCitizenP2, tp.permCitizenP3, tp.permCitizenP4],
+  }
+
+  const roleRequests = [
+    { key: "expert",        label: tp.roleReqExpertLabel, desc: tp.roleReqExpertDesc },
+    { key: "ngo",           label: tp.roleReqNgoLabel,    desc: tp.roleReqNgoDesc },
+    { key: "govt_authority",label: tp.roleReqGovtLabel,   desc: tp.roleReqGovtDesc },
+  ]
 
   if (!user) {
     return (
       <div className="space-y-4 max-w-2xl">
-        <h1 className="text-3xl font-bold">Your Profile</h1>
+        <h1 className="text-3xl font-bold">{tp.title}</h1>
         <Card>
           <CardContent className="py-10 text-center text-sm text-muted-foreground">
-            Please{" "}
-            <a href="/login" className="text-blue-600 underline">
-              sign in
-            </a>{" "}
-            to view your profile.
+            {tp.signInPrompt}{" "}
+            <a href="/login" className="text-blue-600 underline">{tp.signIn}</a>
           </CardContent>
         </Card>
       </div>
@@ -117,14 +122,13 @@ export default function UserProfilePage() {
 
   return (
     <div className="space-y-6 max-w-4xl">
-      {/* Profile Header */}
       <Card>
         <CardHeader>
           <div className="flex items-start justify-between flex-wrap gap-4">
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-2 flex-wrap">
                 <h1 className="text-3xl font-bold">{user.name}</h1>
-                <Badge className="bg-green-100 text-green-800">Verified</Badge>
+                <Badge className="bg-green-100 text-green-800">{tp.verified}</Badge>
                 {!isLoading && profileData && (
                   <Badge className={TIER_COLORS[profileData.reputation.tier] ?? TIER_COLORS.Newcomer!}>
                     {profileData.reputation.tier}
@@ -146,29 +150,28 @@ export default function UserProfilePage() {
               <p className="text-3xl font-bold text-blue-600">
                 {isLoading ? "—" : (profileData?.reputation.totalPoints ?? 0)}
               </p>
-              <p className="text-muted-foreground text-sm">Reputation Points</p>
+              <p className="text-muted-foreground text-sm">{tp.reputationPoints}</p>
             </div>
             <div>
               <p className="text-3xl font-bold text-green-600">
                 {isLoading ? "—" : (profileData?.badges.length ?? 0)}
               </p>
-              <p className="text-muted-foreground text-sm">Badges Earned</p>
+              <p className="text-muted-foreground text-sm">{tp.badgesEarned}</p>
             </div>
             <div>
               <p className="text-3xl font-bold text-purple-600">
                 {isLoading ? "—" : `${profileData?.reputation.weightMultiplier.toFixed(1) ?? "1.0"}x`}
               </p>
-              <p className="text-muted-foreground text-sm">Vote Weight</p>
+              <p className="text-muted-foreground text-sm">{tp.voteWeight}</p>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Role & Permissions */}
       <Card>
         <CardHeader>
-          <CardTitle>Role & Permissions</CardTitle>
-          <CardDescription>Your current platform role and what you can do</CardDescription>
+          <CardTitle>{tp.roleAndPermissions}</CardTitle>
+          <CardDescription>{tp.roleDesc}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex items-center gap-3 mb-4">
@@ -185,12 +188,11 @@ export default function UserProfilePage() {
         </CardContent>
       </Card>
 
-      {/* Badges */}
       {!isLoading && profileData && profileData.badges.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Earned Badges</CardTitle>
-            <CardDescription>Recognition for your civic contributions</CardDescription>
+            <CardTitle>{tp.earnedBadges}</CardTitle>
+            <CardDescription>{tp.badgesDesc}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid gap-3 sm:grid-cols-2">
@@ -216,12 +218,11 @@ export default function UserProfilePage() {
         </Card>
       )}
 
-      {/* Recent Reputation Events */}
       {!isLoading && profileData && profileData.reputation.events.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Recent Activity</CardTitle>
-            <CardDescription>Latest reputation events on your account</CardDescription>
+            <CardTitle>{tp.recentActivity}</CardTitle>
+            <CardDescription>{tp.activityDesc}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
@@ -229,7 +230,7 @@ export default function UserProfilePage() {
                 <div key={event.id} className="flex items-center justify-between text-sm py-2 border-b border-border/40 last:border-0">
                   <span className="text-muted-foreground">{event.reason.replace(/_/g, " ").toLowerCase()}</span>
                   <span className={`font-semibold ${event.delta >= 0 ? "text-green-600" : "text-red-600"}`}>
-                    {event.delta >= 0 ? "+" : ""}{event.delta} pts
+                    {event.delta >= 0 ? "+" : ""}{event.delta} {tp.pts}
                   </span>
                 </div>
               ))}
@@ -238,32 +239,15 @@ export default function UserProfilePage() {
         </Card>
       )}
 
-      {/* Request Additional Roles */}
       {role === "citizen" && (
         <Card>
           <CardHeader>
-            <CardTitle>Request Additional Access</CardTitle>
-            <CardDescription>Expand your participation on the platform</CardDescription>
+            <CardTitle>{tp.requestAccess}</CardTitle>
+            <CardDescription>{tp.requestDesc}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {[
-                {
-                  key: "expert",
-                  label: "Expert / Professor",
-                  desc: "Requires institutional email (.edu.bd or university domain) + NID",
-                },
-                {
-                  key: "ngo",
-                  label: "NGO / Civil Society",
-                  desc: "Requires NGO Bureau registration number + NID of representative",
-                },
-                {
-                  key: "govt_authority",
-                  label: "Government Authority",
-                  desc: "Requires official .gov.bd email + admin approval",
-                },
-              ].map((r) => (
+              {roleRequests.map((r) => (
                 <div key={r.key} className="flex items-center justify-between p-3 border rounded-xl">
                   <div>
                     <p className="font-medium text-sm">{r.label}</p>
@@ -275,7 +259,7 @@ export default function UserProfilePage() {
                     disabled={requestingRole === r.key}
                     onClick={() => setRequestingRole(r.key)}
                   >
-                    {requestingRole === r.key ? "Requested" : "Request"}
+                    {requestingRole === r.key ? tp.requested : tp.request}
                   </Button>
                 </div>
               ))}

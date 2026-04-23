@@ -9,7 +9,7 @@ export async function GET() {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
     }
 
-    return NextResponse.json({ records: listAuthorityRecords() })
+    return NextResponse.json({ records: await listAuthorityRecords() })
   } catch (error) {
     console.error("[API_AUTHORITY_RECORDS]", error)
     return NextResponse.json({ message: "Internal server error" }, { status: 500 })

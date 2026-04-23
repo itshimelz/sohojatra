@@ -3,6 +3,7 @@ import { SiteFooter } from "@/components/site-footer"
 import { SiteHeader } from "@/components/site-header"
 import { AuthProvider } from "@/components/auth-provider"
 import { getDictionary, getLocale } from "@/lib/i18n/server"
+import { TranslationProvider } from "@/lib/i18n/context"
 import { getServerSession } from "@/lib/auth-session"
 import type { AuthSession } from "@/components/auth-provider"
 
@@ -46,11 +47,13 @@ export default async function SiteLayout({
 
   return (
     <AuthProvider initialSession={initialSession}>
-      <div className="flex min-h-svh flex-col bg-background text-foreground selection:bg-primary/20">
-        <SiteHeader nav={t.nav} locale={locale} />
-        <div className="flex flex-1 flex-col">{children}</div>
-        <SiteFooter locale={locale} footer={t.footer} nav={t.nav} />
-      </div>
+      <TranslationProvider dictionary={t}>
+        <div className="flex min-h-svh flex-col bg-background text-foreground selection:bg-primary/20">
+          <SiteHeader nav={t.nav} locale={locale} />
+          <div className="flex flex-1 flex-col">{children}</div>
+          <SiteFooter locale={locale} footer={t.footer} nav={t.nav} />
+        </div>
+      </TranslationProvider>
     </AuthProvider>
   )
 }

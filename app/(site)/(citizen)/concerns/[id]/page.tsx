@@ -10,6 +10,8 @@ import { getServerSession } from "@/lib/auth-session"
 import { getStatusLabel } from "@/lib/concerns/presentation"
 import { UpvoteButton } from "@/components/upvote-button"
 import { buttonVariants } from "@/components/ui/button-variants"
+import { CommentSection } from "@/components/comments/CommentSection"
+import { AiInsightPanel } from "@/components/ai/AiInsightPanel"
 import { AspectRatio } from "@/components/ui/aspect-ratio"
 import {
   CaretLeft,
@@ -71,13 +73,16 @@ export default async function ConcernDetailPage({
   if (!concern) {
     return (
       <div className="container mx-auto max-w-5xl px-4 py-32 text-center text-muted-foreground font-medium">
-        Concern not found. It may have been removed or does not exist.
+        {d.concernDetail.notFound}
       </div>
     )
   }
 
   const session = await getServerSession()
   const userId = session?.user?.id ?? null
+  const currentUser = session?.user
+    ? { id: session.user.id, name: session.user.name ?? "Anonymous" }
+    : null
   const currentVote = null
   const photos = concern.photos ?? []
   const updates = concern.updates ?? []
@@ -104,7 +109,7 @@ export default async function ConcernDetailPage({
         })}
       >
         <CaretLeft className="size-4" />
-        Back to Concerns
+        {d.concernDetail.backToConcerns}
       </Link>
 
       {/* ── Photo gallery hero ── */}
@@ -142,7 +147,7 @@ export default async function ConcernDetailPage({
           {photos.length > 0 && (
             <div className="flex items-center gap-1.5 border-t border-border/40 bg-muted/30 px-4 py-2 text-xs text-muted-foreground">
               <Images className="size-3.5" />
-              {photos.length} photo{photos.length > 1 ? "s" : ""} attached
+              {photos.length} {photos.length > 1 ? d.concernDetail.photosAttached : d.concernDetail.photoAttached}
             </div>
           )}
         </div>
@@ -202,10 +207,15 @@ export default async function ConcernDetailPage({
             </div>
           </div>
 
+          {/* AI analysis panel */}
+          {concern.description.length >= 10 && (
+            <AiInsightPanel text={concern.description} />
+          )}
+
           {/* Vote bar — compact FB-style */}
           <div className="flex items-center justify-between rounded-2xl border border-border/60 bg-card px-5 py-3">
             <span className="text-xs font-medium text-muted-foreground">
-              {!userId ? "Sign in to vote" : "Was this helpful?"}
+              {!userId ? d.concernDetail.signInToVote : d.concernDetail.wasThisHelpful}
             </span>
             <UpvoteButton
               concernId={concern.id}
@@ -221,11 +231,11 @@ export default async function ConcernDetailPage({
         {/* ── Right column: tracking timeline ── */}
         <div className="sticky top-6 h-fit rounded-2xl border border-border/60 bg-card p-5">
           <h3 className="mb-0.5 text-base font-semibold">{tr.timeline}</h3>
-          <p className="mb-5 text-xs text-muted-foreground">Live updates from authorities</p>
+          <p className="mb-5 text-xs text-muted-foreground">{d.concernDetail.liveUpdates}</p>
 
           {updates.length === 0 ? (
             <div className="rounded-xl border border-dashed py-6 text-center">
-              <p className="text-sm text-muted-foreground italic">No updates yet.</p>
+              <p className="text-sm text-muted-foreground italic">{d.concernDetail.noUpdates}</p>
             </div>
           ) : (
             <div className="space-y-6 pl-1">
@@ -262,7 +272,7 @@ export default async function ConcernDetailPage({
                             })}
                           </time>
                         </div>
-                        <p className="mt-0.5 text-xs text-muted-foreground">by {update.author}</p>
+                        <p className="mt-0.5 text-xs text-muted-foreground">{d.concernDetail.by} {update.author}</p>
                         {update.note && (
                           <div className="mt-2 rounded-lg border border-border/60 bg-muted/40 px-3 py-2 text-xs leading-relaxed text-foreground">
                             <span className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
@@ -279,6 +289,14 @@ export default async function ConcernDetailPage({
             </div>
           )}
         </div>
+      </div>
+
+      {/* ── Comment section ── */}
+      <div className="mt-8">
+        <CommentSection
+          apiPath={`/api/concerns/${concern.id}/comments`}
+          currentUser={currentUser}
+        />
       </div>
     </div>
   )

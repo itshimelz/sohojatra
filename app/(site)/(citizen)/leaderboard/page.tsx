@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { Trophy, GraduationCap, CheckCircle, Star } from "@phosphor-icons/react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { useT } from "@/lib/i18n/context"
 
 type LeaderboardEntry = {
   id: string
@@ -16,6 +17,7 @@ type LeaderboardEntry = {
 const medalColor = ["text-amber-400", "text-slate-400", "text-orange-400"]
 
 export default function LeaderboardPage() {
+  const t = useT().leaderboard
   const [rows, setRows] = useState<LeaderboardEntry[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -33,17 +35,12 @@ export default function LeaderboardPage() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
-      {/* Header */}
       <div className="mb-8">
-        <p className="text-xs font-semibold uppercase tracking-widest text-primary">Community</p>
-        <h1 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">University Leaderboard</h1>
-        <p className="mt-2 max-w-2xl text-muted-foreground">
-          Universities and research institutions ranked by their civic contributions — solved concerns,
-          accepted research, and aggregate impact score.
-        </p>
+        <p className="text-xs font-semibold uppercase tracking-widest text-primary">{t.label}</p>
+        <h1 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">{t.title}</h1>
+        <p className="mt-2 max-w-2xl text-muted-foreground">{t.description}</p>
       </div>
 
-      {/* Top 3 podium */}
       {!loading && rows.length >= 3 && (
         <div className="mb-8 grid gap-4 sm:grid-cols-3">
           {[1, 0, 2].map((pos) => {
@@ -60,11 +57,11 @@ export default function LeaderboardPage() {
                   <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">#{rank}</p>
                   <p className="mt-1 text-base font-bold leading-tight">{entry.university}</p>
                   <p className="mt-3 text-3xl font-bold tabular-nums text-primary">{entry.score}</p>
-                  <p className="text-xs text-muted-foreground">impact score</p>
+                  <p className="text-xs text-muted-foreground">{t.impactScore}</p>
                   <div className="mt-3 flex justify-center gap-3 text-xs text-muted-foreground">
-                    <span>{entry.solvedConcerns} solved</span>
+                    <span>{entry.solvedConcerns} {t.solved}</span>
                     <span>·</span>
-                    <span>{entry.acceptedResearch} research</span>
+                    <span>{entry.acceptedResearch} {t.research}</span>
                   </div>
                 </CardContent>
               </Card>
@@ -73,11 +70,10 @@ export default function LeaderboardPage() {
         </div>
       )}
 
-      {/* Full rankings table */}
       <Card className="rounded-2xl">
         <CardHeader className="pb-3">
-          <CardTitle>Full Rankings</CardTitle>
-          <CardDescription>All contributing institutions</CardDescription>
+          <CardTitle>{t.fullRankings}</CardTitle>
+          <CardDescription>{t.allInstitutions}</CardDescription>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -87,7 +83,7 @@ export default function LeaderboardPage() {
               ))}
             </div>
           ) : rows.length === 0 ? (
-            <p className="py-8 text-center text-sm text-muted-foreground">No leaderboard data yet.</p>
+            <p className="py-8 text-center text-sm text-muted-foreground">{t.noData}</p>
           ) : (
             <div className="space-y-2">
               {rows.map((item, index) => (

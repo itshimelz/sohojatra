@@ -4,8 +4,9 @@ import { useEffect, useState } from "react"
 import { Users, ChatCircle, Handshake, ArrowRight, Plus, CheckCircle, Clock } from "@phosphor-icons/react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useAuth } from "@/components/auth-provider"
+import { useT } from "@/lib/i18n/context"
 
 type Thread = {
   id: string
@@ -40,7 +41,8 @@ const statusColors: Record<string, string> = {
 }
 
 export default function CoGovernancePage() {
-  const { session } = useAuth()
+  const { session: _session } = useAuth()
+  const t = useT().collaboration
   const [threads, setThreads] = useState<Thread[]>([])
   const [plans, setPlans] = useState<SolutionPlan[]>([])
   const [loading, setLoading] = useState(true)
@@ -85,27 +87,22 @@ export default function CoGovernancePage() {
   const approvedPlans = plans.filter((p) => p.status === "Approved" || p.status === "Implemented")
   const pendingPlans = plans.filter((p) => p.status === "Submitted" || p.status === "UnderReview")
 
+  const statCards = [
+    { label: t.activeThreads, value: threads.filter((th) => th.status !== "resolved").length || threads.length, icon: ChatCircle, color: "text-blue-500 bg-blue-50" },
+    { label: t.solutionPlans, value: plans.length,         icon: Handshake,   color: "text-violet-500 bg-violet-50" },
+    { label: t.approvedPlans, value: approvedPlans.length, icon: CheckCircle, color: "text-green-500 bg-green-50" },
+  ]
+
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
-      {/* Page header */}
       <div className="mb-8">
-        <p className="text-xs font-semibold uppercase tracking-widest text-primary">Co-Governance</p>
-        <h1 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">
-          Collaborative Decision-Making
-        </h1>
-        <p className="mt-2 max-w-2xl text-muted-foreground">
-          Citizens, experts, and government authorities work together on solution plans and
-          collaborative threads to resolve civic issues.
-        </p>
+        <p className="text-xs font-semibold uppercase tracking-widest text-primary">{t.label}</p>
+        <h1 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">{t.title}</h1>
+        <p className="mt-2 max-w-2xl text-muted-foreground">{t.description}</p>
       </div>
 
-      {/* Stats row */}
       <div className="mb-8 grid gap-4 sm:grid-cols-3">
-        {[
-          { label: "Active Threads", value: threads.filter((t) => t.status !== "resolved").length || threads.length, icon: ChatCircle, color: "text-blue-500 bg-blue-50" },
-          { label: "Solution Plans", value: plans.length, icon: Handshake, color: "text-violet-500 bg-violet-50" },
-          { label: "Approved Plans", value: approvedPlans.length, icon: CheckCircle, color: "text-green-500 bg-green-50" },
-        ].map((stat) => (
+        {statCards.map((stat) => (
           <Card key={stat.label} className="rounded-2xl">
             <CardContent className="flex items-center gap-4 pt-5">
               <span className={`flex size-10 items-center justify-center rounded-xl ${stat.color}`}>
@@ -121,17 +118,13 @@ export default function CoGovernancePage() {
       </div>
 
       <div className="grid gap-8 lg:grid-cols-[minmax(0,1.4fr)_minmax(320px,1fr)]">
-        {/* Collaboration threads */}
+        {/* Threads column */}
         <div className="space-y-5">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold">Collaboration Threads</h2>
-            <Button
-              size="sm"
-              className="rounded-full"
-              onClick={() => setShowForm((v) => !v)}
-            >
+            <h2 className="text-xl font-semibold">{t.threads}</h2>
+            <Button size="sm" className="rounded-full" onClick={() => setShowForm((v) => !v)}>
               <Plus className="mr-1.5 size-4" />
-              New Thread
+              {t.newThread}
             </Button>
           </div>
 
@@ -140,16 +133,16 @@ export default function CoGovernancePage() {
               <CardContent className="pt-5 space-y-3">
                 <input
                   className="w-full rounded-xl border border-border/60 bg-background px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/30"
-                  placeholder="Thread title (e.g. Mirpur Road Repair Coordination)"
+                  placeholder={t.threadPlaceholder}
                   value={newTitle}
                   onChange={(e) => setNewTitle(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && void createThread()}
                 />
                 <div className="flex gap-2">
                   <Button size="sm" onClick={() => void createThread()} disabled={creating || !newTitle.trim()}>
-                    {creating ? "Creating…" : "Create Thread"}
+                    {creating ? t.creating : t.createThread}
                   </Button>
-                  <Button size="sm" variant="ghost" onClick={() => setShowForm(false)}>Cancel</Button>
+                  <Button size="sm" variant="ghost" onClick={() => setShowForm(false)}>{t.cancel}</Button>
                 </div>
               </CardContent>
             </Card>
@@ -164,7 +157,7 @@ export default function CoGovernancePage() {
           ) : threads.length === 0 ? (
             <Card className="rounded-2xl">
               <CardContent className="py-10 text-center text-sm text-muted-foreground">
-                No threads yet. Create the first collaborative thread above.
+                {t.noThreads}
               </CardContent>
             </Card>
           ) : (
@@ -182,8 +175,8 @@ export default function CoGovernancePage() {
                         )}
                       </div>
                       <p className="mt-1 text-sm text-muted-foreground">
-                        {thread.messages.length} message{thread.messages.length !== 1 ? "s" : ""}
-                        {thread.participantCount ? ` · ${thread.participantCount} participants` : ""}
+                        {thread.messages.length} {thread.messages.length !== 1 ? t.messages : t.message}
+                        {thread.participantCount ? ` · ${thread.participantCount} ${t.participants}` : ""}
                       </p>
                       {thread.messages.length > 0 && (
                         <p className="mt-2 truncate text-sm text-foreground/70">
@@ -202,14 +195,14 @@ export default function CoGovernancePage() {
         {/* Solution plans sidebar */}
         <div className="space-y-6">
           <div>
-            <h2 className="text-xl font-semibold">Solution Plans</h2>
-            <p className="text-sm text-muted-foreground">Expert-submitted plans awaiting government approval</p>
+            <h2 className="text-xl font-semibold">{t.solutionPlansTitle}</h2>
+            <p className="text-sm text-muted-foreground">{t.expertPlans}</p>
           </div>
 
           {pendingPlans.length > 0 && (
             <div>
               <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-amber-600">
-                <Clock className="size-3" /> Awaiting Review ({pendingPlans.length})
+                <Clock className="size-3" /> {t.awaitingReview} ({pendingPlans.length})
               </p>
               <div className="space-y-3">
                 {pendingPlans.slice(0, 4).map((plan) => (
@@ -222,7 +215,7 @@ export default function CoGovernancePage() {
                       <p className="mt-1.5 text-xs text-muted-foreground line-clamp-2">{plan.summary}</p>
                       {plan.budgetEstimateBdt && (
                         <p className="mt-1.5 text-xs font-medium text-foreground/70">
-                          Budget: ৳ {plan.budgetEstimateBdt.toLocaleString()}
+                          {t.budget} ৳ {plan.budgetEstimateBdt.toLocaleString()}
                         </p>
                       )}
                     </CardContent>
@@ -235,7 +228,7 @@ export default function CoGovernancePage() {
           {approvedPlans.length > 0 && (
             <div>
               <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-green-600">
-                <CheckCircle className="size-3" /> Approved Plans ({approvedPlans.length})
+                <CheckCircle className="size-3" /> {t.approvedPlansTitle} ({approvedPlans.length})
               </p>
               <div className="space-y-3">
                 {approvedPlans.slice(0, 4).map((plan) => (
@@ -258,21 +251,20 @@ export default function CoGovernancePage() {
           {plans.length === 0 && !loading && (
             <Card className="rounded-xl">
               <CardContent className="py-8 text-center text-sm text-muted-foreground">
-                No solution plans submitted yet.
+                {t.noPlans}
               </CardContent>
             </Card>
           )}
 
-          {/* Workflow card */}
           <Card className="rounded-2xl bg-gradient-to-br from-primary/10 to-transparent">
             <CardHeader>
-              <CardTitle className="text-base">Co-Governance Workflow</CardTitle>
+              <CardTitle className="text-base">{t.workflow}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2.5 text-sm text-muted-foreground">
-              <p><Users className="mr-1.5 inline size-4 text-primary" />Citizens report concerns publicly</p>
-              <p><Handshake className="mr-1.5 inline size-4 text-primary" />Experts submit solution plans</p>
-              <p><CheckCircle className="mr-1.5 inline size-4 text-primary" />Government approves and assigns</p>
-              <p><ArrowRight className="mr-1.5 inline size-4 text-primary" />Progress tracked transparently</p>
+              <p><Users className="mr-1.5 inline size-4 text-primary" />{t.workflowItem1}</p>
+              <p><Handshake className="mr-1.5 inline size-4 text-primary" />{t.workflowItem2}</p>
+              <p><CheckCircle className="mr-1.5 inline size-4 text-primary" />{t.workflowItem3}</p>
+              <p><ArrowRight className="mr-1.5 inline size-4 text-primary" />{t.workflowItem4}</p>
             </CardContent>
           </Card>
         </div>

@@ -6,6 +6,7 @@ import { motion } from "framer-motion"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
+import { useT } from "@/lib/i18n/context"
 
 type Message = {
   id: string
@@ -16,21 +17,32 @@ type Message = {
   error?: boolean
 }
 
-const prompts = [
+const SAMPLE_PROMPTS_EN = [
   "Can I be arrested without being told why?",
   "Who guarantees freedom of speech in Bangladesh?",
   "What does Article 27 say?",
   "আমার ঘরে পুলিশ কি বিনা ওয়ারেন্টে ঢুকতে পারে?",
 ]
 
-const welcome: Message = {
-  id: "welcome",
-  role: "assistant",
-  text: "Ask me about your rights under the Bangladesh Constitution. I'll answer with inline citations like [Article 33].",
-  citations: ["Constitution of Bangladesh, Part III — Fundamental Rights"],
-}
+const SAMPLE_PROMPTS_BN = [
+  "কারণ না জানিয়ে কি আমাকে গ্রেফতার করা যাবে?",
+  "বাংলাদেশে বাক স্বাধীনতার নিশ্চয়তা কে দেয়?",
+  "আর্টিকেল ২৭ কী বলে?",
+  "আমার ঘরে পুলিশ কি বিনা ওয়ারেন্টে ঢুকতে পারে?",
+]
 
 export default function ChatbotPage() {
+  const t = useT().chatbot
+  const isBn = t.ask === "জিজ্ঞেস করুন"
+  const prompts = isBn ? SAMPLE_PROMPTS_BN : SAMPLE_PROMPTS_EN
+
+  const welcome: Message = {
+    id: "welcome",
+    role: "assistant",
+    text: t.welcome,
+    citations: [t.welcomeCitation],
+  }
+
   const [messages, setMessages] = useState<Message[]>([welcome])
   const [input, setInput] = useState("")
   const [isStreaming, setIsStreaming] = useState(false)
@@ -47,18 +59,9 @@ export default function ChatbotPage() {
     const trimmed = question.trim()
     if (!trimmed || isStreaming) return
 
-    const userMsg: Message = {
-      id: `u-${Date.now()}`,
-      role: "user",
-      text: trimmed,
-    }
+    const userMsg: Message = { id: `u-${Date.now()}`, role: "user", text: trimmed }
     const assistantId = `a-${Date.now()}`
-    const placeholder: Message = {
-      id: assistantId,
-      role: "assistant",
-      text: "",
-      pending: true,
-    }
+    const placeholder: Message = { id: assistantId, role: "assistant", text: "", pending: true }
 
     const history = messages
       .filter((m) => m.id !== "welcome")
@@ -72,11 +75,7 @@ export default function ChatbotPage() {
       const response = await fetch("/api/chatbot", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          question: trimmed,
-          messages: history,
-          stream: true,
-        }),
+        body: JSON.stringify({ question: trimmed, messages: history, stream: true }),
       })
 
       if (!response.ok || !response.body) {
@@ -116,23 +115,14 @@ export default function ChatbotPage() {
             accumulated += payload.text
             setMessages((prev) =>
               prev.map((m) =>
-                m.id === assistantId
-                  ? { ...m, text: accumulated, pending: true }
-                  : m,
+                m.id === assistantId ? { ...m, text: accumulated, pending: true } : m,
               ),
             )
           } else if (event === "error") {
             setMessages((prev) =>
               prev.map((m) =>
                 m.id === assistantId
-                  ? {
-                      ...m,
-                      pending: false,
-                      error: true,
-                      text:
-                        payload.message ??
-                        "The chatbot is offline — check GROQ_API_KEY in .env.",
-                    }
+                  ? { ...m, pending: false, error: true, text: payload.message ?? t.offlineError }
                   : m,
               ),
             )
@@ -154,10 +144,7 @@ export default function ChatbotPage() {
                 ...m,
                 pending: false,
                 error: true,
-                text:
-                  error instanceof Error
-                    ? error.message
-                    : "Something went wrong — please try again.",
+                text: error instanceof Error ? error.message : t.genericError,
               }
             : m,
         ),
@@ -173,15 +160,10 @@ export default function ChatbotPage() {
         <div className="rounded-3xl border border-border/50 bg-background/50 p-6 sm:p-8 transition-all duration-300 hover:border-primary/20 hover:bg-background hover:shadow-sm">
           <div className="space-y-3 pb-6 text-center">
             <Badge variant="secondary" className="mx-auto w-fit rounded-full">
-              Constitutional Chatbot
+              {t.badge}
             </Badge>
-            <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
-              Bangla-first rights guidance with citations
-            </h1>
-            <p className="mx-auto max-w-2xl text-muted-foreground">
-              Retrieval-augmented answers powered by the Bangladesh Constitution,
-              served through Groq-hosted Llama 3.3 70B.
-            </p>
+            <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">{t.title}</h1>
+            <p className="mx-auto max-w-2xl text-muted-foreground">{t.description}</p>
           </div>
 
           <div className="space-y-4">
@@ -213,11 +195,8 @@ export default function ChatbotPage() {
                   {message.citations && message.citations.length > 0 ? (
                     <div className="mt-2 space-y-1 text-[11px] opacity-80">
                       {message.citations.map((citation) => (
-                        <p
-                          key={citation}
-                          className="decoration-primary/50 underline underline-offset-2"
-                        >
-                          Cited: {citation}
+                        <p key={citation} className="decoration-primary/50 underline underline-offset-2">
+                          {t.cited} {citation}
                         </p>
                       ))}
                     </div>
@@ -227,16 +206,13 @@ export default function ChatbotPage() {
             </div>
 
             <form
-              onSubmit={(event) => {
-                event.preventDefault()
-                void send(input)
-              }}
+              onSubmit={(event) => { event.preventDefault(); void send(input) }}
               className="flex flex-col gap-2 sm:flex-row"
             >
               <Textarea
                 value={input}
                 onChange={(event) => setInput(event.target.value)}
-                placeholder="Ask about a right, an Article number, or a situation..."
+                placeholder={t.placeholder}
                 rows={2}
                 className="flex-1 rounded-3xl"
                 onKeyDown={(event) => {
@@ -251,7 +227,7 @@ export default function ChatbotPage() {
                 disabled={isStreaming || input.trim().length === 0}
                 className="rounded-full sm:self-end"
               >
-                {isStreaming ? "Thinking..." : "Ask"}
+                {isStreaming ? t.thinking : t.ask}
               </Button>
             </form>
 

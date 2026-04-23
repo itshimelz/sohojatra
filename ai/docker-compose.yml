@@ -1,0 +1,108 @@
+version: "3.9"
+
+# PostgreSQL is hosted on Supabase — no local postgres container needed.
+# Run scripts/init.sql once in the Supabase SQL Editor to create the
+# comment_embeddings and research_documents tables with pgvector indexes.
+
+services:
+  api:
+    build: .
+    container_name: nagarik-api
+    ports:
+      - "8001:8001"
+    environment:
+      # Direct Supabase connection — asyncpg requires direct, not pooler
+      - DATABASE_URL=${AI_DATABASE_URL}
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/1
+      - CELERY_RESULT_BACKEND=redis://redis:6379/2
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+    env_file: ../.env
+    depends_on:
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./src:/app/src
+      - model_cache:/root/.cache/huggingface
+    restart: unless-stopped
+    networks:
+      - sohojatra-net
+
+  worker:
+    build: .
+    container_name: nagarik-worker
+    command: celery -A src.workers.celery_app worker --loglevel=info --concurrency=4
+    environment:
+      - DATABASE_URL=${AI_DATABASE_URL}
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/1
+      - CELERY_RESULT_BACKEND=redis://redis:6379/2
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+    env_file: ../.env
+    depends_on:
+      - redis
+    volumes:
+      - ./src:/app/src
+      - model_cache:/root/.cache/huggingface
+    restart: unless-stopped
+    networks:
+      - sohojatra-net
+
+  redis:
+    image: redis:7-alpine
+    container_name: nagarik-redis
+    ports:
+      - "6380:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - sohojatra-net
+
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: nagarik-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - sohojatra-net
+
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:v2.18.0
+    container_name: nagarik-mlflow
+    ports:
+      - "5000:5000"
+    command: >
+      mlflow server
+      --host 0.0.0.0
+      --port 5000
+      --backend-store-uri postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
+      --default-artifact-root /mlflow/artifacts
+    volumes:
+      - mlflow_data:/mlflow/artifacts
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - sohojatra-net
+
+volumes:
+  redis_data:
+  rabbitmq_data:
+  mlflow_data:
+  model_cache:
+
+networks:
+  sohojatra-net:
+    driver: bridge
