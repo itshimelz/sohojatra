@@ -108,7 +108,7 @@ export default function UserProfilePage() {
 
   if (!user) {
     return (
-      <div className="space-y-4 max-w-2xl">
+      <div className="mx-auto space-y-4 max-w-2xl px-4 py-8">
         <h1 className="text-3xl font-bold">{tp.title}</h1>
         <Card>
           <CardContent className="py-10 text-center text-sm text-muted-foreground">
@@ -121,7 +121,7 @@ export default function UserProfilePage() {
   }
 
   return (
-    <div className="space-y-6 max-w-4xl">
+    <div className="mx-auto space-y-6 max-w-4xl px-4 py-8">
       <Card>
         <CardHeader>
           <div className="flex items-start justify-between flex-wrap gap-4">
@@ -163,6 +163,35 @@ export default function UserProfilePage() {
                 {isLoading ? "—" : `${profileData?.reputation.weightMultiplier.toFixed(1) ?? "1.0"}x`}
               </p>
               <p className="text-muted-foreground text-sm">{tp.voteWeight}</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Personal Information</CardTitle>
+          <CardDescription>Your details as registered in the system</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            <div>
+              <p className="text-muted-foreground">Date of Birth</p>
+              <p className="font-medium">
+                {(user as any).dob ? new Date((user as any).dob).toLocaleDateString() : "Not provided"}
+              </p>
+            </div>
+            <div>
+              <p className="text-muted-foreground">National ID</p>
+              <p className="font-medium">{(user as any).nid || "Not provided"}</p>
+            </div>
+            <div>
+              <p className="text-muted-foreground">Education</p>
+              <p className="font-medium">{(user as any).education || "Not provided"}</p>
+            </div>
+            <div>
+              <p className="text-muted-foreground">Phone Number</p>
+              <p className="font-medium">{(user as any).phoneNumber || "Not provided"}</p>
             </div>
           </div>
         </CardContent>

@@ -54,5 +54,24 @@
       "severity": "Medium",
       "status": "Pending"
     }
-  ]
+  ],
+  "awards": [],
+  "solutionPlans": [],
+  "projects": [],
+  "assemblyEvents": [],
+  "notifications": [],
+  "actionLog": [],
+  "userVotes": [
+    {
+      "id": "v-0967988d",
+      "userId": "pYNl5irwi3VANo0Wh6LGm94o5hmC2xFC",
+      "targetType": "comment",
+      "targetId": "cc-c672c694",
+      "value": 1,
+      "votedAt": "2026-04-23T16:04:01.529Z"
+    }
+  ],
+  "reputationEvents": [],
+  "earnedBadges": [],
+  "concernComments": []
 }

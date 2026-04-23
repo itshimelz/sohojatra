@@ -14,11 +14,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-<<<<<<< HEAD
-import { useT } from "@/lib/i18n/context"
-=======
 import { cn } from "@/lib/utils"
->>>>>>> origin/fix/chatbot
 
 type Message = {
   id: string
@@ -272,7 +268,6 @@ export default function ChatbotPage() {
               Bangladesh Constitution · BM25 retrieval · Groq
             </p>
           </div>
->>>>>>> origin/fix/chatbot
         </div>
 
         <Button
