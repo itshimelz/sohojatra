@@ -39,6 +39,7 @@ export async function POST(request: Request) {
       description: validatedBody.description,
       // Identity from session, NOT body
       authorName: session.userName || "Citizen",
+      authorId: session.userId,
       locationLat: validatedBody.locationLat,
       locationLng: validatedBody.locationLng,
       location: validatedBody.location,

@@ -4,9 +4,12 @@ import { getDictionary } from "@/lib/i18n/server"
 import type { Concern } from "@/lib/concerns/types"
 import Link from "next/link"
 import { buttonVariants } from "@/components/ui/button-variants"
-import { ConcernCard } from "@/components/concern-card"
+import { UpvoteButton } from "@/components/upvote-button"
+import { Badge } from "@/components/ui/badge"
 import { prisma } from "@/lib/prisma"
 import { getServerSession } from "@/lib/auth-session"
+import { getStatusBadgeVariant, getStatusLabel } from "@/lib/concerns/presentation"
+import { Clock, MapPin } from "@phosphor-icons/react/dist/ssr"
 
 export const metadata: Metadata = {
   title: "Citizen Concerns",
@@ -22,7 +25,7 @@ export const metadata: Metadata = {
 }
 
 type PageProps = {
-  searchParams: Promise<{ sort?: string }>
+  searchParams: Promise<{ sort?: string; page?: string }>
 }
 
 export default async function ConcernsPage({ searchParams }: PageProps) {
@@ -30,14 +33,22 @@ export default async function ConcernsPage({ searchParams }: PageProps) {
   const t = d.concerns
   const params = await searchParams
   const sort = params.sort || "recent"
+  const page = Math.max(1, Number.parseInt(params.page ?? "1", 10) || 1)
+  const pageSize = 10
+  const skip = (page - 1) * pageSize
 
   // Get current session (optional — visitors can still see concerns)
   const session = await getServerSession()
   const userId = session?.user?.id ?? null
 
-  const dbConcerns = await prisma.concern.findMany({
-    orderBy: sort === "upvotes" ? { upvotes: "desc" } : { createdAt: "desc" },
-  })
+  const [totalConcerns, dbConcerns] = await Promise.all([
+    prisma.concern.count(),
+    prisma.concern.findMany({
+      orderBy: sort === "upvotes" ? { upvotes: "desc" } : { createdAt: "desc" },
+      skip,
+      take: pageSize,
+    }),
+  ])
 
   // Fetch this user's votes in one query if logged in
   const userVotes: Record<string, "up" | "down"> = {}
@@ -80,6 +91,14 @@ export default async function ConcernsPage({ searchParams }: PageProps) {
     resolved: t.resolved,
     rejected: t.rejected,
   }
+  const totalPages = Math.max(1, Math.ceil(totalConcerns / pageSize))
+
+  const withQuery = (nextPage: number) => {
+    const query = new URLSearchParams()
+    query.set("sort", sort)
+    query.set("page", String(nextPage))
+    return `/concerns?${query.toString()}`
+  }
 
   return (
     <div className="container mx-auto max-w-5xl px-4 py-8">
@@ -96,34 +115,102 @@ export default async function ConcernsPage({ searchParams }: PageProps) {
       <div className="mb-6 flex items-center gap-2">
         <span className="text-sm font-medium text-muted-foreground">{t.sortBy}:</span>
         <Link
-          href="/concerns?sort=recent"
+          href="/concerns?sort=recent&page=1"
           className={buttonVariants({ variant: sort === "recent" ? "secondary" : "ghost", size: "sm" })}
         >
           {t.sortRecent}
         </Link>
         <Link
-          href="/concerns?sort=upvotes"
+          href="/concerns?sort=upvotes&page=1"
           className={buttonVariants({ variant: sort === "upvotes" ? "secondary" : "ghost", size: "sm" })}
         >
           {t.sortUpvotes}
         </Link>
       </div>
 
-      <div className="grid gap-4">
+      <div>
         {sortedConcerns.length === 0 ? (
-          <div className="rounded-lg border border-dashed py-12 text-center">
+          <div className="py-12 text-center">
             <p className="text-muted-foreground">{t.noResults}</p>
           </div>
         ) : (
-          sortedConcerns.map((concern) => (
-            <ConcernCard
-              key={concern.id}
-              concern={concern}
-              statusLabels={statusLabels}
-              isAuthenticated={!!userId}
-            />
-          ))
+          <ul className="space-y-2">
+            {sortedConcerns.map((concern) => (
+              <li key={concern.id} className="flex gap-4 border-b border-border/60 px-1 py-4 last:border-b-0 sm:gap-5">
+                <div className="shrink-0 pt-0.5">
+                  <UpvoteButton
+                    concernId={concern.id}
+                    initialUpvotes={concern.upvotes}
+                    initialDownvotes={concern.downvotes}
+                    initialVote={(concern as Concern & { currentVote?: "up" | "down" | null }).currentVote ?? null}
+                    isAuthenticated={!!userId}
+                  />
+                </div>
+
+                <div className="min-w-0 flex-1">
+                  <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                    <Link
+                      href={`/concerns/${concern.id}`}
+                      className="text-base font-semibold text-foreground transition-colors hover:text-primary sm:text-lg"
+                    >
+                      {concern.title}
+                    </Link>
+                    <Badge variant={getStatusBadgeVariant(concern.status, "list")}>
+                      {getStatusLabel(concern.status, statusLabels)}
+                    </Badge>
+                  </div>
+
+                  <p className="line-clamp-2 text-sm text-muted-foreground">{concern.description}</p>
+
+                  <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                    <span className="inline-flex items-center gap-1">
+                      <MapPin className="size-3.5" weight="duotone" />
+                      {concern.location.address || `${concern.location.lat.toFixed(4)}, ${concern.location.lng.toFixed(4)}`}
+                    </span>
+                    <span className="inline-flex items-center gap-1">
+                      <Clock className="size-3.5" weight="duotone" />
+                      {new Date(concern.createdAt).toLocaleDateString(undefined, {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                      })}
+                    </span>
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
         )}
+      </div>
+
+      <div className="mt-6 flex items-center justify-between gap-3">
+        <p className="text-sm text-muted-foreground">
+          Page {page} of {totalPages}
+        </p>
+        <div className="flex items-center gap-2">
+          <Link
+            href={withQuery(Math.max(1, page - 1))}
+            aria-disabled={page <= 1}
+            className={buttonVariants({
+              variant: "outline",
+              size: "sm",
+              className: page <= 1 ? "pointer-events-none opacity-50" : "",
+            })}
+          >
+            Previous
+          </Link>
+          <Link
+            href={withQuery(Math.min(totalPages, page + 1))}
+            aria-disabled={page >= totalPages}
+            className={buttonVariants({
+              variant: "outline",
+              size: "sm",
+              className: page >= totalPages ? "pointer-events-none opacity-50" : "",
+            })}
+          >
+            Next
+          </Link>
+        </div>
       </div>
     </div>
   )

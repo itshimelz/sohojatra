@@ -127,7 +127,7 @@ export function SiteHeader({ nav, locale }: Props) {
             href="/"
             className="flex shrink-0 items-center gap-2 transition-opacity hover:opacity-90"
           >
-            <Image src="/logo.svg" alt="Sohojatra Logo" width={32} height={32} className="size-8 w-auto" />
+            <Image src="/logo.png" alt="Sohojatra Logo" width={32} height={32} className="size-8 w-auto" />
             <span className="hidden text-xl font-bold tracking-tight text-foreground sm:block">
               Sohojatra
             </span>

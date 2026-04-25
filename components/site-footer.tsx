@@ -27,7 +27,7 @@ export function SiteFooter({ locale, footer, nav }: Props) {
       <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-12">
         <div className="mb-8">
           <div className="mb-3 flex items-center gap-2">
-            <Image src="/logo.svg" alt="Sohojatra Logo" width={32} height={32} className="size-8 w-auto" />
+            <Image src="/logo.png" alt="Sohojatra Logo" width={32} height={32} className="size-8 w-auto" />
             <span className="text-lg font-bold tracking-tight">
               Sohojatra
             </span>

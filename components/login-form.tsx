@@ -14,7 +14,6 @@ import { Input } from "@/components/ui/input"
 import {
   InputOTP,
   InputOTPGroup,
-  InputOTPSeparator,
   InputOTPSlot,
 } from "@/components/ui/input-otp"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
@@ -157,7 +156,7 @@ export function LoginForm({
             <FieldGroup className="gap-5">
               <div className="mb-2 flex flex-col items-center gap-2 text-center">
                 <div className="mb-2 flex size-12 items-center justify-center">
-                  <Image src="/logo.svg" alt="Sohojatra Logo" width={48} height={48} className="size-12 w-auto" />
+                  <Image src="/logo.png" alt="Sohojatra Logo" width={48} height={48} className="size-12 w-auto" />
                 </div>
                 <h1 className="text-2xl font-bold tracking-tight">
                   {isOtpSent ? "Verify Phone" : "Welcome back"}
@@ -218,6 +217,7 @@ export function LoginForm({
                     <FieldLabel htmlFor="otp">OTP Code</FieldLabel>
                     <div className="flex justify-center mt-2 mb-2">
                       <InputOTP
+                        id="otp"
                         maxLength={6}
                         value={otp}
                         onChange={(value) => setOtp(value)}
@@ -227,9 +227,6 @@ export function LoginForm({
                           <InputOTPSlot index={0} />
                           <InputOTPSlot index={1} />
                           <InputOTPSlot index={2} />
-                        </InputOTPGroup>
-                        <InputOTPSeparator />
-                        <InputOTPGroup>
                           <InputOTPSlot index={3} />
                           <InputOTPSlot index={4} />
                           <InputOTPSlot index={5} />

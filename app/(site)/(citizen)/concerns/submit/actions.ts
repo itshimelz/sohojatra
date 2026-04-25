@@ -21,12 +21,13 @@ export async function submitConcernAction(data: {
 }) {
   const session = await requireServerSession()
   const user = session.user
+  const userId = user?.id
 
   // Rate-limit check: count submissions by this user in the last 24h
   const windowStart = new Date(Date.now() - RATE_LIMIT_WINDOW_MS)
   const recentCount = await prisma.concern.count({
     where: {
-      authorName: user?.name ?? "Citizen",
+      authorId: userId ?? undefined,
       createdAt: { gte: windowStart },
     },
   })
@@ -47,6 +48,7 @@ export async function submitConcernAction(data: {
       location: data.address,
       photos: data.photos,
       authorName: user?.name ?? "Citizen",
+      authorId: userId ?? null,
       status: "Submitted",
       updates: [
         {

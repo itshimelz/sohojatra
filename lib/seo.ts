@@ -99,8 +99,9 @@ export const defaultMetadata: Metadata = {
 
   // ── Icons ───────────────────────────────────────────────────
   icons: {
-    icon: "/favicon.ico",
-    apple: "/apple-icon.png",
+    icon: "/logo.png",
+    shortcut: "/logo.png",
+    apple: "/logo.png",
   },
 
   // ── Verification (add IDs when available) ───────────────────

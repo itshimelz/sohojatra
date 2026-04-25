@@ -23,6 +23,7 @@ import {
   CheckCircle,
   XCircle,
 } from "@phosphor-icons/react/dist/ssr"
+import { StatusTimelineModal } from "@/components/concerns/status-timeline-modal"
 
 type DetailParams = { params: Promise<{ id: string }> }
 
@@ -106,7 +107,20 @@ export default async function ConcernDetailPage({
 
       {/* ── Photo gallery hero ── */}
       {photos.length > 0 && (
-        <div className="mb-8 overflow-hidden rounded-2xl border border-border/60">
+        <div className="relative mb-8 overflow-hidden rounded-2xl border border-border/60">
+          <div className="absolute right-3 top-3 z-10">
+            <StatusTimelineModal
+              updates={updates}
+              statusLabels={statusLabels}
+              copy={{
+                timeline: tr.timeline,
+                liveUpdates: d.concernDetail.liveUpdates,
+                noUpdates: d.concernDetail.noUpdates,
+                by: d.concernDetail.by,
+                officialNote: tr.officialNote,
+              }}
+            />
+          </div>
           {photos.length === 1 ? (
             <AspectRatio ratio={16 / 7}>
               <Image src={photos[0]} alt="Concern photo" fill className="object-cover" />
@@ -145,8 +159,8 @@ export default async function ConcernDetailPage({
         </div>
       )}
 
-      {/* ── Main two-column layout ── */}
-      <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
+      {/* ── Main content layout ── */}
+      <div className="grid gap-6">
 
         {/* ── Left column: concern body ── */}
         <div className="space-y-6">
@@ -220,67 +234,6 @@ export default async function ConcernDetailPage({
           </div>
         </div>
 
-        {/* ── Right column: tracking timeline ── */}
-        <div className="sticky top-6 h-fit rounded-2xl border border-border/60 bg-card p-5">
-          <h3 className="mb-0.5 text-base font-semibold">{tr.timeline}</h3>
-          <p className="mb-5 text-xs text-muted-foreground">{d.concernDetail.liveUpdates}</p>
-
-          {updates.length === 0 ? (
-            <div className="rounded-xl border border-dashed py-6 text-center">
-              <p className="text-sm text-muted-foreground italic">{d.concernDetail.noUpdates}</p>
-            </div>
-          ) : (
-            <div className="space-y-6 pl-1">
-              {updates.map((update, index) => {
-                const cfg =
-                  STATUS_CONFIG[update.status as keyof typeof STATUS_CONFIG] ??
-                  STATUS_CONFIG.Submitted
-                const Icon = cfg.icon
-                const isLast = index === updates.length - 1
-
-                return (
-                  <div key={update.id ?? index} className="relative">
-                    {!isLast && (
-                      <div className="absolute left-[11px] top-6 bottom-[-24px] w-px bg-border" />
-                    )}
-                    <div className="flex gap-3">
-                      {/* Node */}
-                      <div
-                        className={`relative z-10 mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full ring-4 ring-card ${cfg.bg} ${cfg.color}`}
-                      >
-                        <Icon className="size-3" weight="fill" />
-                      </div>
-
-                      {/* Content */}
-                      <div className="min-w-0 flex-1">
-                        <div className="flex flex-wrap items-start justify-between gap-1">
-                          <p className="text-sm font-semibold leading-snug text-foreground">
-                            {getStatusLabel(update.status, statusLabels)}
-                          </p>
-                          <time className="shrink-0 text-[11px] text-muted-foreground">
-                            {new Date(update.timestamp).toLocaleDateString(undefined, {
-                              month: "short",
-                              day: "numeric",
-                            })}
-                          </time>
-                        </div>
-                        <p className="mt-0.5 text-xs text-muted-foreground">{d.concernDetail.by} {update.author}</p>
-                        {update.note && (
-                          <div className="mt-2 rounded-lg border border-border/60 bg-muted/40 px-3 py-2 text-xs leading-relaxed text-foreground">
-                            <span className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                              {tr.officialNote}
-                            </span>
-                            {update.note}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          )}
-        </div>
       </div>
 
       {/* ── Comment section ── */}
