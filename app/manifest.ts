@@ -16,9 +16,9 @@ export default function manifest(): MetadataRoute.Manifest {
     theme_color: "#16a34a",
     icons: [
       {
-        src: "/logo.png",
-        sizes: "1024x1024",
-        type: "image/png",
+        src: "/Sohojatra_logo.svg",
+        sizes: "any",
+        type: "image/svg+xml",
       },
     ],
   }

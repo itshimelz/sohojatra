@@ -11,7 +11,7 @@ interface AiBadgeProps {
 }
 
 export function AiBadge({
-  label = "Fine-tuned AI",
+  label = "AI Insight Signals",
   className,
   pulse = true,
   size = "sm",

@@ -2,14 +2,12 @@
 
 import { useEffect, useState } from "react"
 import {
-  Brain,
+  CheckCircle,
   Lightning,
-  Smiley,
-  SmileyMeh,
-  SmileySad,
   Spinner,
   Translate,
   Warning,
+  XCircle,
 } from "@phosphor-icons/react"
 import { cn } from "@/lib/utils"
 import { AiBadge } from "./AiBadge"
@@ -24,6 +22,7 @@ interface AiInsightPanelProps {
   text: string
   className?: string
   autoFetch?: boolean
+  variant?: "card" | "inline"
 }
 
 function UrgencyLabel(u: number) {
@@ -34,12 +33,17 @@ function UrgencyLabel(u: number) {
 }
 
 function SentimentLabel(s: number) {
-  if (s >= 0.2)  return { label: "Constructive", Icon: Smiley,    color: "text-emerald-600" }
-  if (s >= -0.2) return { label: "Neutral",      Icon: SmileyMeh, color: "text-amber-600" }
-  return              { label: "Critical",       Icon: SmileySad,  color: "text-rose-600" }
+  if (s >= 0.2)  return { label: "Constructive", Icon: CheckCircle, color: "text-emerald-600" }
+  if (s >= -0.2) return { label: "Neutral",      Icon: Lightning,   color: "text-amber-600" }
+  return              { label: "Critical",       Icon: XCircle,     color: "text-rose-600" }
 }
 
-export function AiInsightPanel({ text, className, autoFetch = true }: AiInsightPanelProps) {
+export function AiInsightPanel({
+  text,
+  className,
+  autoFetch = true,
+  variant = "card",
+}: AiInsightPanelProps) {
   const [result, setResult] = useState<AiResult | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -74,21 +78,58 @@ export function AiInsightPanel({ text, className, autoFetch = true }: AiInsightP
   const urgency  = result ? UrgencyLabel(result.urgency) : null
   const sentiment = result ? SentimentLabel(result.sentiment) : null
 
+  if (variant === "inline") {
+    return (
+      <div className={cn("flex flex-wrap items-center gap-2 text-xs", className)}>
+        <AiBadge size="xs" className="border-border bg-muted text-muted-foreground" pulse={false} />
+        {loading && (
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted px-2.5 py-1 text-muted-foreground">
+            <Spinner className="size-3 animate-spin" />
+            Analyzing
+          </span>
+        )}
+        {error && !loading && (
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 px-2.5 py-1 text-amber-700 dark:text-amber-400">
+            <Warning className="size-3" weight="fill" />
+            Unavailable
+          </span>
+        )}
+        {result && !loading && (
+          <>
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted px-2.5 py-1 text-muted-foreground">
+              <Lightning className="size-3 text-amber-500" weight="fill" />
+              Urgency: <span className={cn("font-semibold", urgency!.color)}>{urgency!.label}</span>
+            </span>
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted px-2.5 py-1 text-muted-foreground">
+              {sentiment && <sentiment.Icon className="size-3" weight="fill" />}
+              Sentiment: <span className={cn("font-semibold", sentiment!.color)}>{sentiment!.label}</span>
+            </span>
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted px-2.5 py-1 text-muted-foreground">
+              <Translate className="size-3" />
+              {result.language.toUpperCase()}
+            </span>
+          </>
+        )}
+      </div>
+    )
+  }
+
   return (
     <div
       className={cn(
-        "rounded-xl border border-violet-500/20 bg-violet-500/5 p-4",
+        "rounded-2xl border border-border bg-card p-4 text-card-foreground",
         className,
       )}
     >
       {/* Header */}
-      <div className="mb-3 flex items-center justify-between">
+      <div className="mb-4 flex items-center justify-between">
         <AiBadge />
         {!loading && !result && !error && (
           <button
             onClick={() => void fetchAnalysis()}
-            className="rounded-full bg-violet-500/10 px-3 py-1 text-xs font-medium text-violet-600 transition-colors hover:bg-violet-500/20 dark:text-violet-400"
+            className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted px-3 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted/80 hover:text-foreground"
           >
+            <Lightning className="size-3.5" />
             Run Analysis
           </button>
         )}
@@ -97,7 +138,7 @@ export function AiInsightPanel({ text, className, autoFetch = true }: AiInsightP
       {/* Loading */}
       {loading && (
         <div className="flex items-center gap-2.5 py-2 text-sm text-muted-foreground">
-          <Spinner className="size-4 animate-spin text-violet-500" />
+          <Spinner className="size-4 animate-spin text-primary" />
           <span>Analyzing with fine-tuned model…</span>
         </div>
       )}

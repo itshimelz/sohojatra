@@ -53,43 +53,50 @@ export default async function ForumProposalPage({ params }: PageProps) {
         Back to Forum
       </Link>
 
-      {/* Proposal card */}
-      <div className="rounded-2xl border border-border/60 bg-card p-6 sm:p-8">
-        {/* Category badge */}
-        <div className="mb-4 flex flex-wrap items-center gap-2">
-          <Badge variant="secondary" className="gap-1.5">
-            <Tag className="size-3" />
-            {proposal.category}
-          </Badge>
-          <span className="ml-auto font-mono text-xs text-muted-foreground">
-            #{proposal.id.slice(0, 8)}
-          </span>
-        </div>
-
-        {/* Title */}
-        <h1 className="mb-4 text-2xl font-bold tracking-tight sm:text-3xl">
-          {proposal.title}
-        </h1>
-
-        {/* Body */}
-        <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-muted-foreground">
-          {proposal.body}
-        </p>
-
-        {/* Meta */}
-        <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-border/50 pt-5 text-sm text-muted-foreground">
-          <div className="flex items-center gap-1.5">
-            <User className="size-4" weight="duotone" />
-            <span className="font-medium text-foreground">{proposal.author}</span>
+      {/* Post detail stream (matching concern detail style) */}
+      <div className="border-y border-border">
+        <article className="py-5">
+          {/* Category + ID */}
+          <div className="mb-3 flex flex-wrap items-center gap-2">
+            <Badge variant="secondary" className="gap-1.5">
+              <Tag className="size-3" />
+              {proposal.category}
+            </Badge>
+            <span className="ml-auto font-mono text-xs text-muted-foreground">
+              #{proposal.id.slice(0, 8)}
+            </span>
           </div>
-          <div className="flex items-center gap-1.5">
-            <Clock className="size-4" weight="duotone" />
-            <time>{formatDistanceToNow(new Date(proposal.createdAt))} ago</time>
-          </div>
-        </div>
 
-        {/* Vote display */}
-        <div className="mt-5 flex items-center gap-3 text-sm">
+          {/* AI stats above title */}
+          {proposal.body.length >= 10 && (
+            <AiInsightPanel text={proposal.body} variant="inline" className="mb-3" />
+          )}
+
+          {/* Title */}
+          <h1 className="mb-3 text-2xl font-bold tracking-tight leading-tight sm:text-3xl">
+            {proposal.title}
+          </h1>
+
+          {/* Body */}
+          <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-muted-foreground">
+            {proposal.body}
+          </p>
+
+          {/* Meta */}
+          <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-muted-foreground">
+            <div className="flex items-center gap-1.5">
+              <User className="size-4" weight="duotone" />
+              <span className="font-medium text-foreground">{proposal.author}</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <Clock className="size-4" weight="duotone" />
+              <time>{formatDistanceToNow(new Date(proposal.createdAt))} ago</time>
+            </div>
+          </div>
+        </article>
+
+        {/* Engagement row */}
+        <div className="flex items-center gap-3 py-3 text-sm">
           <div className="flex items-center gap-1.5 rounded-full bg-muted px-3 py-1.5">
             <ArrowFatUp className="size-4 text-emerald-500" weight="fill" />
             <span className="font-semibold">{proposal.votes}</span>
@@ -107,11 +114,6 @@ export default async function ForumProposalPage({ params }: PageProps) {
           </div>
         </div>
       </div>
-
-      {/* AI analysis */}
-      {proposal.body.length >= 10 && (
-        <AiInsightPanel text={proposal.body} className="mt-4" />
-      )}
 
       {/* Comments */}
       <div className="mt-8">

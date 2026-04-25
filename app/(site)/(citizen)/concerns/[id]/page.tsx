@@ -107,7 +107,7 @@ export default async function ConcernDetailPage({
 
       {/* ── Photo gallery hero ── */}
       {photos.length > 0 && (
-        <div className="relative mb-8 overflow-hidden rounded-2xl border border-border/60">
+        <div className="relative mb-8 overflow-hidden rounded-2xl border border-border/60 bg-muted/20">
           <div className="absolute right-3 top-3 z-10">
             <StatusTimelineModal
               updates={updates}
@@ -122,29 +122,34 @@ export default async function ConcernDetailPage({
             />
           </div>
           {photos.length === 1 ? (
-            <AspectRatio ratio={16 / 7}>
+            <AspectRatio ratio={16 / 9}>
               <Image src={photos[0]} alt="Concern photo" fill className="object-cover" />
             </AspectRatio>
           ) : photos.length === 2 ? (
-            <div className="grid grid-cols-2 gap-px bg-border/40">
+            <div className="grid grid-cols-2 gap-1 p-1">
               {photos.map((src, i) => (
-                <div key={i} className="relative overflow-hidden bg-muted">
-                  <AspectRatio ratio={4 / 3}>
-                    <Image src={src} alt={`Photo ${i + 1}`} fill className="object-cover" />
+                <div key={i} className="relative overflow-hidden rounded-xl bg-muted">
+                  <AspectRatio ratio={1}>
+                    <Image src={src} alt={`Photo ${i + 1}`} fill className="object-cover transition-transform duration-300 hover:scale-[1.02]" />
                   </AspectRatio>
                 </div>
               ))}
             </div>
           ) : (
-            /* 3-photo mosaic: large left + two stacked right */
-            <div className="grid grid-cols-[2fr_1fr] gap-px bg-border/40" style={{ height: "380px" }}>
-              <div className="relative overflow-hidden bg-muted">
-                <Image src={photos[0]} alt="Photo 1" fill className="object-cover" />
+            /* 3+ photos: wide hero + stacked previews (feed style) */
+            <div className="grid grid-cols-1 gap-1 p-1 md:grid-cols-[2fr_1fr]" style={{ minHeight: "320px" }}>
+              <div className="relative overflow-hidden rounded-xl bg-muted">
+                <Image src={photos[0]} alt="Photo 1" fill className="object-cover transition-transform duration-300 hover:scale-[1.02]" />
               </div>
-              <div className="flex flex-col gap-px">
+              <div className="flex flex-col gap-1">
                 {photos.slice(1, 3).map((src, i) => (
-                  <div key={i} className="relative flex-1 overflow-hidden bg-muted">
-                    <Image src={src} alt={`Photo ${i + 2}`} fill className="object-cover" />
+                  <div key={i} className="relative flex-1 overflow-hidden rounded-xl bg-muted">
+                    <Image src={src} alt={`Photo ${i + 2}`} fill className="object-cover transition-transform duration-300 hover:scale-[1.02]" />
+                    {i === 1 && photos.length > 3 && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/45 text-sm font-semibold text-white">
+                        +{photos.length - 3} more
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -159,81 +164,77 @@ export default async function ConcernDetailPage({
         </div>
       )}
 
-      {/* ── Main content layout ── */}
-      <div className="grid gap-6">
-
-        {/* ── Left column: concern body ── */}
-        <div className="space-y-6">
-          {/* Header card */}
-          <div className="rounded-2xl border border-border/60 bg-card p-6">
-            {/* Status + ID row */}
-            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-              <div className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold ${statusCfg.bg} ${statusCfg.color}`}>
-                <StatusIcon className="size-3.5" weight="fill" />
-                {getStatusLabel(displayStatus, statusLabels)}
-              </div>
-              <span className="rounded-lg bg-muted px-2.5 py-1 font-mono text-xs text-muted-foreground">
-                #{concern.id.slice(0, 8)}
-              </span>
+      {/* ── Post detail stream (X-style hierarchy, list theme) ── */}
+      <div className="border-y border-border">
+        <article className="py-5">
+          {/* Status + ID row */}
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+            <div className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold ${statusCfg.bg} ${statusCfg.color}`}>
+              <StatusIcon className="size-3.5" weight="fill" />
+              {getStatusLabel(displayStatus, statusLabels)}
             </div>
-
-            {/* Title */}
-            <h1 className="mb-4 text-2xl font-bold tracking-tight leading-tight sm:text-3xl">
-              {concern.title}
-            </h1>
-
-            {/* Description */}
-            <p className="text-[15px] leading-relaxed whitespace-pre-wrap text-muted-foreground">
-              {concern.description}
-            </p>
-
-            {/* Meta row */}
-            <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2.5 border-t border-border/50 pt-5 text-sm text-muted-foreground">
-              <div className="flex items-center gap-1.5">
-                <User className="size-4" weight="duotone" />
-                <span className="font-medium text-foreground">{concern.author.name}</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <Clock className="size-4" weight="duotone" />
-                <time dateTime={new Date(concern.createdAt).toISOString()}>
-                  {new Date(concern.createdAt).toLocaleDateString(undefined, {
-                    day: "numeric",
-                    month: "long",
-                    year: "numeric",
-                  })}
-                </time>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <MapPin className="size-4" weight="duotone" />
-                <span>
-                  {concern.location.address ||
-                    `${concern.location.lat.toFixed(4)}, ${concern.location.lng.toFixed(4)}`}
-                </span>
-              </div>
-            </div>
+            <span className="font-mono text-xs text-muted-foreground">#{concern.id.slice(0, 8)}</span>
           </div>
 
-          {/* AI analysis panel */}
+          {/* AI stats above title */}
           {concern.description.length >= 10 && (
-            <AiInsightPanel text={concern.description} />
+            <AiInsightPanel
+              text={concern.description}
+              variant="inline"
+              className="mb-3"
+            />
           )}
 
-          {/* Vote bar — compact FB-style */}
-          <div className="flex items-center justify-between rounded-2xl border border-border/60 bg-card px-5 py-3">
-            <span className="text-xs font-medium text-muted-foreground">
-              {!userId ? d.concernDetail.signInToVote : d.concernDetail.wasThisHelpful}
-            </span>
-            <UpvoteButton
-              concernId={concern.id}
-              initialUpvotes={concern.upvotes}
-              initialDownvotes={concern.downvotes}
-              initialVote={currentVote}
-              isAuthenticated={!!userId}
-              variant="compact"
-            />
-          </div>
-        </div>
+          {/* Title */}
+          <h1 className="mb-3 text-2xl font-bold tracking-tight leading-tight sm:text-3xl">
+            {concern.title}
+          </h1>
 
+          {/* Post body */}
+          <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-muted-foreground">
+            {concern.description}
+          </p>
+
+          {/* Meta row */}
+          <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-muted-foreground">
+            <div className="flex items-center gap-1.5">
+              <User className="size-4" weight="duotone" />
+              <span className="font-medium text-foreground">{concern.author.name}</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <Clock className="size-4" weight="duotone" />
+              <time dateTime={new Date(concern.createdAt).toISOString()}>
+                {new Date(concern.createdAt).toLocaleDateString(undefined, {
+                  day: "numeric",
+                  month: "long",
+                  year: "numeric",
+                })}
+              </time>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <MapPin className="size-4" weight="duotone" />
+              <span>
+                {concern.location.address ||
+                  `${concern.location.lat.toFixed(4)}, ${concern.location.lng.toFixed(4)}`}
+              </span>
+            </div>
+          </div>
+        </article>
+
+        {/* Engagement row */}
+        <div className="flex items-center justify-between py-3">
+          <span className="text-xs font-medium text-muted-foreground">
+            {!userId ? d.concernDetail.signInToVote : d.concernDetail.wasThisHelpful}
+          </span>
+          <UpvoteButton
+            concernId={concern.id}
+            initialUpvotes={concern.upvotes}
+            initialDownvotes={concern.downvotes}
+            initialVote={currentVote}
+            isAuthenticated={!!userId}
+            variant="compact"
+          />
+        </div>
       </div>
 
       {/* ── Comment section ── */}

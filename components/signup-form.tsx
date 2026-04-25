@@ -173,7 +173,7 @@ export function SignupForm({
             <FieldGroup className="gap-5">
               <div className="mb-2 flex flex-col items-center gap-2 text-center">
                 <div className="mb-2 flex size-12 items-center justify-center">
-                  <Image src="/logo.png" alt="Sohojatra Logo" width={48} height={48} className="size-12 w-auto" />
+                  <Image src="/Sohojatra_logo.svg" alt="Sohojatra Logo" width={48} height={48} className="size-12 w-auto" />
                 </div>
                 <h1 className="text-2xl font-bold tracking-tight">
                   {isOtpSent ? "Verify Phone" : "Create your account"}

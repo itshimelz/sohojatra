@@ -76,8 +76,30 @@ const protectedPaths = ["/concerns/submit"]
 /** Auth pages — redirect away if already logged in */
 const authPages = ["/login", "/signup"]
 
-import { betterFetch } from "@better-fetch/fetch"
-import type { auth } from "@/lib/auth"
+type ProxySession = {
+  user?: {
+    onboarded?: boolean | null
+  } | null
+} | null
+
+async function getProxySession(request: NextRequest): Promise<ProxySession> {
+  try {
+    const response = await fetch(new URL("/api/auth/get-session", request.nextUrl.origin), {
+      method: "GET",
+      headers: { cookie: request.headers.get("cookie") || "" },
+      cache: "no-store",
+    })
+
+    if (!response.ok) return null
+
+    const raw = await response.text()
+    if (!raw) return null
+
+    return JSON.parse(raw) as ProxySession
+  } catch {
+    return null
+  }
+}
 
 // ── Proxy ─────────────────────────────────────────────────────
 
@@ -142,13 +164,7 @@ export async function proxy(request: NextRequest) {
   // 4. Force Onboard Check & Protected Routes
   if (sessionCookie) {
     // Only query DB for session if we really need to enforce onboard or access roles
-    const { data: session } = await betterFetch<typeof auth.$Infer.Session>(
-      "/api/auth/get-session",
-      {
-        baseURL: request.nextUrl.origin,
-        headers: { cookie: request.headers.get("cookie") || "" },
-      }
-    )
+    const session = await getProxySession(request)
 
     if (session?.user) {
       const isOnboarded = (session.user as any).onboarded

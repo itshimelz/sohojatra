@@ -99,9 +99,9 @@ export const defaultMetadata: Metadata = {
 
   // ── Icons ───────────────────────────────────────────────────
   icons: {
-    icon: "/logo.png",
-    shortcut: "/logo.png",
-    apple: "/logo.png",
+    icon: "/Sohojatra_logo.svg",
+    shortcut: "/Sohojatra_logo.svg",
+    apple: "/Sohojatra_logo.svg",
   },
 
   // ── Verification (add IDs when available) ───────────────────

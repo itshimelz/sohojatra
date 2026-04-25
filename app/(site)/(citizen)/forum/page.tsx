@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
+import Link from "next/link"
 import { ArrowFatUp, ArrowFatDown, ChatCircle, Quotes, Star, Plus, X } from "@phosphor-icons/react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -229,7 +230,14 @@ export default function ForumPage() {
                 <li key={proposal.id} className="group rounded-lg border-b border-border/60 px-1 py-4 transition-colors hover:bg-muted/40 last:border-b-0">
                   <div className="mb-2 flex flex-wrap items-start justify-between gap-2">
                     <div>
-                      <h2 className="text-lg font-semibold tracking-tight transition-colors group-hover:text-primary">{proposal.title}</h2>
+                      <Link
+                        href={`/forum/${proposal.id}`}
+                        className="block"
+                      >
+                        <h2 className="text-lg font-semibold tracking-tight transition-colors group-hover:text-primary hover:text-primary">
+                          {proposal.title}
+                        </h2>
+                      </Link>
                       <p className="text-sm text-muted-foreground">by {proposal.author}</p>
                     </div>
                     <div className="flex items-center gap-2">
@@ -242,7 +250,11 @@ export default function ForumPage() {
                       )}
                     </div>
                   </div>
-                  <p className="line-clamp-2 text-sm leading-relaxed text-foreground/90">{proposal.body}</p>
+                  <Link href={`/forum/${proposal.id}`} className="block">
+                    <p className="line-clamp-2 text-sm leading-relaxed text-foreground/90 hover:text-foreground">
+                      {proposal.body}
+                    </p>
+                  </Link>
 
                   <div className="mt-3 flex flex-wrap items-center gap-2">
                     <Button size="sm" className="rounded-full gap-1.5" onClick={() => void vote(proposal.id, "up")}>
@@ -253,9 +265,11 @@ export default function ForumPage() {
                       <ArrowFatDown className="size-4" />
                       {proposal.downvotes ?? 0}
                     </Button>
-                    <Button variant="ghost" size="sm" className="rounded-full gap-1.5 text-muted-foreground">
-                      <ChatCircle className="size-4" />
-                      {proposal.comments.length} comments
+                    <Button asChild variant="ghost" size="sm" className="rounded-full gap-1.5 text-muted-foreground">
+                      <Link href={`/forum/${proposal.id}`}>
+                        <ChatCircle className="size-4" />
+                        {proposal.comments.length} comments
+                      </Link>
                     </Button>
                   </div>
 
