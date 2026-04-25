@@ -7,21 +7,13 @@ import {
   Warning,
   ChatCircle,
   Users,
-  Flask,
-  ShieldCheck,
   ChartBar,
-  CalendarCheck,
-  Star,
-  Trophy,
-  Buildings,
-  Database,
   Gear,
   List,
   X,
   ArrowRight,
   type Icon,
 } from "@phosphor-icons/react"
-import { buttonVariants } from "@/components/ui/button-variants"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -36,7 +28,6 @@ import {
   NavigationMenuList,
   NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu"
-import { cn } from "@/lib/utils"
 
 import { UserMenu } from "@/components/user-menu"
 import { useAuth } from "@/components/auth-provider"
@@ -70,17 +61,8 @@ function buildNavGroups(nav: Dictionary["nav"]): NavGroup[] {
       key: "civic",
       label: nav.civic,
       items: [
-        { href: "/concerns", label: nav.concernHub, desc: nav.concernHubDesc, Icon: Warning },
         { href: "/forum", label: nav.voiceForum, desc: nav.voiceForumDesc, Icon: ChatCircle },
         { href: "/collaboration", label: nav.coGovernance, desc: nav.coGovernanceDesc, Icon: Users },
-      ],
-    },
-    {
-      key: "knowledge",
-      label: nav.knowledge,
-      items: [
-        { href: "/research", label: nav.researchLab, desc: nav.researchLabDesc, Icon: Flask },
-        { href: "/chatbot", label: nav.rightsChatbot, desc: nav.rightsChatbotDesc, Icon: ShieldCheck },
       ],
     },
     {
@@ -88,23 +70,13 @@ function buildNavGroups(nav: Dictionary["nav"]): NavGroup[] {
       label: nav.government,
       items: [
         { href: "/projects", label: nav.projectTracker, desc: nav.projectTrackerDesc, Icon: ChartBar },
-        { href: "/assembly", label: nav.assemblies, desc: nav.assembliesDesc, Icon: CalendarCheck },
-      ],
-    },
-    {
-      key: "community",
-      label: nav.community,
-      items: [
-        { href: "/profile", label: nav.reputation, desc: nav.reputationDesc, Icon: Star },
-        { href: "/leaderboard", label: nav.leaderboard, desc: nav.leaderboardDesc, Icon: Trophy },
       ],
     },
     {
       key: "transparency",
       label: nav.transparency,
       items: [
-        { href: "/dashboard", label: nav.analytics, desc: nav.analyticsDesc, Icon: Buildings },
-        { href: "/open-data", label: nav.openData, desc: nav.openDataDesc, Icon: Database },
+        { href: "/dashboard", label: nav.analytics, desc: nav.analyticsDesc, Icon: ChartBar },
         { href: "/admin", label: nav.adminPanel, desc: nav.adminPanelDesc, Icon: Gear, elevated: true },
       ],
     },
@@ -165,6 +137,14 @@ export function SiteHeader({ nav, locale }: Props) {
           <div className="hidden flex-1 justify-center lg:flex">
             <NavigationMenu>
               <NavigationMenuList className="gap-0.5">
+                <NavigationMenuItem>
+                  <NavigationMenuLink
+                    render={<Link href="/concerns" />}
+                    className="group inline-flex h-10 items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors hover:bg-muted hover:text-foreground"
+                  >
+                    {nav.concernHub}
+                  </NavigationMenuLink>
+                </NavigationMenuItem>
                 {navGroups.map((group) => (
                   <NavigationMenuItem key={group.key}>
                     <NavigationMenuTrigger className="text-sm font-medium">
@@ -185,16 +165,6 @@ export function SiteHeader({ nav, locale }: Props) {
 
           {/* Right actions */}
           <div className="flex items-center gap-1.5">
-            <Link
-              href="/concerns/submit"
-              className={cn(
-                buttonVariants({ size: "sm" }),
-                "hidden rounded-full bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-md hover:from-emerald-600 hover:to-teal-700 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 border-none md:inline-flex"
-              )}
-            >
-              {nav.submitConcern}
-            </Link>
-
             <UserMenu loginLabel={nav.login} />
 
 
@@ -215,6 +185,21 @@ export function SiteHeader({ nav, locale }: Props) {
       {mobileOpen && (
         <div className="fixed inset-x-0 bottom-0 z-40 overflow-y-auto bg-background lg:hidden" style={{ top: "64px" }}>
           <div className="flex flex-col gap-6 px-5 py-6">
+            <Link
+              href="/concerns"
+              onClick={() => setMobileOpen(false)}
+              className="flex items-center gap-3 rounded-xl p-3 transition-colors hover:bg-muted"
+            >
+              <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <Warning className="size-4" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-medium">{nav.concernHub}</p>
+                <p className="text-xs text-muted-foreground">{nav.concernHubDesc}</p>
+              </div>
+              <ArrowRight className="size-4 shrink-0 text-muted-foreground/40" />
+            </Link>
+
             {navGroups.map((group) => (
               <div key={group.key}>
                 <p className="mb-2 px-1 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
@@ -241,19 +226,6 @@ export function SiteHeader({ nav, locale }: Props) {
                 </div>
               </div>
             ))}
-
-            <div className="border-t border-border/60 pt-4">
-              <Link
-                href="/concerns/submit"
-                onClick={() => setMobileOpen(false)}
-                className={cn(
-                  buttonVariants({ size: "lg" }),
-                  "w-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-md hover:from-emerald-600 hover:to-teal-700 transition-all border-none"
-                )}
-              >
-                {nav.submitConcern}
-              </Link>
-            </div>
           </div>
         </div>
       )}

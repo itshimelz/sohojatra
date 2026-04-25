@@ -63,6 +63,14 @@
   "actionLog": [],
   "userVotes": [
     {
+      "id": "v-1f63b705",
+      "userId": "M7P2nOs8z9nn7uqzn7SLkrcOHtSMaGtT",
+      "targetType": "proposal",
+      "targetId": "p-6da80d12",
+      "value": -1,
+      "votedAt": "2026-04-25T05:25:46.979Z"
+    },
+    {
       "id": "v-0967988d",
       "userId": "pYNl5irwi3VANo0Wh6LGm94o5hmC2xFC",
       "targetType": "comment",

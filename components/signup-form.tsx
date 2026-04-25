@@ -28,6 +28,7 @@ import { mapAuthError } from "@/lib/auth-feedback"
 import {
   bdPhoneRegex,
   bdPhoneSchema,
+  normalizeBdPhone,
   otpCodeSchema,
   signupNameSchema,
 } from "@/lib/validation/auth"
@@ -72,8 +73,9 @@ export function SignupForm({
     setIsLoading(true)
     setInlineError(null)
     try {
+      const normalizedPhone = normalizeBdPhone(phoneResult.data)
       const { error } = await authClient.phoneNumber.sendOtp({
-        phoneNumber: `+880${phoneNumber}`,
+        phoneNumber: `+880${normalizedPhone}`,
       })
 
       if (error) {
@@ -118,9 +120,10 @@ export function SignupForm({
     setIsLoading(true)
     setInlineError(null)
     try {
+      const normalizedPhone = normalizeBdPhone(phoneNumber)
       type PhoneVerifyPayload = Parameters<typeof authClient.phoneNumber.verify>[0]
       const payload = {
-        phoneNumber: `+880${phoneNumber}`,
+        phoneNumber: `+880${normalizedPhone}`,
         code: otpResult.data,
         name: signupNameSchema.parse(name),
       } as unknown as PhoneVerifyPayload
@@ -215,13 +218,13 @@ export function SignupForm({
                       <Input
                         id="phone"
                         type="tel"
-                        placeholder="1712345678"
+                        placeholder="01XXXXXXXXX"
                         pattern={bdPhoneRegex.source}
                         required
                         value={phoneNumber}
                         onChange={(e) => {
                           const val = e.target.value.replace(/\D/g, "")
-                          if (val.length <= 10) setPhoneNumber(val)
+                          if (val.length <= 11) setPhoneNumber(val)
                         }}
                         className="h-11 rounded-l-none focus-visible:z-10"
                         disabled={isLoading}

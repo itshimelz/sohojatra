@@ -8,29 +8,36 @@ import type { Dictionary } from "@/lib/i18n/dictionaries/en"
 type Props = {
   locale: Locale
   footer: Dictionary["footer"]
-  nav: Pick<Dictionary["nav"], "browseConcerns" | "login">
+  nav: Pick<
+    Dictionary["nav"],
+    | "browseConcerns"
+    | "login"
+    | "researchLab"
+    | "rightsChatbot"
+    | "assemblies"
+    | "leaderboard"
+    | "openData"
+    | "coGovernance"
+  >
 }
 
 export function SiteFooter({ locale, footer, nav }: Props) {
   return (
     <footer className="border-t border-border/40 bg-muted/20">
-      <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
-        <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-4 lg:gap-8">
-          <div className="lg:col-span-2">
-            <div className="mb-4 flex items-center gap-2">
-              <Image src="/logo.svg" alt="Sohojatra Logo" width={32} height={32} className="size-8 w-auto" />
-              <span className="text-lg font-bold tracking-tight">
-                Sohojatra
-              </span>
-            </div>
-            <p className="max-w-md text-sm leading-relaxed text-muted-foreground">
-              {footer.description}
-            </p>
-            {/* <p className="mt-4 text-xs leading-relaxed text-muted-foreground/90">
-              {footer.legalNote}
-            </p> */}
+      <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-12">
+        <div className="mb-8">
+          <div className="mb-3 flex items-center gap-2">
+            <Image src="/logo.svg" alt="Sohojatra Logo" width={32} height={32} className="size-8 w-auto" />
+            <span className="text-lg font-bold tracking-tight">
+              Sohojatra
+            </span>
           </div>
+          <p className="max-w-sm text-sm leading-relaxed text-muted-foreground">
+            {footer.description}
+          </p>
+        </div>
 
+        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3 lg:gap-10">
           <div>
             <h3 className="mb-3 text-sm font-semibold tracking-wide text-foreground uppercase">
               {footer.exploreTitle}
@@ -62,10 +69,10 @@ export function SiteFooter({ locale, footer, nav }: Props) {
               </li>
               <li>
                 <Link
-                  href="/login"
+                  href="/collaboration"
                   className="text-muted-foreground transition-colors hover:text-foreground"
                 >
-                  {footer.signIn}
+                  {nav.coGovernance}
                 </Link>
               </li>
             </ul>
@@ -78,6 +85,62 @@ export function SiteFooter({ locale, footer, nav }: Props) {
             <ul className="space-y-2.5 text-sm">
               <li>
                 <Link
+                  href="/research"
+                  className="text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  {nav.researchLab}
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/chatbot"
+                  className="text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  {nav.rightsChatbot}
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/assembly"
+                  className="text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  {nav.assemblies}
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/leaderboard"
+                  className="text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  {nav.leaderboard}
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/open-data"
+                  className="text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  {nav.openData}
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <h3 className="mb-3 text-sm font-semibold tracking-wide text-foreground uppercase">
+              {footer.contact}
+            </h3>
+            <ul className="space-y-2.5 text-sm">
+              <li>
+                <Link
+                  href="/login"
+                  className="text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  {footer.signIn}
+                </Link>
+              </li>
+              <li>
+                <Link
                   href="/#faq"
                   className="text-muted-foreground transition-colors hover:text-foreground"
                 >
@@ -86,10 +149,6 @@ export function SiteFooter({ locale, footer, nav }: Props) {
               </li>
               <li>
                 <p className="text-muted-foreground">
-                  <span className="font-medium text-foreground/90">
-                    {footer.contact}
-                  </span>
-                  <br />
                   <a
                     href={`mailto:${footer.supportEmail}`}
                     className="text-xs text-primary underline-offset-4 hover:underline"
@@ -101,30 +160,30 @@ export function SiteFooter({ locale, footer, nav }: Props) {
                   </span>
                 </p>
               </li>
-              <li className="pt-1 text-xs text-muted-foreground">
-                <Link
-                  href="/privacy"
-                  className="transition-colors hover:text-foreground"
-                >
-                  {footer.privacy}
-                </Link>{" "}
-                ·{" "}
-                <Link
-                  href="/terms"
-                  className="transition-colors hover:text-foreground"
-                >
-                  {footer.terms}
-                </Link>
-              </li>
             </ul>
           </div>
         </div>
 
-        <div className="mt-10 flex flex-col gap-4 border-t border-border/40 pt-8 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mt-8 flex flex-col gap-3 border-t border-border/40 pt-6 sm:mt-10 sm:flex-row sm:items-center sm:justify-between sm:pt-8">
           <p className="text-center text-sm text-muted-foreground sm:text-left">
             &copy; {new Date().getFullYear()} {footer.tagline}
           </p>
           <div className="flex flex-wrap items-center justify-center gap-3 sm:justify-end">
+            <p className="text-xs text-muted-foreground">
+              <Link
+                href="/privacy"
+                className="transition-colors hover:text-foreground"
+              >
+                {footer.privacy}
+              </Link>{" "}
+              ·{" "}
+              <Link
+                href="/terms"
+                className="transition-colors hover:text-foreground"
+              >
+                {footer.terms}
+              </Link>
+            </p>
             {/* <span className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
               {footer.preferencesTitle}
             </span> */}

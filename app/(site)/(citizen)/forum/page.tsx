@@ -5,6 +5,20 @@ import { ArrowFatUp, ArrowFatDown, ChatCircle, Quotes, Star, Plus, X } from "@ph
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { useAuth } from "@/components/auth-provider"
 
 type ProposalComment = {
@@ -98,58 +112,74 @@ export default function ForumPage() {
         <div>
           <p className="text-xs font-semibold uppercase tracking-widest text-primary">Civic</p>
           <h1 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">Voice Forum</h1>
-          <p className="mt-2 max-w-2xl text-muted-foreground">
-            Reddit-style civic proposals with quote replies. Citizens, experts, and diaspora users
-            surface ideas, vote, and turn useful comments into action.
-          </p>
         </div>
         <Button
           className="w-fit rounded-full"
-          onClick={() => setShowForm((v) => !v)}
+          onClick={() => setShowForm(true)}
         >
-          {showForm ? <X className="mr-1.5 size-4" /> : <Plus className="mr-1.5 size-4" />}
-          {showForm ? "Cancel" : "New Proposal"}
+          <Plus className="mr-1.5 size-4" />
+          New Proposal
         </Button>
       </div>
 
-      {/* Submission form */}
-      {showForm && (
-        <Card className="mb-6 rounded-2xl border-primary/30">
-          <CardContent className="space-y-4 pt-5">
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="sm:col-span-2">
-                <input
-                  className="w-full rounded-xl border border-border/60 bg-background px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/30"
-                  placeholder="Proposal title…"
-                  value={form.title}
-                  onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-                />
-              </div>
-              <div className="sm:col-span-2">
-                <textarea
-                  className="w-full rounded-xl border border-border/60 bg-background px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/30"
-                  rows={4}
-                  placeholder="Describe your proposal in detail…"
-                  value={form.body}
-                  onChange={(e) => setForm((f) => ({ ...f, body: e.target.value }))}
-                />
-              </div>
-              <select
-                className="rounded-xl border border-border/60 bg-background px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/30"
-                value={form.category}
-                onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
-              >
-                {CATEGORIES.map((c) => <option key={c}>{c}</option>)}
-              </select>
+      <Dialog open={showForm} onOpenChange={setShowForm}>
+        <DialogContent className="sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Create New Proposal</DialogTitle>
+          </DialogHeader>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="sm:col-span-2">
+              <input
+                className="w-full rounded-xl border border-border/60 bg-background px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/30"
+                placeholder="Proposal title…"
+                value={form.title}
+                onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
+              />
             </div>
-            <div className="flex gap-2">
-              <Button size="sm" onClick={() => void submitProposal()} disabled={submitting || !form.title.trim()}>
-                {submitting ? "Submitting…" : "Submit Proposal"}
-              </Button>
+            <div className="sm:col-span-2">
+              <textarea
+                className="w-full rounded-xl border border-border/60 bg-background px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/30"
+                rows={5}
+                placeholder="Describe your proposal in detail…"
+                value={form.body}
+                onChange={(e) => setForm((f) => ({ ...f, body: e.target.value }))}
+              />
             </div>
-          </CardContent>
-        </Card>
-      )}
+            <Select
+              value={form.category}
+              onValueChange={(value) =>
+                setForm((f) => ({ ...f, category: value ?? "Infrastructure" }))
+              }
+            >
+              <SelectTrigger className="rounded-xl border-border/60 bg-background">
+                <SelectValue placeholder="Select a category" />
+              </SelectTrigger>
+              <SelectContent>
+                {CATEGORIES.map((c) => (
+                  <SelectItem key={c} value={c}>
+                    {c}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowForm(false)}
+              disabled={submitting}
+            >
+              <X className="mr-1.5 size-4" />
+              Cancel
+            </Button>
+            <Button onClick={() => void submitProposal()} disabled={submitting || !form.title.trim()}>
+              {submitting ? "Submitting…" : "Submit Proposal"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Sort tabs */}
       <div className="mb-6 flex flex-wrap gap-2">
@@ -166,9 +196,7 @@ export default function ForumPage() {
         ))}
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(300px,0.9fr)]">
-        {/* Proposals list */}
-        <div className="space-y-5">
+      <div className="space-y-5">
           {loading ? (
             [...Array(3)].map((_, i) => <div key={i} className="h-48 animate-pulse rounded-2xl bg-muted" />)
           ) : sorted.length === 0 ? (
@@ -251,51 +279,6 @@ export default function ForumPage() {
               </Card>
             ))
           )}
-        </div>
-
-        {/* Sidebar */}
-        <div className="space-y-5">
-          <Card className="rounded-3xl border-border/60">
-            <CardHeader>
-              <h2 className="text-base font-semibold">Participation rules</h2>
-            </CardHeader>
-            <CardContent className="space-y-2 text-sm text-muted-foreground">
-              <p>1 vote per verified user.</p>
-              <p>Comments can be quoted and nested up to 3 levels.</p>
-              <p>AI scoring lifts constructive, evidenced replies.</p>
-              <p>Moderators review flags before any action.</p>
-            </CardContent>
-          </Card>
-
-          <Card className="rounded-3xl border-border/60 bg-gradient-to-br from-primary/10 to-transparent">
-            <CardHeader>
-              <h2 className="text-base font-semibold">Community awards</h2>
-            </CardHeader>
-            <CardContent className="flex flex-wrap gap-2">
-              {["Expert Take", "Most Actionable", "Best Cited", "Local Voice"].map((a) => (
-                <Badge key={a} variant="secondary" className="rounded-full">{a}</Badge>
-              ))}
-            </CardContent>
-          </Card>
-
-          <Card className="rounded-3xl border-border/60">
-            <CardHeader>
-              <h2 className="text-base font-semibold">Stats</h2>
-            </CardHeader>
-            <CardContent className="grid grid-cols-2 gap-3 text-sm">
-              <div>
-                <p className="text-2xl font-bold tabular-nums text-primary">{proposals.length}</p>
-                <p className="text-muted-foreground">Proposals</p>
-              </div>
-              <div>
-                <p className="text-2xl font-bold tabular-nums text-primary">
-                  {proposals.reduce((s, p) => s + p.comments.length, 0)}
-                </p>
-                <p className="text-muted-foreground">Comments</p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
       </div>
     </div>
   )

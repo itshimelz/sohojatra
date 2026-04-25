@@ -286,12 +286,16 @@ export function SubmitConcernForm({ dictionary: t }: { dictionary: Dictionary })
         address: buildAddress(),
         photos: uploadedUrls,
       })
+      if (!id) {
+        throw new Error("Concern saved but no tracking id was returned.")
+      }
       toast.success(t.success)
-      router.push(`/concerns/${id}`)
-      router.refresh()
+      router.replace(`/concerns/${id}`)
+      return
     } catch (err) {
       console.error(err)
       setError(err instanceof Error ? err.message : t.error)
+    } finally {
       setIsSubmitting(false)
     }
   }

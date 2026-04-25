@@ -25,7 +25,7 @@ import { authClient } from "@/lib/auth-client"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { mapAuthError } from "@/lib/auth-feedback"
-import { bdPhoneRegex, bdPhoneSchema, otpCodeSchema } from "@/lib/validation/auth"
+import { bdPhoneRegex, bdPhoneSchema, normalizeBdPhone, otpCodeSchema } from "@/lib/validation/auth"
 
 export function LoginForm({
   className,
@@ -60,8 +60,9 @@ export function LoginForm({
     setIsLoading(true)
     setInlineError(null)
     try {
+      const normalizedPhone = normalizeBdPhone(phoneResult.data)
       const { error } = await authClient.phoneNumber.sendOtp({
-        phoneNumber: `+880${phoneNumber}`,
+        phoneNumber: `+880${normalizedPhone}`,
       })
 
       if (error) {
@@ -106,8 +107,9 @@ export function LoginForm({
     setIsLoading(true)
     setInlineError(null)
     try {
+      const normalizedPhone = normalizeBdPhone(phoneNumber)
       const { data, error } = await authClient.phoneNumber.verify({
-        phoneNumber: `+880${phoneNumber}`,
+        phoneNumber: `+880${normalizedPhone}`,
         code: otpResult.data,
       })
 
@@ -186,13 +188,13 @@ export function LoginForm({
                       <Input
                         id="phone"
                         type="tel"
-                        placeholder="1712345678"
+                        placeholder="01XXXXXXXXX"
                         pattern={bdPhoneRegex.source}
                         required
                         value={phoneNumber}
                         onChange={(e) => {
                           const val = e.target.value.replace(/\D/g, "")
-                          if (val.length <= 10) setPhoneNumber(val)
+                          if (val.length <= 11) setPhoneNumber(val)
                         }}
                         className="h-11 rounded-l-none focus-visible:z-10"
                         disabled={isLoading}
