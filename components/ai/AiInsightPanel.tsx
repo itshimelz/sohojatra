@@ -25,6 +25,21 @@ interface AiInsightPanelProps {
   variant?: "card" | "inline"
 }
 
+const CLIENT_AI_CACHE_TTL_MS = 10 * 60 * 1000 // 10 minutes
+
+function hashText(input: string) {
+  let hash = 0
+  for (let i = 0; i < input.length; i += 1) {
+    hash = (hash << 5) - hash + input.charCodeAt(i)
+    hash |= 0
+  }
+  return String(hash)
+}
+
+function getClientCacheKey(text: string) {
+  return `ai:analyze:${hashText(text.trim().toLowerCase())}`
+}
+
 function UrgencyLabel(u: number) {
   if (u >= 0.75) return { label: "Critical", color: "text-rose-600", bg: "bg-rose-500" }
   if (u >= 0.5)  return { label: "High",     color: "text-orange-600", bg: "bg-orange-500" }
@@ -50,6 +65,25 @@ export function AiInsightPanel({
 
   async function fetchAnalysis() {
     if (!text.trim() || text.trim().length < 10) return
+    const cacheKey = getClientCacheKey(text)
+
+    if (typeof window !== "undefined") {
+      try {
+        const raw = window.sessionStorage.getItem(cacheKey)
+        if (raw) {
+          const cached = JSON.parse(raw) as { ts: number; data: AiResult }
+          if (Date.now() - cached.ts < CLIENT_AI_CACHE_TTL_MS) {
+            setResult(cached.data)
+            setError(null)
+            setLoading(false)
+            return
+          }
+        }
+      } catch {
+        // ignore broken client cache entries
+      }
+    }
+
     setLoading(true)
     setError(null)
     try {
@@ -61,6 +95,16 @@ export function AiInsightPanel({
       if (!res.ok) throw new Error("AI service unavailable")
       const data = (await res.json()) as AiResult
       setResult(data)
+      if (typeof window !== "undefined") {
+        try {
+          window.sessionStorage.setItem(
+            cacheKey,
+            JSON.stringify({ ts: Date.now(), data })
+          )
+        } catch {
+          // best-effort cache only
+        }
+      }
     } catch {
       setError("AI analysis unavailable — model may be loading.")
     } finally {

@@ -6,6 +6,7 @@
  * Railway URL is not configured (RAILWAY_AI_URL env var).
  */
 import { NextResponse } from "next/server"
+import { createHash } from "node:crypto"
 import { z } from "zod"
 
 import { requireRole } from "@/lib/api-guard"
@@ -16,6 +17,35 @@ const schema = z.object({
 })
 
 const RAILWAY_AI_URL = process.env.RAILWAY_AI_URL ?? ""
+const AI_CACHE_TTL_MS = 10 * 60 * 1000 // 10 minutes
+const AI_CACHE_MAX_ITEMS = 1000
+const aiAnalyzeCache = new Map<string, { expiresAt: number; data: unknown }>()
+
+function makeCacheKey(userId: string, text: string) {
+  const digest = createHash("sha256").update(text).digest("hex")
+  return `${userId}:${digest}`
+}
+
+function getCachedAnalyze(key: string) {
+  const entry = aiAnalyzeCache.get(key)
+  if (!entry) return null
+  if (Date.now() >= entry.expiresAt) {
+    aiAnalyzeCache.delete(key)
+    return null
+  }
+  return entry.data
+}
+
+function setCachedAnalyze(key: string, data: unknown) {
+  if (aiAnalyzeCache.size >= AI_CACHE_MAX_ITEMS) {
+    const oldestKey = aiAnalyzeCache.keys().next().value as string | undefined
+    if (oldestKey) aiAnalyzeCache.delete(oldestKey)
+  }
+  aiAnalyzeCache.set(key, {
+    expiresAt: Date.now() + AI_CACHE_TTL_MS,
+    data,
+  })
+}
 
 export async function POST(request: Request) {
   const session = await requireRole(request, [
@@ -43,6 +73,14 @@ export async function POST(request: Request) {
     )
   }
 
+  const cacheKey = makeCacheKey(session.userId, parsed.data.text)
+  const cached = getCachedAnalyze(cacheKey)
+  if (cached) {
+    return NextResponse.json(cached, {
+      headers: { "X-AI-Cache": "HIT" },
+    })
+  }
+
   let upstream: Response
   try {
     upstream = await fetch(`${RAILWAY_AI_URL.replace(/\/$/, "")}/analyze`, {
@@ -67,5 +105,8 @@ export async function POST(request: Request) {
   }
 
   const data = await upstream.json()
-  return NextResponse.json(data)
+  setCachedAnalyze(cacheKey, data)
+  return NextResponse.json(data, {
+    headers: { "X-AI-Cache": "MISS" },
+  })
 }

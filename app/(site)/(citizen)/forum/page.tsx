@@ -47,6 +47,8 @@ const SORTS = ["Hot", "Best", "Top", "New"] as const
 type Sort = typeof SORTS[number]
 
 const CATEGORIES = ["Infrastructure", "Health", "Education", "Environment", "Corruption", "Safety", "Rights", "Economy"]
+const PROPOSAL_CACHE_KEY = "forum:proposals:v1"
+const PROPOSAL_CACHE_TTL_MS = 5 * 60 * 1000
 
 export default function ForumPage() {
   const { session } = useAuth()
@@ -60,10 +62,37 @@ export default function ForumPage() {
   const pageSize = 8
 
   async function loadProposals() {
+    if (typeof window !== "undefined") {
+      try {
+        const raw = window.sessionStorage.getItem(PROPOSAL_CACHE_KEY)
+        if (raw) {
+          const cached = JSON.parse(raw) as { ts: number; proposals: Proposal[] }
+          if (Date.now() - cached.ts < PROPOSAL_CACHE_TTL_MS) {
+            setProposals(cached.proposals ?? [])
+            setLoading(false)
+            return
+          }
+        }
+      } catch {
+        // ignore broken cache payload
+      }
+    }
+
     try {
       const res = await fetch("/api/forum/proposals")
       const data = (await res.json()) as { proposals?: Proposal[] }
-      setProposals(data.proposals ?? [])
+      const proposals = data.proposals ?? []
+      setProposals(proposals)
+      if (typeof window !== "undefined") {
+        try {
+          window.sessionStorage.setItem(
+            PROPOSAL_CACHE_KEY,
+            JSON.stringify({ ts: Date.now(), proposals })
+          )
+        } catch {
+          // best-effort cache only
+        }
+      }
     } finally {
       setLoading(false)
     }
@@ -85,6 +114,9 @@ export default function ForumPage() {
       })
       setForm({ title: "", body: "", category: "Infrastructure" })
       setShowForm(false)
+      if (typeof window !== "undefined") {
+        window.sessionStorage.removeItem(PROPOSAL_CACHE_KEY)
+      }
       await loadProposals()
     } finally {
       setSubmitting(false)
@@ -98,6 +130,9 @@ export default function ForumPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ userId, targetType: "proposal", targetId: id, value: direction === "up" ? 1 : -1 }),
     })
+    if (typeof window !== "undefined") {
+      window.sessionStorage.removeItem(PROPOSAL_CACHE_KEY)
+    }
     await loadProposals()
   }
 
@@ -265,16 +300,23 @@ export default function ForumPage() {
                       <ArrowFatDown className="size-4" />
                       {proposal.downvotes ?? 0}
                     </Button>
-                    <Button asChild variant="ghost" size="sm" className="rounded-full gap-1.5 text-muted-foreground">
-                      <Link href={`/forum/${proposal.id}`}>
-                        <ChatCircle className="size-4" />
-                        {proposal.comments.length} comments
-                      </Link>
-                    </Button>
+                    <Link
+                      href={`/forum/${proposal.id}`}
+                      className="inline-flex items-center gap-1.5 rounded-full px-1 py-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
+                    >
+                      <ChatCircle className="size-4 shrink-0" weight="duotone" />
+                      <span className="leading-none">{proposal.comments.length}</span>
+                      <span className="text-xs leading-none">
+                        {proposal.comments.length === 1 ? "comment" : "comments"}
+                      </span>
+                    </Link>
                   </div>
 
                   {proposal.comments.length > 0 && (
                     <div className="mt-3 space-y-2 border-t border-border/50 pt-3">
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground/80">
+                        Recent comments
+                      </p>
                       {proposal.comments.slice(0, 2).map((comment) => (
                         <div key={comment.id} className="rounded-xl border border-border/60 bg-muted/30 p-3">
                           <div className="flex flex-wrap items-center justify-between gap-2">
