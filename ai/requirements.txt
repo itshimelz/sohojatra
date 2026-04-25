@@ -1,6 +1,5 @@
 fastapi==0.115.5
 uvicorn[standard]==0.32.1
-anthropic==0.40.0
 transformers==4.46.3
 sentence-transformers==3.3.1
 xgboost==2.1.3

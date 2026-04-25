@@ -3,20 +3,31 @@
 from __future__ import annotations
 
 from fastapi import APIRouter
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
-from src.mlops.tracker import log_call
 from src.models.comment_ranker import rank_comment
 
 router = APIRouter(prefix="/rank_comment", tags=["ranking"])
 
 
 class RankRequest(BaseModel):
-    comment_id: str
-    sentiment: float = Field(..., ge=-1.0, le=1.0)
-    urgency: float = Field(..., ge=0.0, le=1.0)
-    engagement_rate: float = Field(..., ge=0.0, le=1.0)
-    fake_prob: float = Field(..., ge=0.0, le=1.0)
+    comment_id: str = "unknown"
+    sentiment: float = Field(default=0.0, ge=-1.0, le=1.0)
+    urgency: float = Field(default=0.0, ge=0.0, le=1.0)
+    engagement_rate: float = Field(default=0.0, ge=0.0, le=1.0)
+    fake_prob: float = Field(default=0.0, ge=0.0, le=1.0)
+
+    @model_validator(mode="before")
+    @classmethod
+    def normalize_input(cls, data):
+        if not isinstance(data, dict):
+            return data
+        return {
+            **data,
+            "comment_id": str(data.get("comment_id") or data.get("commentId") or "unknown"),
+            "engagement_rate": data.get("engagement_rate", data.get("engagement", 0.0)),
+            "fake_prob": data.get("fake_prob", data.get("fakeProbability", 0.0)),
+        }
 
 
 class RankResponse(BaseModel):
@@ -25,7 +36,6 @@ class RankResponse(BaseModel):
 
 
 @router.post("", response_model=RankResponse)
-@log_call(model_name="comment_ranker")
 async def rank_comment_endpoint(req: RankRequest) -> RankResponse:
     result = await rank_comment(
         comment_id=req.comment_id,

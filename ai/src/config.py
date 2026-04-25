@@ -8,7 +8,6 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    anthropic_api_key: str = ""
     # AI_DATABASE_URL uses the asyncpg driver against Supabase direct connection
     database_url: str = ""
     ai_database_url: str = ""
@@ -23,9 +22,8 @@ class Settings(BaseSettings):
 
     banglabert_model: str = "csebuetnlp/banglabert"
     embedding_model: str = "paraphrase-multilingual-MiniLM-L12-v2"
-    claude_model: str = "claude-haiku-4-5"
     # Modal web endpoint URL — set after `modal deploy ai/serve_model.py`
-    # Leave empty to use Claude Haiku for /analyze
+    # /analyze requires this fine-tuned model endpoint.
     modal_api_url: str = ""
     # HuggingFace token (needed by Modal container to pull private LoRA repo)
     huggingface_token: str = ""

@@ -7,6 +7,7 @@ skipped — the wrapped endpoint still runs normally.
 from __future__ import annotations
 
 import functools
+import inspect
 import logging
 import time
 from typing import Any, Callable
@@ -71,6 +72,8 @@ def log_call(model_name: str) -> Callable:
 
             return result
 
+        # Keep original endpoint signature so FastAPI parses body params correctly.
+        wrapper.__signature__ = inspect.signature(fn)
         return wrapper
 
     return decorator

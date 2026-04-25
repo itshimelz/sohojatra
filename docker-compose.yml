@@ -24,7 +24,6 @@ services:
     environment:
       # Override Redis to use cloud Redis from .env (not local)
       - REDIS_URL=${REDIS_URL}
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
       - AI_DATABASE_URL=${AI_DATABASE_URL}
       - DATABASE_URL=${DATABASE_URL}
     volumes:
