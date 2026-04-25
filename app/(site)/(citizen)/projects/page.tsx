@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react"
 import { ChartBar, Clock, Buildings, Star, ArrowRight } from "@phosphor-icons/react"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { useT } from "@/lib/i18n/context"
 
@@ -47,6 +47,8 @@ export default function ProjectTrackerPage() {
   const [projects, setProjects] = useState<ProjectDeliverable[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [filter, setFilter] = useState<"all" | "Planning" | "In Progress" | "On Hold" | "Completed">("all")
+  const [page, setPage] = useState(1)
+  const pageSize = 8
 
   const userId = useMemo(() => {
     if (typeof window === "undefined") return "anonymous"
@@ -94,6 +96,9 @@ export default function ProjectTrackerPage() {
   }
 
   const filtered = filter === "all" ? projects : projects.filter((p) => p.status === filter)
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize))
+  const safePage = Math.min(page, totalPages)
+  const paginated = filtered.slice((safePage - 1) * pageSize, safePage * pageSize)
   const stats = {
     total: projects.length,
     active: projects.filter((p) => p.status === "In Progress").length,
@@ -102,6 +107,14 @@ export default function ProjectTrackerPage() {
       ? Math.round(projects.reduce((s, p) => s + p.progress, 0) / projects.length)
       : 0,
   }
+
+  useEffect(() => {
+    setPage(1)
+  }, [filter])
+
+  useEffect(() => {
+    if (page > totalPages) setPage(totalPages)
+  }, [page, totalPages])
 
   const filterOptions = [
     { key: "all" as const,          label: t.filterAll },
@@ -159,9 +172,9 @@ export default function ProjectTrackerPage() {
       </div>
 
       {isLoading ? (
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="space-y-2">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="h-56 animate-pulse rounded-2xl bg-muted" />
+            <div key={i} className="h-28 animate-pulse rounded-xl bg-muted" />
           ))}
         </div>
       ) : filtered.length === 0 ? (
@@ -171,30 +184,32 @@ export default function ProjectTrackerPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2">
-          {filtered.map((project) => {
+        <ul className="space-y-2">
+          {paginated.map((project) => {
             const isFollowing = (project.followers ?? []).includes(userId)
             const verifiedMilestones = project.milestones?.filter((m) => m.status === "Verified").length ?? 0
             const totalMilestones = project.milestones?.length ?? 0
             return (
-              <Card key={project.id} className="flex flex-col rounded-2xl transition-all hover:border-primary/30 hover:shadow-sm">
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <Badge className={statusStyles[project.status]}>{project.status}</Badge>
-                    <button
-                      onClick={() => void toggleFollow(project.id)}
-                      className={`flex size-8 items-center justify-center rounded-full transition-colors ${
-                        isFollowing ? "text-amber-500 hover:text-amber-600" : "text-muted-foreground hover:text-amber-500"
-                      }`}
-                      title={isFollowing ? t.unfollow : t.follow}
-                    >
-                      <Star className="size-4" weight={isFollowing ? "fill" : "regular"} />
-                    </button>
+              <li key={project.id} className="group rounded-lg border-b border-border/60 px-1 py-4 transition-colors hover:bg-muted/40 last:border-b-0">
+                <div className="mb-2 flex items-start justify-between gap-2">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <Badge className={statusStyles[project.status]}>{project.status}</Badge>
+                    </div>
+                    <h3 className="mt-2 text-base font-semibold leading-snug transition-colors group-hover:text-primary">{project.title}</h3>
+                    <p className="text-sm text-muted-foreground">{project.ministry}{project.department ? ` · ${project.department}` : ""}</p>
                   </div>
-                  <CardTitle className="text-base leading-snug">{project.title}</CardTitle>
-                  <CardDescription>{project.ministry}{project.department ? ` · ${project.department}` : ""}</CardDescription>
-                </CardHeader>
-                <CardContent className="flex flex-1 flex-col gap-4">
+                  <button
+                    onClick={() => void toggleFollow(project.id)}
+                    className={`flex size-8 items-center justify-center rounded-full transition-colors ${
+                      isFollowing ? "text-amber-500 hover:text-amber-600" : "text-muted-foreground hover:text-amber-500"
+                    }`}
+                    title={isFollowing ? t.unfollow : t.follow}
+                  >
+                    <Star className="size-4" weight={isFollowing ? "fill" : "regular"} />
+                  </button>
+                </div>
+                <div className="flex flex-1 flex-col gap-4">
                   <div>
                     <div className="mb-1.5 flex justify-between text-sm">
                       <span className="text-muted-foreground">{t.progress}</span>
@@ -245,10 +260,35 @@ export default function ProjectTrackerPage() {
                       </div>
                     </div>
                   )}
-                </CardContent>
-              </Card>
+                </div>
+              </li>
             )
           })}
+        </ul>
+      )}
+      {!isLoading && filtered.length > 0 && (
+        <div className="mt-6 flex items-center justify-between gap-3">
+          <p className="text-sm text-muted-foreground">
+            Page {safePage} of {totalPages}
+          </p>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              className="inline-flex h-8 items-center rounded-md border border-input bg-background px-3 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground disabled:pointer-events-none disabled:opacity-50"
+              disabled={safePage <= 1}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+            >
+              Previous
+            </button>
+            <button
+              type="button"
+              className="inline-flex h-8 items-center rounded-md border border-input bg-background px-3 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground disabled:pointer-events-none disabled:opacity-50"
+              disabled={safePage >= totalPages}
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            >
+              Next
+            </button>
+          </div>
         </div>
       )}
     </div>

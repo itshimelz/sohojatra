@@ -34,6 +34,8 @@ export default function ResearchPage() {
   const [filter, setFilter] = useState<"all" | "Open" | "UnderReview" | "Funded">("all")
   const [search, setSearch] = useState("")
   const [applying, setApplying] = useState<string | null>(null)
+  const [page, setPage] = useState(1)
+  const pageSize = 8
 
   useEffect(() => {
     async function load() {
@@ -75,8 +77,19 @@ export default function ResearchPage() {
       p.ministry.toLowerCase().includes(search.toLowerCase())
     return matchStatus && matchSearch
   })
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize))
+  const safePage = Math.min(page, totalPages)
+  const paginated = filtered.slice((safePage - 1) * pageSize, safePage * pageSize)
 
   const openCount = problems.filter((p) => p.status === "Open").length
+
+  useEffect(() => {
+    setPage(1)
+  }, [filter, search])
+
+  useEffect(() => {
+    if (page > totalPages) setPage(totalPages)
+  }, [page, totalPages])
 
   const filterOptions = [
     { key: "all" as const,          label: t.filterAll },
@@ -130,9 +143,11 @@ export default function ResearchPage() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1.5fr)_minmax(300px,0.85fr)]">
-        <div className="space-y-4">
+        <div>
           {loading ? (
-            [...Array(3)].map((_, i) => <div key={i} className="h-44 animate-pulse rounded-2xl bg-muted" />)
+            <div className="space-y-2">
+              {[...Array(3)].map((_, i) => <div key={i} className="h-28 animate-pulse rounded-xl bg-muted" />)}
+            </div>
           ) : filtered.length === 0 ? (
             <Card className="rounded-2xl">
               <CardContent className="py-12 text-center text-sm text-muted-foreground">
@@ -140,29 +155,27 @@ export default function ResearchPage() {
               </CardContent>
             </Card>
           ) : (
-            filtered.map((problem) => (
-              <Card key={problem.id} className="rounded-3xl border-border/60 transition-all hover:border-primary/30 hover:shadow-sm">
-                <CardHeader className="pb-3">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <Badge variant="outline" className="rounded-full">{problem.ministry}</Badge>
-                    <div className="flex items-center gap-2">
+            <ul className="space-y-2">
+              {paginated.map((problem) => (
+                <li key={problem.id} className="group rounded-lg border-b border-border/60 px-1 py-4 transition-colors hover:bg-muted/40 last:border-b-0">
+                  <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Badge variant="outline" className="rounded-full">{problem.ministry}</Badge>
                       <Badge className={statusStyles[problem.status]}>{problem.status}</Badge>
-                      <span className="text-xs text-muted-foreground">
-                        <CalendarCheck className="mr-1 inline size-3.5" />
-                        {problem.deadline}
-                      </span>
                     </div>
+                    <span className="text-xs text-muted-foreground">
+                      <CalendarCheck className="mr-1 inline size-3.5" />
+                      {problem.deadline}
+                    </span>
                   </div>
-                  <CardTitle className="text-xl">{problem.title}</CardTitle>
-                  <CardDescription>
+                  <h3 className="text-lg font-semibold tracking-tight transition-colors group-hover:text-primary">{problem.title}</h3>
+                  <p className="mt-1 text-sm text-muted-foreground">
                     <Bank className="mr-1 inline size-3.5" />
                     {t.grant} {problem.grant}
                     {problem.applicants != null && ` · ${problem.applicants} ${t.applicants}`}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm leading-relaxed text-foreground/90">{problem.summary}</p>
-                  <div className="mt-4 flex flex-wrap gap-2">
+                  </p>
+                  <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-foreground/90">{problem.summary}</p>
+                  <div className="mt-3 flex flex-wrap gap-2">
                     <Button
                       size="sm"
                       className="rounded-full"
@@ -177,9 +190,24 @@ export default function ResearchPage() {
                       {t.milestonePlan}
                     </Button>
                   </div>
-                </CardContent>
-              </Card>
-            ))
+                </li>
+              ))}
+            </ul>
+          )}
+          {!loading && filtered.length > 0 && (
+            <div className="mt-6 flex items-center justify-between gap-3">
+              <p className="text-sm text-muted-foreground">
+                Page {safePage} of {totalPages}
+              </p>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" disabled={safePage <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>
+                  Previous
+                </Button>
+                <Button variant="outline" size="sm" disabled={safePage >= totalPages} onClick={() => setPage((p) => Math.min(totalPages, p + 1))}>
+                  Next
+                </Button>
+              </div>
+            </div>
           )}
         </div>
 
@@ -208,7 +236,7 @@ export default function ResearchPage() {
             </CardContent>
           </Card>
 
-          <Card className="rounded-3xl bg-gradient-to-br from-primary/10 to-transparent">
+          <Card className="rounded-3xl bg-linear-to-br from-primary/10 to-transparent">
             <CardContent className="pt-5">
               <p className="text-sm font-medium">{t.researcherTitle}</p>
               <p className="mt-1 text-xs text-muted-foreground">{t.researcherDesc}</p>

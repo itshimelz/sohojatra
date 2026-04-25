@@ -136,7 +136,7 @@ export default async function ConcernsPage({ searchParams }: PageProps) {
         ) : (
           <ul className="space-y-2">
             {sortedConcerns.map((concern) => (
-              <li key={concern.id} className="flex gap-4 border-b border-border/60 px-1 py-4 last:border-b-0 sm:gap-5">
+              <li key={concern.id} className="group flex gap-4 rounded-lg border-b border-border/60 px-1 py-4 transition-colors hover:bg-muted/40 last:border-b-0 sm:gap-5">
                 <div className="shrink-0 pt-0.5">
                   <UpvoteButton
                     concernId={concern.id}
@@ -151,7 +151,7 @@ export default async function ConcernsPage({ searchParams }: PageProps) {
                   <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
                     <Link
                       href={`/concerns/${concern.id}`}
-                      className="text-base font-semibold text-foreground transition-colors hover:text-primary sm:text-lg"
+                      className="text-base font-semibold text-foreground transition-colors group-hover:text-primary hover:text-primary sm:text-lg"
                     >
                       {concern.title}
                     </Link>

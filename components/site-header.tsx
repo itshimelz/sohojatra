@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
+import { usePathname } from "next/navigation"
 import {
   Warning,
   ChatCircle,
@@ -83,11 +84,17 @@ function buildNavGroups(nav: Dictionary["nav"]): NavGroup[] {
   ]
 }
 
-function NavDropdownItem({ href, label, desc, Icon }: NavItem) {
+function isRouteActive(pathname: string, href: string) {
+  return pathname === href || pathname.startsWith(`${href}/`)
+}
+
+function NavDropdownItem({ href, label, desc, Icon, active }: NavItem & { active: boolean }) {
   return (
     <NavigationMenuLink
       render={<Link href={href} />}
-      className="flex items-start gap-3 rounded-xl p-3 transition-colors hover:bg-muted focus:bg-muted outline-none"
+      className={`flex items-start gap-3 rounded-xl p-3 outline-none transition-colors hover:bg-muted focus:bg-muted ${
+        active ? "bg-muted/70" : ""
+      }`}
     >
       <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
         <Icon className="size-4" />
@@ -102,6 +109,7 @@ function NavDropdownItem({ href, label, desc, Icon }: NavItem) {
 
 export function SiteHeader({ nav, locale }: Props) {
   const [mobileOpen, setMobileOpen] = useState(false)
+  const pathname = usePathname()
   const { session } = useAuth()
   const userRole = session?.user?.role
   const elevated = hasElevatedRole(userRole)
@@ -117,6 +125,8 @@ export function SiteHeader({ nav, locale }: Props) {
       }))
       .filter((group) => group.items.length > 0)
   }, [elevated, allGroups])
+
+  const concernHubActive = isRouteActive(pathname, "/concerns")
 
   return (
     <>
@@ -140,20 +150,26 @@ export function SiteHeader({ nav, locale }: Props) {
                 <NavigationMenuItem>
                   <NavigationMenuLink
                     render={<Link href="/concerns" />}
-                    className="group inline-flex h-10 items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors hover:bg-muted hover:text-foreground"
+                    className={`group inline-flex h-10 items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors hover:bg-muted hover:text-foreground ${
+                      concernHubActive ? "bg-muted text-foreground" : ""
+                    }`}
                   >
                     {nav.concernHub}
                   </NavigationMenuLink>
                 </NavigationMenuItem>
                 {navGroups.map((group) => (
                   <NavigationMenuItem key={group.key}>
-                    <NavigationMenuTrigger className="text-sm font-medium">
+                    <NavigationMenuTrigger
+                      className={`text-sm font-medium ${
+                        group.items.some((item) => isRouteActive(pathname, item.href)) ? "bg-muted text-foreground" : ""
+                      }`}
+                    >
                       {group.label}
                     </NavigationMenuTrigger>
                     <NavigationMenuContent>
                       <div className="w-72 p-2">
                         {group.items.map((item) => (
-                          <NavDropdownItem key={item.href} {...item} />
+                          <NavDropdownItem key={item.href} {...item} active={isRouteActive(pathname, item.href)} />
                         ))}
                       </div>
                     </NavigationMenuContent>
@@ -188,7 +204,9 @@ export function SiteHeader({ nav, locale }: Props) {
             <Link
               href="/concerns"
               onClick={() => setMobileOpen(false)}
-              className="flex items-center gap-3 rounded-xl p-3 transition-colors hover:bg-muted"
+              className={`flex items-center gap-3 rounded-xl p-3 transition-colors hover:bg-muted ${
+                concernHubActive ? "bg-muted/70" : ""
+              }`}
             >
               <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
                 <Warning className="size-4" />
@@ -211,7 +229,9 @@ export function SiteHeader({ nav, locale }: Props) {
                       key={item.href}
                       href={item.href}
                       onClick={() => setMobileOpen(false)}
-                      className="flex items-center gap-3 rounded-xl p-3 transition-colors hover:bg-muted"
+                      className={`flex items-center gap-3 rounded-xl p-3 transition-colors hover:bg-muted ${
+                        isRouteActive(pathname, item.href) ? "bg-muted/70" : ""
+                      }`}
                     >
                       <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
                         <item.Icon className="size-4" />

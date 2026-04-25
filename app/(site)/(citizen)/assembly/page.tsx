@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react"
 import { CalendarCheck, Clock, MapPin, Users, ArrowRight, FileText } from "@phosphor-icons/react"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { useT } from "@/lib/i18n/context"
@@ -32,6 +32,8 @@ export default function AssemblyEventsPage() {
   const [events, setEvents] = useState<AssemblyEvent[]>([])
   const [filter, setFilter] = useState<"all" | "Upcoming" | "Ongoing" | "Completed">("all")
   const [isLoading, setIsLoading] = useState(true)
+  const [page, setPage] = useState(1)
+  const pageSize = 8
 
   const userId = useMemo(() => {
     if (typeof window === "undefined") return "anonymous"
@@ -75,11 +77,22 @@ export default function AssemblyEventsPage() {
   }
 
   const filtered = filter === "all" ? events : events.filter((e) => e.status === filter)
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize))
+  const safePage = Math.min(page, totalPages)
+  const paginated = filtered.slice((safePage - 1) * pageSize, safePage * pageSize)
   const counts = {
     Upcoming: events.filter((e) => e.status === "Upcoming").length,
     Ongoing: events.filter((e) => e.status === "Ongoing").length,
     Completed: events.filter((e) => e.status === "Completed").length,
   }
+
+  useEffect(() => {
+    setPage(1)
+  }, [filter])
+
+  useEffect(() => {
+    if (page > totalPages) setPage(totalPages)
+  }, [page, totalPages])
 
   const filterOptions = [
     ["all", t.filterAll, events.length],
@@ -116,9 +129,9 @@ export default function AssemblyEventsPage() {
 
       {/* Event list */}
       {isLoading ? (
-        <div className="space-y-4">
+        <div className="space-y-2">
           {[...Array(3)].map((_, i) => (
-            <div key={i} className="h-40 animate-pulse rounded-2xl bg-muted" />
+            <div key={i} className="h-28 animate-pulse rounded-xl bg-muted" />
           ))}
         </div>
       ) : filtered.length === 0 ? (
@@ -128,20 +141,20 @@ export default function AssemblyEventsPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((event) => {
+        <ul className="space-y-2">
+          {paginated.map((event) => {
             const isAttending = event.rsvps.includes(userId)
             return (
-              <Card key={event.id} className="rounded-2xl flex flex-col transition-all hover:border-primary/30 hover:shadow-sm">
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between gap-2">
+              <li key={event.id} className="group rounded-lg border-b border-border/60 px-1 py-4 transition-colors hover:bg-muted/40 last:border-b-0">
+                <div className="mb-2 flex items-start justify-between gap-2">
+                  <div>
                     <Badge className={statusStyles[event.status]}>{event.status}</Badge>
-                    <p className="text-xs text-muted-foreground">{event.organizer}</p>
+                    <h3 className="mt-2 text-base font-semibold leading-snug transition-colors group-hover:text-primary">{event.title}</h3>
+                    <p className="line-clamp-1 text-sm text-muted-foreground">{event.topic}</p>
                   </div>
-                  <CardTitle className="mt-2 text-base leading-snug">{event.title}</CardTitle>
-                  <CardDescription className="line-clamp-2">{event.topic}</CardDescription>
-                </CardHeader>
-                <CardContent className="flex flex-1 flex-col gap-4">
+                  <p className="text-xs text-muted-foreground">{event.organizer}</p>
+                </div>
+                <div className="flex flex-1 flex-col gap-4">
                   <div className="grid grid-cols-2 gap-y-2 text-sm">
                     <div className="flex items-center gap-1.5 text-muted-foreground">
                       <CalendarCheck className="size-3.5 shrink-0" />
@@ -192,10 +205,25 @@ export default function AssemblyEventsPage() {
                       <p className="text-xs text-muted-foreground">{t.minutesNotPublished}</p>
                     )}
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </li>
             )
           })}
+        </ul>
+      )}
+      {!isLoading && filtered.length > 0 && (
+        <div className="mt-6 flex items-center justify-between gap-3">
+          <p className="text-sm text-muted-foreground">
+            Page {safePage} of {totalPages}
+          </p>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" disabled={safePage <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>
+              Previous
+            </Button>
+            <Button variant="outline" size="sm" disabled={safePage >= totalPages} onClick={() => setPage((p) => Math.min(totalPages, p + 1))}>
+              Next
+            </Button>
+          </div>
         </div>
       )}
     </div>

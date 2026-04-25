@@ -1,10 +1,10 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { ArrowFatUp, ArrowFatDown, ChatCircle, Quotes, Star, Plus, X } from "@phosphor-icons/react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import {
   Select,
   SelectContent,
@@ -55,6 +55,8 @@ export default function ForumPage() {
   const [showForm, setShowForm] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [form, setForm] = useState({ title: "", body: "", category: "Infrastructure" })
+  const [page, setPage] = useState(1)
+  const pageSize = 8
 
   async function loadProposals() {
     try {
@@ -104,6 +106,20 @@ export default function ForumPage() {
     if (sort === "Hot") return (b.votes - b.downvotes + b.comments.length * 2) - (a.votes - a.downvotes + a.comments.length * 2)
     return (b.votes - b.downvotes) - (a.votes - a.downvotes)
   })
+  const totalPages = Math.max(1, Math.ceil(sorted.length / pageSize))
+  const safePage = Math.min(page, totalPages)
+  const paginated = useMemo(
+    () => sorted.slice((safePage - 1) * pageSize, safePage * pageSize),
+    [safePage, sorted],
+  )
+
+  useEffect(() => {
+    setPage(1)
+  }, [sort])
+
+  useEffect(() => {
+    if (page > totalPages) setPage(totalPages)
+  }, [page, totalPages])
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
@@ -196,9 +212,11 @@ export default function ForumPage() {
         ))}
       </div>
 
-      <div className="space-y-5">
+      <div>
           {loading ? (
-            [...Array(3)].map((_, i) => <div key={i} className="h-48 animate-pulse rounded-2xl bg-muted" />)
+            <div className="space-y-2">
+              {[...Array(3)].map((_, i) => <div key={i} className="h-28 animate-pulse rounded-xl bg-muted" />)}
+            </div>
           ) : sorted.length === 0 ? (
             <Card className="rounded-2xl">
               <CardContent className="py-12 text-center text-sm text-muted-foreground">
@@ -206,38 +224,32 @@ export default function ForumPage() {
               </CardContent>
             </Card>
           ) : (
-            sorted.map((proposal) => (
-              <Card key={proposal.id} className="rounded-3xl border-border/60 transition-all hover:border-primary/30 hover:shadow-sm">
-                <CardHeader className="space-y-3 pb-3">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <Badge variant="secondary" className="rounded-full">{proposal.category}</Badge>
-                    {proposal.sortLabel && (
-                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                        <Star className="size-3.5" weight="fill" />
-                        {proposal.sortLabel}
-                      </div>
-                    )}
+            <ul className="space-y-2">
+              {paginated.map((proposal) => (
+                <li key={proposal.id} className="group rounded-lg border-b border-border/60 px-1 py-4 transition-colors hover:bg-muted/40 last:border-b-0">
+                  <div className="mb-2 flex flex-wrap items-start justify-between gap-2">
+                    <div>
+                      <h2 className="text-lg font-semibold tracking-tight transition-colors group-hover:text-primary">{proposal.title}</h2>
+                      <p className="text-sm text-muted-foreground">by {proposal.author}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="secondary" className="rounded-full">{proposal.category}</Badge>
+                      {proposal.sortLabel && (
+                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                          <Star className="size-3.5" weight="fill" />
+                          {proposal.sortLabel}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <h2 className="text-xl font-semibold tracking-tight">{proposal.title}</h2>
-                  <p className="text-sm text-muted-foreground">by {proposal.author}</p>
-                  <p className="leading-relaxed text-foreground/90 text-sm">{proposal.body}</p>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Button
-                      size="sm"
-                      className="rounded-full gap-1.5"
-                      onClick={() => void vote(proposal.id, "up")}
-                    >
+                  <p className="line-clamp-2 text-sm leading-relaxed text-foreground/90">{proposal.body}</p>
+
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                    <Button size="sm" className="rounded-full gap-1.5" onClick={() => void vote(proposal.id, "up")}>
                       <ArrowFatUp className="size-4" />
                       {proposal.votes}
                     </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="rounded-full gap-1.5"
-                      onClick={() => void vote(proposal.id, "down")}
-                    >
+                    <Button size="sm" variant="outline" className="rounded-full gap-1.5" onClick={() => void vote(proposal.id, "down")}>
                       <ArrowFatDown className="size-4" />
                       {proposal.downvotes ?? 0}
                     </Button>
@@ -248,17 +260,15 @@ export default function ForumPage() {
                   </div>
 
                   {proposal.comments.length > 0 && (
-                    <div className="space-y-2 border-t border-border/50 pt-4">
-                      {proposal.comments.slice(0, 3).map((comment) => (
-                        <div key={comment.id} className="rounded-2xl border border-border/60 bg-muted/30 p-3">
+                    <div className="mt-3 space-y-2 border-t border-border/50 pt-3">
+                      {proposal.comments.slice(0, 2).map((comment) => (
+                        <div key={comment.id} className="rounded-xl border border-border/60 bg-muted/30 p-3">
                           <div className="flex flex-wrap items-center justify-between gap-2">
                             <p className="text-sm font-medium">{comment.author}</p>
-                            {comment.points != null && (
-                              <p className="text-xs text-muted-foreground">{comment.points} AI pts</p>
-                            )}
+                            {comment.points != null && <p className="text-xs text-muted-foreground">{comment.points} AI pts</p>}
                           </div>
                           {comment.quoted && (
-                            <div className="mt-2 rounded-xl border-l-2 border-primary/40 bg-background p-2.5 text-xs text-muted-foreground">
+                            <div className="mt-2 rounded-lg border-l-2 border-primary/40 bg-background p-2 text-xs text-muted-foreground">
                               <Quotes className="mr-1 inline size-3" />
                               {comment.quoted}
                             </div>
@@ -275,11 +285,26 @@ export default function ForumPage() {
                       ))}
                     </div>
                   )}
-                </CardContent>
-              </Card>
-            ))
+                </li>
+              ))}
+            </ul>
           )}
       </div>
+      {!loading && sorted.length > 0 && (
+        <div className="mt-6 flex items-center justify-between gap-3">
+          <p className="text-sm text-muted-foreground">
+            Page {safePage} of {totalPages}
+          </p>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" disabled={safePage <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>
+              Previous
+            </Button>
+            <Button variant="outline" size="sm" disabled={safePage >= totalPages} onClick={() => setPage((p) => Math.min(totalPages, p + 1))}>
+              Next
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

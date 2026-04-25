@@ -1,10 +1,17 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Users, ChatCircle, Handshake, ArrowRight, Plus, CheckCircle, Clock } from "@phosphor-icons/react"
+import { Users, ChatCircle, ArrowRight, Plus, CheckCircle } from "@phosphor-icons/react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { useAuth } from "@/components/auth-provider"
 import { useT } from "@/lib/i18n/context"
 
@@ -44,7 +51,6 @@ export default function CoGovernancePage() {
   const { session: _session } = useAuth()
   const t = useT().collaboration
   const [threads, setThreads] = useState<Thread[]>([])
-  const [plans, setPlans] = useState<SolutionPlan[]>([])
   const [loading, setLoading] = useState(true)
   const [creating, setCreating] = useState(false)
   const [newTitle, setNewTitle] = useState("")
@@ -52,14 +58,9 @@ export default function CoGovernancePage() {
 
   async function loadData() {
     try {
-      const [tRes, pRes] = await Promise.all([
-        fetch("/api/collaboration/threads"),
-        fetch("/api/solution-plans"),
-      ])
+      const tRes = await fetch("/api/collaboration/threads")
       const tData = (await tRes.json()) as { threads: Thread[] }
-      const pData = pRes.ok ? (await pRes.json()) as { plans: SolutionPlan[] } : { plans: [] }
       setThreads(tData.threads ?? [])
-      setPlans(pData.plans ?? [])
     } finally {
       setLoading(false)
     }
@@ -84,13 +85,10 @@ export default function CoGovernancePage() {
     }
   }
 
-  const approvedPlans = plans.filter((p) => p.status === "Approved" || p.status === "Implemented")
-  const pendingPlans = plans.filter((p) => p.status === "Submitted" || p.status === "UnderReview")
-
   const statCards = [
     { label: t.activeThreads, value: threads.filter((th) => th.status !== "resolved").length || threads.length, icon: ChatCircle, color: "text-blue-500 bg-blue-50" },
-    { label: t.solutionPlans, value: plans.length,         icon: Handshake,   color: "text-violet-500 bg-violet-50" },
-    { label: t.approvedPlans, value: approvedPlans.length, icon: CheckCircle, color: "text-green-500 bg-green-50" },
+    { label: t.solutionPlans, value: 0,                    icon: Users,       color: "text-violet-500 bg-violet-50" },
+    { label: t.approvedPlans, value: 0,                    icon: CheckCircle, color: "text-green-500 bg-green-50" },
   ]
 
   return (
@@ -117,20 +115,21 @@ export default function CoGovernancePage() {
         ))}
       </div>
 
-      <div className="grid gap-8 lg:grid-cols-[minmax(0,1.4fr)_minmax(320px,1fr)]">
-        {/* Threads column */}
-        <div className="space-y-5">
+      <div className="space-y-5">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold">{t.threads}</h2>
-            <Button size="sm" className="rounded-full" onClick={() => setShowForm((v) => !v)}>
+            <Button size="sm" className="rounded-full" onClick={() => setShowForm(true)}>
               <Plus className="mr-1.5 size-4" />
               {t.newThread}
             </Button>
           </div>
 
-          {showForm && (
-            <Card className="rounded-2xl border-primary/30">
-              <CardContent className="pt-5 space-y-3">
+          <Dialog open={showForm} onOpenChange={setShowForm}>
+            <DialogContent className="sm:max-w-xl">
+              <DialogHeader>
+                <DialogTitle>{t.newThread}</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-3">
                 <input
                   className="w-full rounded-xl border border-border/60 bg-background px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/30"
                   placeholder={t.threadPlaceholder}
@@ -138,20 +137,22 @@ export default function CoGovernancePage() {
                   onChange={(e) => setNewTitle(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && void createThread()}
                 />
-                <div className="flex gap-2">
-                  <Button size="sm" onClick={() => void createThread()} disabled={creating || !newTitle.trim()}>
-                    {creating ? t.creating : t.createThread}
-                  </Button>
-                  <Button size="sm" variant="ghost" onClick={() => setShowForm(false)}>{t.cancel}</Button>
-                </div>
-              </CardContent>
-            </Card>
-          )}
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setShowForm(false)} disabled={creating}>
+                  {t.cancel}
+                </Button>
+                <Button onClick={() => void createThread()} disabled={creating || !newTitle.trim()}>
+                  {creating ? t.creating : t.createThread}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
 
           {loading ? (
-            <div className="space-y-3">
+            <div className="space-y-2">
               {[...Array(3)].map((_, i) => (
-                <div key={i} className="h-20 animate-pulse rounded-2xl bg-muted" />
+                <div key={i} className="h-24 animate-pulse rounded-xl bg-muted" />
               ))}
             </div>
           ) : threads.length === 0 ? (
@@ -161,113 +162,33 @@ export default function CoGovernancePage() {
               </CardContent>
             </Card>
           ) : (
-            <div className="space-y-3">
+            <ul className="space-y-2">
               {threads.map((thread) => (
-                <Card key={thread.id} className="rounded-2xl transition-all hover:border-primary/30 hover:shadow-sm">
-                  <CardContent className="flex items-start justify-between gap-3 pt-5">
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <p className="font-medium">{thread.title}</p>
-                        {thread.status && (
-                          <Badge className={statusColors[thread.status] ?? ""} variant="outline">
-                            {thread.status}
-                          </Badge>
-                        )}
-                      </div>
-                      <p className="mt-1 text-sm text-muted-foreground">
-                        {thread.messages.length} {thread.messages.length !== 1 ? t.messages : t.message}
-                        {thread.participantCount ? ` · ${thread.participantCount} ${t.participants}` : ""}
-                      </p>
-                      {thread.messages.length > 0 && (
-                        <p className="mt-2 truncate text-sm text-foreground/70">
-                          "{thread.messages[thread.messages.length - 1]?.text}"
-                        </p>
+                <li key={thread.id} className="group flex items-start justify-between gap-3 rounded-lg border-b border-border/60 px-1 py-4 transition-colors hover:bg-muted/40 last:border-b-0">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="font-medium transition-colors group-hover:text-primary">{thread.title}</p>
+                      {thread.status && (
+                        <Badge className={statusColors[thread.status] ?? ""} variant="outline">
+                          {thread.status}
+                        </Badge>
                       )}
                     </div>
-                    <ArrowRight className="mt-1 size-4 shrink-0 text-muted-foreground/40" />
-                  </CardContent>
-                </Card>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      {thread.messages.length} {thread.messages.length !== 1 ? t.messages : t.message}
+                      {thread.participantCount ? ` · ${thread.participantCount} ${t.participants}` : ""}
+                    </p>
+                    {thread.messages.length > 0 && (
+                      <p className="mt-2 truncate text-sm text-foreground/70">
+                        "{thread.messages[thread.messages.length - 1]?.text}"
+                      </p>
+                    )}
+                  </div>
+                  <ArrowRight className="mt-1 size-4 shrink-0 text-muted-foreground/40" />
+                </li>
               ))}
-            </div>
+            </ul>
           )}
-        </div>
-
-        {/* Solution plans sidebar */}
-        <div className="space-y-6">
-          <div>
-            <h2 className="text-xl font-semibold">{t.solutionPlansTitle}</h2>
-            <p className="text-sm text-muted-foreground">{t.expertPlans}</p>
-          </div>
-
-          {pendingPlans.length > 0 && (
-            <div>
-              <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-amber-600">
-                <Clock className="size-3" /> {t.awaitingReview} ({pendingPlans.length})
-              </p>
-              <div className="space-y-3">
-                {pendingPlans.slice(0, 4).map((plan) => (
-                  <Card key={plan.id} className="rounded-xl border-amber-200/60">
-                    <CardContent className="pt-4 pb-4">
-                      <div className="flex items-start justify-between gap-2">
-                        <p className="text-sm font-medium leading-snug">{plan.title}</p>
-                        <Badge className={statusColors[plan.status]}>{plan.status}</Badge>
-                      </div>
-                      <p className="mt-1.5 text-xs text-muted-foreground line-clamp-2">{plan.summary}</p>
-                      {plan.budgetEstimateBdt && (
-                        <p className="mt-1.5 text-xs font-medium text-foreground/70">
-                          {t.budget} ৳ {plan.budgetEstimateBdt.toLocaleString()}
-                        </p>
-                      )}
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {approvedPlans.length > 0 && (
-            <div>
-              <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-green-600">
-                <CheckCircle className="size-3" /> {t.approvedPlansTitle} ({approvedPlans.length})
-              </p>
-              <div className="space-y-3">
-                {approvedPlans.slice(0, 4).map((plan) => (
-                  <Card key={plan.id} className="rounded-xl border-green-200/60">
-                    <CardContent className="pt-4 pb-4">
-                      <div className="flex items-start justify-between gap-2">
-                        <p className="text-sm font-medium leading-snug">{plan.title}</p>
-                        <Badge className={statusColors[plan.status]}>{plan.status}</Badge>
-                      </div>
-                      {plan.assignedDepartment && (
-                        <p className="mt-1 text-xs text-muted-foreground">{plan.assignedDepartment}</p>
-                      )}
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {plans.length === 0 && !loading && (
-            <Card className="rounded-xl">
-              <CardContent className="py-8 text-center text-sm text-muted-foreground">
-                {t.noPlans}
-              </CardContent>
-            </Card>
-          )}
-
-          <Card className="rounded-2xl bg-gradient-to-br from-primary/10 to-transparent">
-            <CardHeader>
-              <CardTitle className="text-base">{t.workflow}</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2.5 text-sm text-muted-foreground">
-              <p><Users className="mr-1.5 inline size-4 text-primary" />{t.workflowItem1}</p>
-              <p><Handshake className="mr-1.5 inline size-4 text-primary" />{t.workflowItem2}</p>
-              <p><CheckCircle className="mr-1.5 inline size-4 text-primary" />{t.workflowItem3}</p>
-              <p><ArrowRight className="mr-1.5 inline size-4 text-primary" />{t.workflowItem4}</p>
-            </CardContent>
-          </Card>
-        </div>
       </div>
     </div>
   )
