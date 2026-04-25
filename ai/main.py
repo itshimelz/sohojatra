@@ -27,6 +27,13 @@ logging.basicConfig(
 logger = logging.getLogger("nagarik.main")
 
 
+def _resolve_cors_origins() -> list[str]:
+    raw = (settings.cors_origins or "*").strip()
+    if raw == "*":
+        return ["*"]
+    return [origin.strip() for origin in raw.split(",") if origin.strip()]
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("Nagarik AI starting up (env=%s)", settings.app_env)
@@ -39,14 +46,16 @@ app = FastAPI(
     description="Bangla NLP, moderation, and ranking microservice for Sohojatra",
     version="1.0.0",
     lifespan=lifespan,
-    docs_url="/docs",
-    redoc_url="/redoc",
+    docs_url="/docs" if settings.app_env != "production" else None,
+    redoc_url="/redoc" if settings.app_env != "production" else None,
 )
 
+cors_origins = _resolve_cors_origins()
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
+    allow_origins=cors_origins,
+    # Credentials cannot be safely paired with wildcard origins.
+    allow_credentials=cors_origins != ["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )

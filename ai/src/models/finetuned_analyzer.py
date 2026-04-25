@@ -15,11 +15,13 @@ from __future__ import annotations
 
 import logging
 import re
+import asyncio
 from typing import Any
 
 import httpx
 
 logger = logging.getLogger(__name__)
+_http_client: httpx.AsyncClient | None = None
 
 _URGENCY_TO_FLOAT: dict[str, float] = {
     "critical": 0.9,
@@ -67,10 +69,15 @@ def is_available() -> bool:
 async def _call_modal(text: str, task: str) -> dict[str, Any]:
     from src.config import settings
     url = settings.modal_api_url.rstrip("/")
-    async with httpx.AsyncClient(timeout=30.0) as client:
-        resp = await client.post(url, json={"text": text, "task": task})
-        resp.raise_for_status()
-        return resp.json()
+    global _http_client
+    if _http_client is None:
+        _http_client = httpx.AsyncClient(
+            timeout=settings.modal_timeout_secs,
+            limits=httpx.Limits(max_keepalive_connections=20, max_connections=50),
+        )
+    resp = await _http_client.post(url, json={"text": text, "task": task})
+    resp.raise_for_status()
+    return resp.json()
 
 
 def _count_matches(text: str, patterns: list[str]) -> int:
@@ -120,18 +127,26 @@ async def analyze(text: str) -> dict[str, float | str]:
         return _local_fallback_analyze(text)
 
     try:
-        urgency_data = await _call_modal(text, task="urgency")
+        # Run both requests concurrently to reduce end-to-end latency.
+        urgency_task = _call_modal(text, task="urgency")
+        emotion_task = _call_modal(text, task="emotion")
+        urgency_data, emotion_result = await asyncio.gather(
+            urgency_task,
+            emotion_task,
+            return_exceptions=True,
+        )
+
+        if isinstance(urgency_data, Exception):
+            raise urgency_data
         if "error" in urgency_data:
             raise RuntimeError(f"Modal urgency error: {urgency_data['error']}")
 
         urgency_label = urgency_data.get("urgency_level", "moderate").lower()
         urgency_float = _URGENCY_TO_FLOAT.get(urgency_label, 0.5)
 
-        try:
-            emotion_data = await _call_modal(text, task="emotion")
-            emotions: list[str] = emotion_data.get("emotions", [])
-        except Exception:
-            emotions = []
+        emotions: list[str] = []
+        if not isinstance(emotion_result, Exception):
+            emotions = emotion_result.get("emotions", [])
 
         scores = [_EMOTION_SENTIMENT[e] for e in emotions if e in _EMOTION_SENTIMENT]
         sentiment_float = round(sum(scores) / len(scores), 4) if scores else 0.0

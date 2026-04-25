@@ -38,6 +38,10 @@ pnpm-debug.log*
 .env.local
 .env*.local
 !.env.example
+.env.render
+ai/.env.render
+ai/.env.local
+ai/.env.*
 .env
 .env.local
 

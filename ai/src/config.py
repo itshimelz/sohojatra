@@ -40,6 +40,8 @@ class Settings(BaseSettings):
 
     app_env: str = "development"
     log_level: str = "info"
+    cors_origins: str = "*"
+    modal_timeout_secs: float = 12.0
 
 
 settings = Settings()
