@@ -1,7 +1,7 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
 
-import { MOCK_CONCERNS, type Concern } from "@/lib/concerns/mock"
+import type { Concern } from "@/lib/concerns/types"
 import { prisma } from "@/lib/prisma"
 
 export type ProposalComment = {
@@ -216,9 +216,33 @@ type StateFile = {
 }
 
 const stateFilePath = join(process.cwd(), ".sohojatra-state.json")
+const fallbackEventsSeen = new Set<string>()
+const enableLocalFallback =
+  process.env.SOHOJATRA_ENABLE_LOCAL_FALLBACK === "true" || process.env.NODE_ENV !== "production"
+
+function reportFallback(event: string, details?: string) {
+  const key = `${event}:${details ?? ""}`
+  if (fallbackEventsSeen.has(key)) return
+  fallbackEventsSeen.add(key)
+  console.warn(`[store:fallback] ${event}${details ? ` (${details})` : ""}`)
+}
+
+function createDisabledStateProxy(): StateFile {
+  const err = new Error(
+    "Local Sohojatra store fallback is disabled. Configure DB models or set SOHOJATRA_ENABLE_LOCAL_FALLBACK=true for local development."
+  )
+  return new Proxy({} as StateFile, {
+    get() {
+      throw err
+    },
+    set() {
+      throw err
+    },
+  })
+}
 
 const defaultState: StateFile = {
-  concerns: [...MOCK_CONCERNS],
+  concerns: [],
   proposals: [],
   researchProblems: [],
   moderation: [],
@@ -234,12 +258,21 @@ const defaultState: StateFile = {
   concernComments: [],
 }
 
-let state = loadState()
+let state = enableLocalFallback ? loadState() : createDisabledStateProxy()
 
 const db = prisma as unknown as Record<string, any>
 
 function hasModel(modelName: string) {
-  return Boolean(db?.[modelName])
+  const available = Boolean(db?.[modelName])
+  if (!available) {
+    if (!enableLocalFallback) {
+      throw new Error(
+        `Missing Prisma model "${modelName}" while local fallback is disabled.`
+      )
+    }
+    reportFallback("missing-model", modelName)
+  }
+  return available
 }
 
 function uniqueId(prefix: string) {
@@ -255,7 +288,12 @@ function cloneState<T>(value: T): T {
 }
 
 function loadState(): StateFile {
+  if (!enableLocalFallback) {
+    return cloneState(defaultState)
+  }
+
   if (!existsSync(stateFilePath)) {
+    reportFallback("state-file-missing", stateFilePath)
     return cloneState(defaultState)
   }
 
@@ -280,11 +318,16 @@ function loadState(): StateFile {
       concernComments: Array.isArray(parsed.concernComments) ? parsed.concernComments : [],
     }
   } catch {
+    reportFallback("state-file-parse-error", stateFilePath)
     return cloneState(defaultState)
   }
 }
 
 function saveState() {
+  if (!enableLocalFallback) {
+    return
+  }
+  reportFallback("state-file-write", stateFilePath)
   writeFileSync(stateFilePath, JSON.stringify(state, null, 2), "utf8")
 }
 

@@ -19,7 +19,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { buttonVariants } from "@/components/ui/button-variants"
-import type { Concern } from "@/lib/concerns/mock"
+import type { Concern } from "@/lib/concerns/types"
 import { getStatusBadgeVariant, getStatusLabel } from "@/lib/concerns/presentation"
 import { findConcernById } from "@/lib/concerns/client-store"
 import type { Dictionary } from "@/lib/i18n/dictionaries/en"

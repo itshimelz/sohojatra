@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 import { SITE_URL } from "@/lib/seo"
 import { getDictionary } from "@/lib/i18n/server"
-import type { Concern } from "@/lib/concerns/mock"
+import type { Concern } from "@/lib/concerns/types"
 import Link from "next/link"
 import { buttonVariants } from "@/components/ui/button-variants"
 import { ConcernCard } from "@/components/concern-card"

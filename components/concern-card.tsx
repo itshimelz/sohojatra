@@ -19,7 +19,7 @@ import {
   PaperPlaneTilt,
 } from "@phosphor-icons/react/dist/ssr"
 import { getStatusBadgeVariant, getStatusLabel } from "@/lib/concerns/presentation"
-import type { Concern } from "@/lib/concerns/mock"
+import type { Concern } from "@/lib/concerns/types"
 
 type ConcernCardProps = {
   concern: Concern & { currentVote?: "up" | "down" | null }

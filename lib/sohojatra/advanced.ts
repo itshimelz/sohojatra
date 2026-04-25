@@ -45,9 +45,35 @@ type AdvancedState = {
 
 const statePath = join(process.cwd(), ".sohojatra-advanced.json")
 const db = prisma as unknown as Record<string, any>
+const fallbackEventsSeen = new Set<string>()
+const enableLocalFallback =
+  process.env.SOHOJATRA_ENABLE_LOCAL_FALLBACK === "true" || process.env.NODE_ENV !== "production"
+
+function reportFallback(event: string, details?: string) {
+  const key = `${event}:${details ?? ""}`
+  if (fallbackEventsSeen.has(key)) return
+  fallbackEventsSeen.add(key)
+  console.warn(`[advanced:fallback] ${event}${details ? ` (${details})` : ""}`)
+}
+
+function assertLocalFallbackAllowed(context: string) {
+  if (!enableLocalFallback) {
+    throw new Error(
+      `${context} requires local advanced fallback, which is disabled in this environment.`
+    )
+  }
+  reportFallback("local-fallback", context)
+}
 
 function hasModel(name: string) {
-  return Boolean(db?.[name])
+  const available = Boolean(db?.[name])
+  if (!available && enableLocalFallback) {
+    reportFallback("missing-model", name)
+  }
+  if (!available && !enableLocalFallback) {
+    throw new Error(`Missing Prisma model "${name}" while local advanced fallback is disabled.`)
+  }
+  return available
 }
 
 function uid(prefix: string) {
@@ -110,9 +136,10 @@ function defaultState(): AdvancedState {
   }
 }
 
-const state: AdvancedState = loadState()
+const state: AdvancedState = enableLocalFallback ? loadState() : defaultState()
 
 function loadState(): AdvancedState {
+  assertLocalFallbackAllowed("loadState")
   if (!existsSync(statePath)) return defaultState()
 
   try {
@@ -130,10 +157,12 @@ function loadState(): AdvancedState {
 }
 
 function saveState() {
+  assertLocalFallbackAllowed("saveState")
   writeFileSync(statePath, JSON.stringify(state, null, 2), "utf8")
 }
 
 export function verifyPassport(passport: string) {
+  assertLocalFallbackAllowed("verifyPassport")
   const clean = passport.trim().toUpperCase()
   const valid = /^[A-Z0-9]{7,15}$/.test(clean)
   const trustScore = valid ? 92 : 25
@@ -194,7 +223,8 @@ export async function createThread(title: string) {
     }
   }
 
-  // File fallback
+  assertLocalFallbackAllowed("createThread")
+  // Local fallback (development only)
   const thread = { id: uid("t"), title: title.trim() || "Untitled collaborative thread", messages: [] as any[] }
   return thread
 }
@@ -354,6 +384,7 @@ export function banglaNlpAnalyze(text: string) {
 }
 
 export function logDriftMetric(input: { model: string; baseline: number; current: number }) {
+  assertLocalFallbackAllowed("logDriftMetric")
   const drift = Math.abs(input.current - input.baseline)
   const metric: DriftMetric = {
     id: uid("dr"),
@@ -374,6 +405,7 @@ export function logDriftMetric(input: { model: string; baseline: number; current
 }
 
 export function listDriftMetrics() {
+  assertLocalFallbackAllowed("listDriftMetrics")
   return state.driftMetrics
 }
 
@@ -413,6 +445,7 @@ export function registerVector(input: {
   text: string
   metadata?: Record<string, string>
 }) {
+  assertLocalFallbackAllowed("registerVector")
   const point: VectorPoint = {
     id: input.id ?? uid("vec"),
     text: input.text,
@@ -427,6 +460,7 @@ export function registerVector(input: {
 }
 
 export function queryVectors(query: string, topK = 5) {
+  assertLocalFallbackAllowed("queryVectors")
   const queryVector = embed(query)
   return state.vectors
     .map((item) => ({

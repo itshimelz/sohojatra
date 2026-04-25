@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 
 import { listConcerns } from "@/lib/sohojatra/store"
-import type { Concern } from "@/lib/concerns/mock"
+import type { Concern } from "@/lib/concerns/types"
 
 export async function GET() {
   const concerns = await listConcerns()

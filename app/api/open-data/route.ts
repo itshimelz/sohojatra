@@ -17,7 +17,7 @@ import {
   type ProposalRecord,
   type SolutionPlan,
 } from "@/lib/sohojatra/store"
-import type { Concern } from "@/lib/concerns/mock"
+import type { Concern } from "@/lib/concerns/types"
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)

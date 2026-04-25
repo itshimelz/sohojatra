@@ -14,7 +14,7 @@ import {
 
 import { Badge } from "@/components/ui/badge"
 import { Button, buttonVariants } from "@/components/ui/button"
-import type { Concern } from "@/lib/concerns/mock"
+import type { Concern } from "@/lib/concerns/types"
 import { getStatusBadgeVariant, getStatusLabel } from "@/lib/concerns/presentation"
 import { getBrowserConcerns, upvoteConcern } from "@/lib/concerns/client-store"
 import type { Dictionary } from "@/lib/i18n/dictionaries/en"

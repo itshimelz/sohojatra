@@ -1,4 +1,4 @@
-import { MOCK_CONCERNS, type Concern } from "./mock"
+import type { Concern } from "./types"
 
 const CONCERNS_STORAGE_KEY = "sohojatra:concerns"
 const VOTES_STORAGE_KEY = "sohojatra:concern-votes"
@@ -82,7 +82,7 @@ function writeVotesToStorage(votes: VoteMap) {
 }
 
 function seedConcerns() {
-  return MOCK_CONCERNS.map(cloneConcern)
+  return [] as Concern[]
 }
 
 function sortConcerns(concerns: Concern[]) {

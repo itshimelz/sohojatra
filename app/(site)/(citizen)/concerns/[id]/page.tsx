@@ -3,7 +3,6 @@ import Link from "next/link"
 import Image from "next/image"
 
 import { getConcern } from "@/lib/sohojatra/store"
-import { MOCK_CONCERNS } from "@/lib/concerns/mock"
 import { getDictionary } from "@/lib/i18n/server"
 import { SITE_URL } from "@/lib/seo"
 import { getServerSession } from "@/lib/auth-session"
@@ -29,10 +28,7 @@ type DetailParams = { params: Promise<{ id: string }> }
 
 export async function generateMetadata({ params }: DetailParams): Promise<Metadata> {
   const { id } = await params
-  const concern =
-    (await getConcern(id).catch(() => null)) ??
-    MOCK_CONCERNS.find((c) => c.id === id) ??
-    null
+  const concern = (await getConcern(id).catch(() => null)) ?? null
 
   if (!concern) {
     return { title: "Concern Not Found" }
@@ -64,11 +60,7 @@ export default async function ConcernDetailPage({
   const d = await getDictionary()
   const { id } = await params
 
-  // Try store API first (DB-backed or file state), then fall back to mock data
-  const concern =
-    (await getConcern(id).catch(() => null)) ??
-    MOCK_CONCERNS.find((item) => item.id === id) ??
-    null
+  const concern = (await getConcern(id).catch(() => null)) ?? null
 
   if (!concern) {
     return (

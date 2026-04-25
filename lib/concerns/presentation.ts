@@ -1,4 +1,4 @@
-import type { ConcernStatus } from "@/lib/concerns/mock"
+import type { ConcernStatus } from "@/lib/concerns/types"
 
 type StatusLabels = {
   submitted: string
