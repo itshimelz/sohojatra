@@ -17,6 +17,14 @@ class Settings(BaseSettings):
         if not self.database_url and self.ai_database_url:
             object.__setattr__(self, "database_url", self.ai_database_url)
 
+    @property
+    def async_database_url(self) -> str:
+        """Returns asyncpg-compatible URL for SQLAlchemy async engine."""
+        url = self.ai_database_url or self.database_url
+        if url and not url.startswith("postgresql+asyncpg://"):
+            url = url.replace("postgresql://", "postgresql+asyncpg://", 1)
+        return url
+
     redis_url: str = "redis://localhost:6379/0"
     celery_broker_url: str = "redis://localhost:6379/1"
     celery_result_backend: str = "redis://localhost:6379/2"

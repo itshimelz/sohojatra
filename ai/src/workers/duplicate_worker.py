@@ -24,7 +24,7 @@ from src.workers.celery_app import celery_app
 
 logger = logging.getLogger(__name__)
 
-_engine = create_async_engine(settings.database_url, pool_pre_ping=True)
+_engine = create_async_engine(settings.async_database_url, pool_pre_ping=True)
 _session_factory = async_sessionmaker(_engine, expire_on_commit=False)
 
 # Lazy-loaded embedding model (loaded once per worker process)

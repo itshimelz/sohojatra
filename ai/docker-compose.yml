@@ -4,16 +4,69 @@ services:
     container_name: nagarik-api
     ports:
       - "8001:8001"
-    environment:
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
-      - REDIS_URL=redis://redis:6379/0
     env_file: ../.env
+    environment:
+      # All three Redis vars must point to the SAME Redis service inside Docker.
+      # env_file provides the Redis Labs URL for non-Docker; these overrides
+      # replace it with the local container name so intra-Docker routing works.
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/1
+      - CELERY_RESULT_BACKEND=redis://redis:6379/2
+      # MLflow: use localhost (server not running) → tracker silently disabled
+      - MLFLOW_TRACKING_URI=http://localhost:5000
+      # Pass Modal + HuggingFace explicitly so they're always visible
+      - MODAL_API_URL=${MODAL_API_URL}
+      - HUGGINGFACE_TOKEN=${HUGGINGFACE_TOKEN}
+    depends_on:
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./src:/app/src
+      - ./main.py:/app/main.py
+      - model_cache:/root/.cache/huggingface
+    restart: unless-stopped
+    networks:
+      - sohojatra-net
+
+  celery-worker:
+    build: .
+    container_name: nagarik-worker
+    command: celery -A src.workers.celery_app worker --loglevel=info --concurrency=2
+    env_file: ../.env
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/1
+      - CELERY_RESULT_BACKEND=redis://redis:6379/2
+      - MLFLOW_TRACKING_URI=http://localhost:5000
+      - MODAL_API_URL=${MODAL_API_URL}
+      - HUGGINGFACE_TOKEN=${HUGGINGFACE_TOKEN}
     depends_on:
       redis:
         condition: service_healthy
     volumes:
       - ./src:/app/src
       - model_cache:/root/.cache/huggingface
+    restart: unless-stopped
+    networks:
+      - sohojatra-net
+
+  celery-beat:
+    build: .
+    container_name: nagarik-beat
+    command: celery -A src.workers.celery_app beat --loglevel=info
+    env_file: ../.env
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/1
+      - CELERY_RESULT_BACKEND=redis://redis:6379/2
+      - MLFLOW_TRACKING_URI=http://localhost:5000
+      - MODAL_API_URL=${MODAL_API_URL}
+      - HUGGINGFACE_TOKEN=${HUGGINGFACE_TOKEN}
+    depends_on:
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./src:/app/src
     restart: unless-stopped
     networks:
       - sohojatra-net

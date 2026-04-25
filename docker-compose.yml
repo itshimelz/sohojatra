@@ -22,11 +22,15 @@ services:
     env_file:
       - .env
     environment:
-      # Override Redis to use cloud Redis from .env (not local)
       - REDIS_URL=${REDIS_URL}
+      - CELERY_BROKER_URL=${CELERY_BROKER_URL}
+      - CELERY_RESULT_BACKEND=${CELERY_RESULT_BACKEND}
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
       - AI_DATABASE_URL=${AI_DATABASE_URL}
       - DATABASE_URL=${DATABASE_URL}
+      - MODAL_API_URL=${MODAL_API_URL}
+      - HUGGINGFACE_TOKEN=${HUGGINGFACE_TOKEN}
+      - MLFLOW_TRACKING_URI=http://localhost:5000
     volumes:
       - ./ai/src:/app/src
       - ./ai/main.py:/app/main.py
