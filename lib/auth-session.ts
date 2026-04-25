@@ -1,6 +1,7 @@
 import "server-only"
 
 import { cookies } from "next/headers"
+import { headers } from "next/headers"
 import { redirect } from "next/navigation"
 
 import { env } from "@/lib/env"
@@ -17,8 +18,29 @@ type SessionPayload = {
   }
 }
 
+async function resolveServerBaseUrl(): Promise<string | null> {
+  // Prefer request-aware host/proto in deployed environments (Vercel, proxies).
+  // This avoids hard dependency on BETTER_AUTH_URL being perfectly configured.
+  const hdrs = await headers()
+  const forwardedHost = hdrs.get("x-forwarded-host")
+  const host = forwardedHost ?? hdrs.get("host")
+
+  if (host) {
+    const proto = hdrs.get("x-forwarded-proto") ?? "https"
+    return `${proto}://${host}`
+  }
+
+  if (env.BETTER_AUTH_URL) {
+    return env.BETTER_AUTH_URL
+  }
+
+  return null
+}
+
 export async function getServerSession(): Promise<SessionPayload | null> {
-  if (!env.BETTER_AUTH_URL) {
+  const baseUrl = await resolveServerBaseUrl()
+
+  if (!baseUrl) {
     return null
   }
 
@@ -29,7 +51,7 @@ export async function getServerSession(): Promise<SessionPayload | null> {
   }
 
   const response = await fetch(
-    new URL("/api/auth/get-session", env.BETTER_AUTH_URL),
+    new URL("/api/auth/get-session", baseUrl),
     {
       method: "GET",
       headers: {
