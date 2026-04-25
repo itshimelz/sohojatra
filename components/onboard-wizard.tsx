@@ -30,7 +30,6 @@ export function OnboardWizard({ user }: OnboardWizardProps) {
     name: user.name || "",
     email: user.email || "",
     dob: "",
-    nid: "",
     education: "",
   })
 
@@ -65,7 +64,6 @@ export function OnboardWizard({ user }: OnboardWizardProps) {
         name: formData.name,
         email: formData.email !== user.email ? formData.email : undefined,
         dob: formData.dob || undefined,
-        nid: formData.nid || undefined,
         education: formData.education || undefined,
       })
       toast.success("Welcome to Sohojatra!", {
@@ -132,60 +130,48 @@ export function OnboardWizard({ user }: OnboardWizardProps) {
                 />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-2 sm:col-span-1">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="dob">Date of Birth</Label>
-                    {formData.dob && (
-                      <span className="text-xs text-muted-foreground font-medium">
-                        Age: {calculateAge(formData.dob)}
-                      </span>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="dob">Date of Birth</Label>
+                  {formData.dob && (
+                    <span className="text-xs text-muted-foreground font-medium">
+                      Age: {calculateAge(formData.dob)}
+                    </span>
+                  )}
+                </div>
+                <Popover>
+                  <PopoverTrigger
+                    id="dob"
+                    className={cn(
+                      buttonVariants({ variant: "outline" }),
+                      "w-full justify-start text-left font-normal border-border/50",
+                      !formData.dob && "text-muted-foreground"
                     )}
-                  </div>
-                  <Popover>
-                    <PopoverTrigger
-                      id="dob"
-                      className={cn(
-                        buttonVariants({ variant: "outline" }),
-                        "w-full justify-start text-left font-normal border-border/50",
-                        !formData.dob && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarBlank className="mr-2 size-4" />
-                      {formData.dob ? format(new Date(formData.dob), "PPP") : <span>Pick a date</span>}
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        captionLayout="dropdown"
-                        startMonth={new Date(1950, 0)}
-                        endMonth={new Date()}
-                        selected={formData.dob ? new Date(formData.dob) : undefined}
-                        onSelect={(date) => {
-                          if (date) {
-                            setFormData((prev) => ({
-                              ...prev,
-                              dob: format(date, "yyyy-MM-dd"),
-                            }))
-                          } else {
-                            setFormData((prev) => ({ ...prev, dob: "" }))
-                          }
-                        }}
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
-                <div className="space-y-2 sm:col-span-1">
-                  <Label htmlFor="nid">NID Number <span className="text-muted-foreground font-normal">(Optional)</span></Label>
-                  <Input
-                    id="nid"
-                    name="nid"
-                    placeholder="e.g. 1990123456789"
-                    value={formData.nid}
-                    onChange={handleChange}
-                  />
-                </div>
+                  >
+                    <CalendarBlank className="mr-2 size-4" />
+                    {formData.dob ? format(new Date(formData.dob), "PPP") : <span>Pick a date</span>}
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      captionLayout="dropdown"
+                      startMonth={new Date(1950, 0)}
+                      endMonth={new Date()}
+                      selected={formData.dob ? new Date(formData.dob) : undefined}
+                      onSelect={(date) => {
+                        if (date) {
+                          setFormData((prev) => ({
+                            ...prev,
+                            dob: format(date, "yyyy-MM-dd"),
+                          }))
+                        } else {
+                          setFormData((prev) => ({ ...prev, dob: "" }))
+                        }
+                      }}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
               </div>
             </CardContent>
             <CardFooter className="flex justify-end">
@@ -256,10 +242,6 @@ export function OnboardWizard({ user }: OnboardWizardProps) {
                   <span className="text-sm font-semibold col-span-2">
                     {formData.dob ? `${formData.dob} (${calculateAge(formData.dob)} yrs)` : "Not provided"}
                   </span>
-                </div>
-                <div className="grid grid-cols-3 gap-2 border-b border-border/50 pb-3">
-                  <span className="text-sm font-medium text-muted-foreground col-span-1">NID</span>
-                  <span className="text-sm font-semibold col-span-2">{formData.nid || "Not provided"}</span>
                 </div>
                 <div className="grid grid-cols-3 gap-2">
                   <span className="text-sm font-medium text-muted-foreground col-span-1">Education</span>

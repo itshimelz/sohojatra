@@ -8,7 +8,12 @@
 import { NextResponse } from "next/server"
 
 import { requireSession } from "@/lib/api-guard"
-import { addProposalComment, listProposals } from "@/lib/sohojatra/store"
+import {
+  addProposalComment,
+  listProposals,
+  type ProposalComment,
+  type ProposalRecord,
+} from "@/lib/sohojatra/store"
 
 export async function GET(
   _request: Request,
@@ -16,8 +21,8 @@ export async function GET(
 ) {
   const { id } = await params
   const proposals = await listProposals()
-  const proposal = proposals.find((p) => p.id === id)
-  const comments = (proposal?.comments ?? []).map((c) => ({
+  const proposal = proposals.find((p: ProposalRecord) => p.id === id)
+  const comments = (proposal?.comments ?? []).map((c: ProposalComment) => ({
     id: c.id,
     authorName: c.author,
     body: c.body,

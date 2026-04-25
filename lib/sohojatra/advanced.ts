@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma"
 
 type VerificationRecord = {
   id: string
+  /** `"nid"` may exist in legacy saved state; new records use `"passport"` only. */
   type: "nid" | "passport"
   valueHash: string
   status: "verified" | "needs-review" | "rejected"
@@ -130,25 +131,6 @@ function loadState(): AdvancedState {
 
 function saveState() {
   writeFileSync(statePath, JSON.stringify(state, null, 2), "utf8")
-}
-
-export function verifyNid(nid: string) {
-  const clean = nid.replace(/\D/g, "")
-  const valid = clean.length === 10 || clean.length === 13 || clean.length === 17
-  const trustScore = valid ? 86 : 30
-
-  const record: VerificationRecord = {
-    id: uid("v"),
-    type: "nid",
-    valueHash: hash(clean),
-    status: valid ? "verified" : "needs-review",
-    trustScore,
-    createdAt: new Date().toISOString(),
-  }
-
-  state.verifications.unshift(record)
-  saveState()
-  return record
 }
 
 export function verifyPassport(passport: string) {

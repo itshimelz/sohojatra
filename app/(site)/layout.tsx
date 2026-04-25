@@ -26,7 +26,6 @@ export default async function SiteLayout({
         phoneNumber?: string | null
         onboarded?: boolean
         dob?: string | Date | null
-        nid?: string | null
         education?: string | null
       }
       initialSession = {

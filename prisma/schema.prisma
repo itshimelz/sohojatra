@@ -26,9 +26,7 @@ model User {
   banExpires DateTime?
   onboarded  Boolean   @default(false)
   dob        DateTime?
-  nid        String?
   education  String?
-  nidHash          String?
   passportNumber   String?
   institution      String?
   department       String?

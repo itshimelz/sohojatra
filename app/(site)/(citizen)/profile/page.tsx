@@ -182,10 +182,6 @@ export default function UserProfilePage() {
               </p>
             </div>
             <div>
-              <p className="text-muted-foreground">National ID</p>
-              <p className="font-medium">{(user as any).nid || "Not provided"}</p>
-            </div>
-            <div>
               <p className="text-muted-foreground">Education</p>
               <p className="font-medium">{(user as any).education || "Not provided"}</p>
             </div>

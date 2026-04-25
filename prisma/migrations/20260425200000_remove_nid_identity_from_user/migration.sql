@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "user" DROP COLUMN IF EXISTS "nid";
+ALTER TABLE "user" DROP COLUMN IF EXISTS "nidHash";

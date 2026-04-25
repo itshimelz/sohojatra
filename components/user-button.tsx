@@ -206,10 +206,6 @@ export function UserButton({ loginLabel }: { loginLabel: string }) {
                         {user.dob ? new Date(user.dob).toLocaleDateString() : "Not provided"}
                       </p>
                     </div>
-                    <div className="space-y-1">
-                      <p className="text-xs font-medium text-muted-foreground uppercase">NID Number</p>
-                      <p className="text-sm font-medium">{user.nid || "Not provided"}</p>
-                    </div>
                     <div className="space-y-1 sm:col-span-2">
                       <p className="text-xs font-medium text-muted-foreground uppercase">Education</p>
                       <p className="text-sm font-medium capitalize">{user.education || "Not provided"}</p>
@@ -246,7 +242,7 @@ export function UserButton({ loginLabel }: { loginLabel: string }) {
                   
                   <div className="pt-4 rounded-lg bg-muted/30 p-4 border border-border/50 text-sm text-muted-foreground">
                     <span className="block font-medium text-foreground mb-1">Your data is strictly secured.</span>
-                    We do not share your NID, Date of Birth, or precise personal details with common civic entities unless explicitly authorized or mandated.
+                    We do not share your date of birth or other precise personal details with common civic entities unless explicitly authorized or mandated.
                   </div>
                   
                   <Button variant="outline" disabled className="w-full">Download Personal Data Archive</Button>

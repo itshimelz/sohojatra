@@ -22,7 +22,6 @@ export type AuthUser = {
   phoneNumber?: string | null
   onboarded?: boolean
   dob?: Date | string | null
-  nid?: string | null
   education?: string | null
 }
 

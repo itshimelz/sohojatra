@@ -4,7 +4,7 @@ import { join } from "node:path"
 import { MOCK_CONCERNS, type Concern } from "@/lib/concerns/mock"
 import { prisma } from "@/lib/prisma"
 
-type ProposalComment = {
+export type ProposalComment = {
   id: string
   author: string
   body: string
@@ -56,7 +56,7 @@ type Award = {
   value?: string
 }
 
-type ActionLogEntry = {
+export type ActionLogEntry = {
   id: string
   entityType: "solutionPlan" | "project" | "assemblyEvent" | "researchProblem"
   entityId: string
@@ -67,7 +67,7 @@ type ActionLogEntry = {
   createdAt: string
 }
 
-type SolutionPlan = {
+export type SolutionPlan = {
   id: string
   concernId: string
   title: string
@@ -89,7 +89,7 @@ type SolutionPlan = {
   updatedAt: string
 }
 
-type ProjectMilestone = {
+export type ProjectMilestone = {
   id: string
   title: string
   dueDate: string
@@ -114,7 +114,7 @@ type ProjectComment = {
   createdAt: string
 }
 
-type ProjectTracker = {
+export type ProjectTracker = {
   id: string
   title: string
   ministry: string
@@ -131,7 +131,7 @@ type ProjectTracker = {
   comments: ProjectComment[]
 }
 
-type AssemblyEvent = {
+export type AssemblyEvent = {
   id: string
   title: string
   date: string

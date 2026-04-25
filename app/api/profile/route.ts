@@ -12,11 +12,8 @@ export async function GET(req: NextRequest) {
     where: { id: session.user.id },
     select: {
       id: true,
-      address: true,
       createdAt: true,
       phoneNumber: true,
-      nidHash: true,
-      birthCertificateNoHash: true,
       trustScore: true,
     },
   })
@@ -30,16 +27,15 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
-  let body: { name?: string; address?: string }
+  let body: { name?: string }
   try {
-    body = (await req.json()) as { name?: string; address?: string }
+    body = (await req.json()) as { name?: string }
   } catch {
     return NextResponse.json({ error: "Invalid request body." }, { status: 400 })
   }
 
-  const updates: { name?: string; address?: string } = {}
+  const updates: { name?: string } = {}
   if (body.name?.trim()) updates.name = body.name.trim()
-  if (typeof body.address === "string") updates.address = body.address.trim()
 
   if (!Object.keys(updates).length) {
     return NextResponse.json({ error: "Nothing to update." }, { status: 400 })
@@ -48,7 +44,7 @@ export async function PATCH(req: NextRequest) {
   const user = await prisma.user.update({
     where: { id: session.user.id },
     data: updates,
-    select: { id: true, name: true, address: true },
+    select: { id: true, name: true },
   })
 
   return NextResponse.json(user)

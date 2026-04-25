@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   db:
     image: postgis/postgis:15-3.3
@@ -14,5 +12,33 @@ services:
       - sohojatra_pgdata:/var/lib/postgresql/data
     restart: unless-stopped
 
+  ai-api:
+    build:
+      context: ./ai
+      dockerfile: Dockerfile
+    container_name: sohojatra_ai
+    ports:
+      - "8001:8001"
+    env_file:
+      - .env
+    environment:
+      # Override Redis to use cloud Redis from .env (not local)
+      - REDIS_URL=${REDIS_URL}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - AI_DATABASE_URL=${AI_DATABASE_URL}
+      - DATABASE_URL=${DATABASE_URL}
+    volumes:
+      - ./ai/src:/app/src
+      - ./ai/main.py:/app/main.py
+      - model_cache:/root/.cache/huggingface
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+
 volumes:
   sohojatra_pgdata:
+  model_cache:

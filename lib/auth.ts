@@ -282,7 +282,6 @@ export const auth = betterAuth({
     additionalFields: {
       onboarded: { type: "boolean", defaultValue: false, required: false },
       dob: { type: "date", required: false },
-      nid: { type: "string", required: false },
       education: { type: "string", required: false },
     },
   },

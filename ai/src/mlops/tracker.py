@@ -1,18 +1,29 @@
-"""MLflow tracking utilities. Import log_call to wrap any endpoint."""
+"""MLflow tracking utilities. Import log_call to wrap any endpoint.
+
+When MLflow is not installed or not configured, all tracking is silently
+skipped — the wrapped endpoint still runs normally.
+"""
 
 from __future__ import annotations
 
-import asyncio
 import functools
+import logging
 import time
 from typing import Any, Callable
 
-import mlflow
-import mlflow.sklearn
-from src.config import settings
+logger = logging.getLogger(__name__)
 
-mlflow.set_tracking_uri(settings.mlflow_tracking_uri)
-mlflow.set_experiment(settings.mlflow_experiment_name)
+_mlflow_available = False
+try:
+    import mlflow
+    import mlflow.sklearn
+    from src.config import settings
+
+    mlflow.set_tracking_uri(settings.mlflow_tracking_uri)
+    mlflow.set_experiment(settings.mlflow_experiment_name)
+    _mlflow_available = True
+except Exception:
+    logger.info("MLflow not available — tracking disabled")
 
 
 def log_call(model_name: str) -> Callable:
@@ -24,6 +35,9 @@ def log_call(model_name: str) -> Callable:
             start = time.monotonic()
             result = await fn(*args, **kwargs)
             latency_ms = (time.monotonic() - start) * 1000
+
+            if not _mlflow_available:
+                return result
 
             # Best-effort: extract text length from first arg if it's a Pydantic model
             input_len = 0
@@ -38,19 +52,22 @@ def log_call(model_name: str) -> Callable:
 
             score_output = _extract_score(result)
 
-            with mlflow.start_run(run_name=model_name, nested=True):
-                mlflow.log_metrics(
-                    {
-                        "input_text_length": float(input_len),
-                        "score_output": float(score_output) if score_output is not None else -1.0,
-                        "latency_ms": latency_ms,
-                    }
-                )
-                mlflow.log_params(
-                    {
-                        "model_name": model_name,
-                    }
-                )
+            try:
+                with mlflow.start_run(run_name=model_name, nested=True):
+                    mlflow.log_metrics(
+                        {
+                            "input_text_length": float(input_len),
+                            "score_output": float(score_output) if score_output is not None else -1.0,
+                            "latency_ms": latency_ms,
+                        }
+                    )
+                    mlflow.log_params(
+                        {
+                            "model_name": model_name,
+                        }
+                    )
+            except Exception as exc:
+                logger.debug("MLflow logging failed: %s", exc)
 
             return result
 
@@ -69,56 +86,3 @@ def _extract_score(result: Any) -> float | None:
         if isinstance(val, (int, float)):
             return float(val)
     return None
-
-
-async def check_and_trigger_retraining(
-    experiment_name: str = settings.mlflow_experiment_name,
-    metric_key: str = "accuracy",
-    threshold: float = settings.retraining_accuracy_threshold,
-) -> dict[str, Any]:
-    """
-    Weekly retraining trigger.
-
-    Queries the last 7 days of MLflow runs for the given experiment.
-    If the rolling mean accuracy drops below `threshold`, enqueues a
-    Celery retraining task and returns a trigger signal.
-    """
-    client = mlflow.tracking.MlflowClient()
-    experiment = client.get_experiment_by_name(experiment_name)
-    if experiment is None:
-        return {"triggered": False, "reason": "experiment_not_found"}
-
-    runs = client.search_runs(
-        experiment_ids=[experiment.experiment_id],
-        filter_string="",
-        order_by=["start_time DESC"],
-        max_results=50,
-    )
-
-    scores = [
-        r.data.metrics[metric_key]
-        for r in runs
-        if metric_key in r.data.metrics
-    ]
-
-    if not scores:
-        return {"triggered": False, "reason": "no_metric_data"}
-
-    mean_accuracy = sum(scores) / len(scores)
-
-    if mean_accuracy < threshold:
-        from src.workers.celery_app import celery_app  # avoid circular import
-        celery_app.send_task("src.workers.duplicate_worker.retrain_models")
-        return {
-            "triggered": True,
-            "mean_accuracy": mean_accuracy,
-            "threshold": threshold,
-            "reason": "accuracy_below_threshold",
-        }
-
-    return {
-        "triggered": False,
-        "mean_accuracy": mean_accuracy,
-        "threshold": threshold,
-        "reason": "accuracy_ok",
-    }

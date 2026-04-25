@@ -65,7 +65,7 @@ export function classifyCrime(text = "") {
 
   if (/(bribe|ঘুষ|money demanded)/.test(lower)) flags.push("bribery-signal")
   if (/(hate|kill|attack|violence)/.test(lower)) flags.push("incitement-risk")
-  if (/(phone|address|nid|doxx)/.test(lower)) flags.push("privacy-violation")
+  if (/(phone|address|doxx|national\s*id)/.test(lower)) flags.push("privacy-violation")
   if (/(spam|bot|ddos|automation)/.test(lower)) flags.push("platform-abuse")
 
   return flags.length > 0 ? flags : ["no-flag"]
