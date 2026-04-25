@@ -37,7 +37,7 @@ RETRAIN_THRESHOLD = int(os.getenv("RETRAIN_THRESHOLD", "50"))
 HF_REPO_ID = os.getenv("HF_DATASET_REPO", "Emon3412/sohojatra-dataset")
 HF_TOKEN = settings.huggingface_token
 
-_engine = create_async_engine(settings.database_url, pool_pre_ping=True)
+_engine = create_async_engine(settings.async_database_url, pool_pre_ping=True)
 _session_factory = async_sessionmaker(_engine, expire_on_commit=False)
 
 
