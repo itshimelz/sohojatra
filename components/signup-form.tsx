@@ -31,6 +31,7 @@ import {
   otpCodeSchema,
   signupNameSchema,
 } from "@/lib/validation/auth"
+import { PENDING_ONBOARDING_NAME_KEY } from "@/lib/onboarding-pending-name"
 
 export function SignupForm({
   className,
@@ -127,7 +128,7 @@ export function SignupForm({
         name: signupNameSchema.parse(name),
       } as unknown as PhoneVerifyPayload
 
-      const { data, error } = await authClient.phoneNumber.verify(payload)
+      const { error } = await authClient.phoneNumber.verify(payload)
 
       if (error) {
         const errorText =
@@ -149,8 +150,18 @@ export function SignupForm({
         return
       }
 
-      toast.success(`Welcome to Sohojatra, ${name}! Your account is ready.`)
-      if ((data?.user as any)?.onboarded) {
+      const displayName = signupNameSchema.parse(name)
+      toast.success(`Welcome to Sohojatra, ${displayName}! Your account is ready.`)
+      try {
+        sessionStorage.setItem(PENDING_ONBOARDING_NAME_KEY, displayName)
+      } catch {
+        /* private mode / unavailable */
+      }
+      const sessionRes = await authClient.getSession()
+      const user = sessionRes.data?.user as { onboarded?: boolean } | undefined
+      const onboarded = Boolean(user?.onboarded)
+      void router.refresh()
+      if (onboarded) {
         void router.push("/concerns")
       } else {
         void router.push("/onboard")
