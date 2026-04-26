@@ -12,34 +12,44 @@ import type { ConcernHeatmapMapProps } from "./concern-heatmap-map-types"
 const DEFAULT_CENTER: [number, number] = [90.4125, 23.8103]
 const DEFAULT_ZOOM = 10.5
 
-const OSM_RASTER_STYLE: maplibregl.StyleSpecification = {
+/**
+ * CARTO light raster — reliable on mobile and avoids OSM tile
+ * referrer blocks that can leave maps blank in embedded browsers.
+ */
+const DEFAULT_RASTER_STYLE: maplibregl.StyleSpecification = {
   version: 8,
   sources: {
-    osm: {
+    basemap: {
       type: "raster",
-      tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
+      tiles: [
+        "https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png",
+        "https://b.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png",
+        "https://c.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png",
+      ],
       tileSize: 256,
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> © CARTO',
     },
   },
-  layers: [{ id: "osm", type: "raster", source: "osm", minzoom: 0, maxzoom: 19 }],
+  layers: [{ id: "basemap", type: "raster", source: "basemap", minzoom: 0, maxzoom: 22 }],
 }
 
-/** Red-only heat ramp: transparent → deep red */
+/** Red heat ramp tuned so sparse points and low density stay visible */
 const HEAT_COLOR_STOPS: maplibregl.ExpressionSpecification = [
   "interpolate",
   ["linear"],
   ["heatmap-density"],
   0,
-  "rgba(220, 38, 38, 0)",
-  0.12,
-  "rgba(248, 113, 113, 0.35)",
-  0.35,
-  "rgba(239, 68, 68, 0.65)",
-  0.6,
-  "rgba(220, 38, 38, 0.88)",
+  "rgba(254, 226, 226, 0)",
+  0.02,
+  "rgba(252, 165, 165, 0.45)",
+  0.15,
+  "rgba(248, 113, 113, 0.75)",
+  0.4,
+  "rgba(239, 68, 68, 0.9)",
+  0.7,
+  "rgba(220, 38, 38, 0.95)",
   1,
-  "rgba(127, 29, 29, 0.95)",
+  "rgba(127, 29, 29, 0.98)",
 ]
 
 function debounce<T extends (...args: Parameters<T>) => void>(fn: T, ms: number) {
@@ -53,114 +63,70 @@ function debounce<T extends (...args: Parameters<T>) => void>(fn: T, ms: number)
   }
 }
 
-function intensityPaint(mult: number): maplibregl.ExpressionSpecification {
-  return [
-    "*",
-    mult,
-    ["interpolate", ["linear"], ["zoom"], 0, 0.85, 12, 1.5, 18, 2.35] as maplibregl.ExpressionSpecification,
-  ] as maplibregl.ExpressionSpecification
-}
-
-function radiusPaint(mult: number): maplibregl.ExpressionSpecification {
-  return [
-    "*",
-    mult,
-    ["interpolate", ["linear"], ["zoom"], 0, 3, 10, 18, 14, 30, 18, 40] as maplibregl.ExpressionSpecification,
-  ] as maplibregl.ExpressionSpecification
-}
-
 export function ConcernHeatmapMap({
-  onStatusChange,
   labels,
-  filterCategory,
-  filterStatus,
-  intensityMultiplier,
-  radiusMultiplier,
-  heatOpacity,
-  mapHeightClassName,
-  showHeader,
-  resetViewSignal = 0,
+  mapHeightClassName = "h-[min(65vh,560px)]",
+  showHeader = false,
 }: ConcernHeatmapMapProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<maplibregl.Map | null>(null)
   const abortRef = useRef<AbortController | null>(null)
 
-  const filterCategoryRef = useRef(filterCategory)
-  const filterStatusRef = useRef(filterStatus)
-  filterCategoryRef.current = filterCategory
-  filterStatusRef.current = filterStatus
-
-  const paintRef = useRef({ intensityMultiplier, radiusMultiplier, heatOpacity })
-  paintRef.current = { intensityMultiplier, radiusMultiplier, heatOpacity }
-
   const [status, setStatus] = useState<"idle" | "loading" | "error">("idle")
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
-  const loadHeatmapForBounds = useCallback(async (map: maplibregl.Map) => {
-    const b = map.getBounds()
-    const west = b.getWest()
-    const south = b.getSouth()
-    const east = b.getEast()
-    const north = b.getNorth()
+  const loadHeatmapForBounds = useCallback(
+    async (map: maplibregl.Map) => {
+      const b = map.getBounds()
+      const params = new URLSearchParams({
+        west: b.getWest().toFixed(5),
+        south: b.getSouth().toFixed(5),
+        east: b.getEast().toFixed(5),
+        north: b.getNorth().toFixed(5),
+      })
 
-    abortRef.current?.abort()
-    const ac = new AbortController()
-    abortRef.current = ac
+      abortRef.current?.abort()
+      const ac = new AbortController()
+      abortRef.current = ac
 
-    const params = new URLSearchParams({
-      west: west.toFixed(5),
-      south: south.toFixed(5),
-      east: east.toFixed(5),
-      north: north.toFixed(5),
-    })
-    const cat = filterCategoryRef.current
-    const st = filterStatusRef.current
-    if (cat) params.set("category", cat)
-    if (st) params.set("status", st)
+      setStatus("loading")
+      setErrorMessage(null)
 
-    setStatus("loading")
-    onStatusChange?.("loading")
-    setErrorMessage(null)
+      try {
+        const res = await fetch(`/api/concerns/heatmap?${params}`, { signal: ac.signal })
+        if (!res.ok) throw new Error(await res.text().catch(() => res.statusText))
+        const geojson = await res.json()
 
-    try {
-      const res = await fetch(`/api/concerns/heatmap?${params}`, { signal: ac.signal })
-      if (!res.ok) throw new Error(await res.text().catch(() => res.statusText))
-      const geojson = await res.json()
-
-      const src = map.getSource("concerns-heat") as maplibregl.GeoJSONSource | undefined
-      if (src) {
-        src.setData(geojson)
+        const src = map.getSource("concerns-heat") as maplibregl.GeoJSONSource | undefined
+        if (src) src.setData(geojson)
+        setStatus("idle")
+      } catch (e) {
+        if ((e as Error).name === "AbortError") return
+        setStatus("error")
+        setErrorMessage(e instanceof Error ? e.message : labels.error)
       }
-      setStatus("idle")
-      onStatusChange?.("idle")
-    } catch (e) {
-      if ((e as Error).name === "AbortError") return
-      setStatus("error")
-      onStatusChange?.("error")
-      setErrorMessage(e instanceof Error ? e.message : labels.error)
-    }
-  }, [labels.error, onStatusChange])
+    },
+    [labels.error]
+  )
 
   useEffect(() => {
     const el = containerRef.current
     if (!el) return
 
-    const styleUrl = process.env.NEXT_PUBLIC_MAP_STYLE_URL
-    const p = paintRef.current
+    const envStyle = process.env.NEXT_PUBLIC_MAP_STYLE_URL
     const map = new maplibregl.Map({
       container: el,
-      style: (styleUrl || OSM_RASTER_STYLE) as string | maplibregl.StyleSpecification,
+      style: (envStyle || DEFAULT_RASTER_STYLE) as string | maplibregl.StyleSpecification,
       center: DEFAULT_CENTER,
       zoom: DEFAULT_ZOOM,
       attributionControl: { compact: true },
     })
 
-    map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right")
     mapRef.current = map
 
     const scheduleLoad = debounce(() => {
       if (mapRef.current) void loadHeatmapForBounds(mapRef.current)
-    }, 450)
+    }, 400)
 
     map.on("load", () => {
       map.addSource("concerns-heat", {
@@ -172,17 +138,19 @@ export function ConcernHeatmapMap({
         id: "concerns-heat-layer",
         type: "heatmap",
         source: "concerns-heat",
-        maxzoom: 18,
         paint: {
-          "heatmap-weight": ["interpolate", ["linear"], ["get", "weight"], 0, 0, 8, 1],
-          "heatmap-intensity": intensityPaint(p.intensityMultiplier),
+          "heatmap-weight": ["coalesce", ["get", "weight"], 1],
+          "heatmap-intensity": ["interpolate", ["linear"], ["zoom"], 5, 0.9, 9, 1.35, 12, 1.85, 16, 2.4, 20, 2.9],
           "heatmap-color": HEAT_COLOR_STOPS,
-          "heatmap-radius": radiusPaint(p.radiusMultiplier),
-          "heatmap-opacity": p.heatOpacity,
+          "heatmap-radius": ["interpolate", ["linear"], ["zoom"], 5, 12, 9, 22, 12, 32, 16, 48, 20, 56],
+          "heatmap-opacity": 0.92,
         },
       })
 
-      void loadHeatmapForBounds(map)
+      requestAnimationFrame(() => {
+        map.resize()
+        void loadHeatmapForBounds(map)
+      })
     })
 
     map.on("moveend", scheduleLoad)
@@ -190,7 +158,10 @@ export function ConcernHeatmapMap({
     const ro = new ResizeObserver(() => map.resize())
     ro.observe(el)
 
+    const layoutFix = window.setTimeout(() => map.resize(), 200)
+
     return () => {
+      window.clearTimeout(layoutFix)
       ro.disconnect()
       map.off("moveend", scheduleLoad)
       abortRef.current?.abort()
@@ -199,35 +170,13 @@ export function ConcernHeatmapMap({
     }
   }, [loadHeatmapForBounds])
 
-  useEffect(() => {
-    const map = mapRef.current
-    if (!map?.isStyleLoaded() || !map.getLayer("concerns-heat-layer")) return
-    const p = paintRef.current
-    map.setPaintProperty("concerns-heat-layer", "heatmap-intensity", intensityPaint(p.intensityMultiplier))
-    map.setPaintProperty("concerns-heat-layer", "heatmap-radius", radiusPaint(p.radiusMultiplier))
-    map.setPaintProperty("concerns-heat-layer", "heatmap-opacity", p.heatOpacity)
-  }, [intensityMultiplier, radiusMultiplier, heatOpacity])
-
-  useEffect(() => {
-    const map = mapRef.current
-    if (!map?.isStyleLoaded()) return
-    void loadHeatmapForBounds(map)
-  }, [filterCategory, filterStatus, loadHeatmapForBounds])
-
-  useEffect(() => {
-    if (resetViewSignal <= 0) return
-    const map = mapRef.current
-    if (!map?.isStyleLoaded()) return
-    map.flyTo({ center: DEFAULT_CENTER, zoom: DEFAULT_ZOOM, essential: true })
-  }, [resetViewSignal])
-
   const retry = () => {
     const map = mapRef.current
     if (map) void loadHeatmapForBounds(map)
   }
 
   const mapBlock = (
-    <div className="relative">
+    <div className="relative overflow-hidden rounded-xl border border-border shadow-sm">
       <div ref={containerRef} className={`w-full min-h-[280px] ${mapHeightClassName}`} role="application" />
 
       {status === "error" && (
