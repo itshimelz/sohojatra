@@ -61,6 +61,14 @@ export function SiteFooter({ locale, footer, nav }: Props) {
               </li>
               <li>
                 <Link
+                  href="/concerns/heatmap"
+                  className="text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  {footer.concernHeatmap}
+                </Link>
+              </li>
+              <li>
+                <Link
                   href="/concerns/submit"
                   className="text-muted-foreground transition-colors hover:text-foreground"
                 >

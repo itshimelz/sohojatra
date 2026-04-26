@@ -89,6 +89,7 @@ export const en = {
     preferencesTitle: "Preferences",
     home: "Overview",
     reportConcern: "Report",
+    concernHeatmap: "Concern heat map",
     signIn: "Login",
     faq: "Help",
     privacy: "Privacy",
@@ -117,6 +118,15 @@ export const en = {
     noResults: "No concerns found.",
     submitNew: "Submit a Concern",
     details: "View Details",
+  },
+  concernHeatmap: {
+    title: "Concern heat map",
+    description:
+      "Red areas show where reports cluster. Pan or zoom to load data for the visible map. If nothing appears, zoom closer or check back after new reports.",
+    backToConcerns: "Back to concerns list",
+    loading: "Updating map…",
+    error: "Could not load map data.",
+    retry: "Try again",
   },
   submit: {
     title: "Report a Concern",

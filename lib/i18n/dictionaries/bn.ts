@@ -92,6 +92,7 @@ export const bn: Dictionary = {
     preferencesTitle: "পছন্দ",
     home: "সারসংক্ষেপ",
     reportConcern: "রিপোর্ট",
+    concernHeatmap: "সমস্যার হিট ম্যাপ",
     signIn: "লগইন",
     faq: "সহায়তা",
     privacy: "গোপনীয়তা",
@@ -120,6 +121,15 @@ export const bn: Dictionary = {
     noResults: "কোনো সমস্যা পাওয়া যায়নি।",
     submitNew: "নতুন সমস্যা জমা দিন",
     details: "বিস্তারিত দেখুন",
+  },
+  concernHeatmap: {
+    title: "সমস্যার হিট ম্যাপ",
+    description:
+      "লাল এলাকায় বেশি রিপোর্ট জমায়েত দেখায়। দেখতে চাওয়া অংশে মানচিত্র সরান বা জুম করুন। কিছু না দেখালে আরও জুম করুন বা নতুন রিপোর্টের পর আবার চেষ্টা করুন।",
+    backToConcerns: "সমস্যার তালিকায় ফিরে যান",
+    loading: "মানচিত্র আপডেট হচ্ছে…",
+    error: "মানচিত্রের তথ্য লোড করা যায়নি।",
+    retry: "আবার চেষ্টা করুন",
   },
   submit: {
     title: "সমস্যা রিপোর্ট করুন",
