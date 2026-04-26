@@ -4,6 +4,7 @@ import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/sonner"
 import { BackToTopButton } from "@/components/back-to-top-button"
+import { AiWarmClient } from "@/components/ai-warm-client"
 import { cn } from "@/lib/utils"
 import { getLocale } from "@/lib/i18n/server"
 import { defaultMetadata } from "@/lib/seo"
@@ -31,6 +32,7 @@ export default async function RootLayout({
       <body suppressHydrationWarning>
         <ThemeProvider>
           <div className="flex min-h-svh flex-col bg-background text-foreground">
+            <AiWarmClient />
             {children}
             <BackToTopButton />
             <Toaster closeButton position="top-right" />
