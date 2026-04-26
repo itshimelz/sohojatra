@@ -13,6 +13,14 @@ import {
 } from "@phosphor-icons/react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Label } from "@/components/ui/label"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import {
   Dialog,
   DialogContent,
@@ -42,6 +50,16 @@ type Message = {
   pending?: boolean
   error?: boolean
 }
+
+type ChatbotProviderId = "gemini" | "groq" | "openrouter"
+
+type ProviderOption = {
+  id: ChatbotProviderId
+  label: string
+  configured: boolean
+}
+
+const PROVIDER_STORAGE_KEY = "sohojatra-rights-chatbot-provider"
 
 const SUGGESTED = [
   "Can I be arrested without being told why?",
@@ -275,6 +293,10 @@ export default function ChatbotPage() {
   const [messages, setMessages] = useState<Message[]>([WELCOME])
   const [input, setInput] = useState("")
   const [isStreaming, setIsStreaming] = useState(false)
+  const [providerOptions, setProviderOptions] = useState<
+    ProviderOption[] | undefined
+  >(undefined)
+  const [providerId, setProviderId] = useState<ChatbotProviderId>("gemini")
   const [articlesByNumber, setArticlesByNumber] = useState<Record<
     string,
     ConstitutionArticlePublic
@@ -293,6 +315,46 @@ export default function ChatbotPage() {
     apply()
     mq.addEventListener("change", apply)
     return () => mq.removeEventListener("change", apply)
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    void (async () => {
+      try {
+        const res = await fetch("/api/chatbot/providers")
+        const data = res.ok
+          ? ((await res.json()) as { providers?: ProviderOption[] })
+          : { providers: [] as ProviderOption[] }
+        const list = data.providers ?? []
+        if (cancelled) return
+        setProviderOptions(list)
+
+        const order: ChatbotProviderId[] = ["gemini", "groq", "openrouter"]
+        const configured = new Set(
+          list.filter((p) => p.configured).map((p) => p.id),
+        )
+        let next: ChatbotProviderId | null = null
+        try {
+          const stored = sessionStorage.getItem(
+            PROVIDER_STORAGE_KEY,
+          ) as ChatbotProviderId | null
+          if (stored && configured.has(stored)) next = stored
+        } catch {
+          /* ignore */
+        }
+        if (!next) {
+          next =
+            order.find((id) => configured.has(id)) ??
+            ("gemini" as ChatbotProviderId)
+        }
+        setProviderId(next)
+      } catch {
+        /* ignore */
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   useEffect(() => {
@@ -346,7 +408,12 @@ export default function ChatbotPage() {
       const response = await fetch("/api/chatbot", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question: trimmed, messages: history, stream: true }),
+        body: JSON.stringify({
+          question: trimmed,
+          messages: history,
+          stream: true,
+          provider: providerId,
+        }),
         signal: controller.signal,
       })
 
@@ -405,7 +472,7 @@ export default function ChatbotPage() {
                         error: true,
                         text:
                           payload.message ??
-                          "The chatbot is offline — set GEMINI_API_KEY or GROQ_API_KEY in .env.",
+                          "The chatbot is offline — configure GEMINI_API_KEY, GROQ_API_KEY, or OPENROUTER_API_KEY in .env.",
                       }
                     : m,
                 ),
@@ -469,11 +536,11 @@ export default function ChatbotPage() {
                 className="hidden h-5 rounded-full px-2 text-[10px] sm:flex"
               >
                 <Lightning className="mr-1 size-2.5" weight="fill" />
-                RAG · Gemini / Groq
+                RAG · multi-provider
               </Badge>
             </div>
             <p className="text-[11px] text-muted-foreground">
-              Bangladesh Constitution · BM25 · server LLM (env)
+              Bangladesh Constitution · BM25 · pick AI backend below
             </p>
           </div>
         </div>
@@ -488,6 +555,58 @@ export default function ChatbotPage() {
           <span className="hidden sm:inline">New chat</span>
         </Button>
       </header>
+
+      <div className="shrink-0 border-b border-border/40 bg-muted/20 px-4 py-2.5 sm:px-6">
+        <div className="mx-auto flex max-w-2xl flex-col gap-1.5 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+          <Label htmlFor="chatbot-provider" className="text-[11px] text-muted-foreground">
+            AI provider
+          </Label>
+          <Select
+            value={providerId}
+            onValueChange={(v) => {
+              const id = v as ChatbotProviderId
+              setProviderId(id)
+              try {
+                sessionStorage.setItem(PROVIDER_STORAGE_KEY, id)
+              } catch {
+                /* ignore */
+              }
+            }}
+            disabled={providerOptions === undefined}
+          >
+            <SelectTrigger
+              id="chatbot-provider"
+              size="sm"
+              className="h-8 w-full min-w-0 border-border/60 bg-background/90 sm:max-w-xs"
+            >
+              <SelectValue
+                placeholder={
+                  providerOptions === undefined
+                    ? "Loading providers…"
+                    : "Select provider"
+                }
+              />
+            </SelectTrigger>
+            <SelectContent>
+              {(providerOptions ?? []).map((p) => (
+                <SelectItem
+                  key={p.id}
+                  value={p.id}
+                  disabled={!p.configured}
+                  title={
+                    p.configured
+                      ? undefined
+                      : "Not configured on the server (missing API key)"
+                  }
+                >
+                  {p.label}
+                  {!p.configured ? " (unavailable)" : ""}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
 
       {/* ── Message area ───────────────────────────────────────── */}
       <div

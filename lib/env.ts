@@ -24,6 +24,9 @@ export const env = {
   /** Google AI Studio / Gemini API key. When set, the rights chatbot uses Gemini instead of Groq. */
   GEMINI_API_KEY: process.env.GEMINI_API_KEY ?? "",
   GEMINI_MODEL: process.env.GEMINI_MODEL ?? "gemini-2.0-flash",
+  OPENROUTER_API_KEY: process.env.OPENROUTER_API_KEY ?? "",
+  OPENROUTER_MODEL:
+    process.env.OPENROUTER_MODEL ?? "google/gemma-4-31b-it:free",
   VECTORIZER_API_ID: process.env.VECTORIZER_API_ID ?? "",
   VECTORIZER_API_SECRET: process.env.VECTORIZER_API_SECRET ?? "",
 }

@@ -224,7 +224,8 @@ export const en = {
     cited: "Cited:",
     welcome: "Ask me about your rights under the Bangladesh Constitution. I'll answer with inline citations like [Article 33].",
     welcomeCitation: "Constitution of Bangladesh, Part III — Fundamental Rights",
-    offlineError: "The chatbot is offline — set GEMINI_API_KEY or GROQ_API_KEY in .env.",
+    offlineError:
+      "The chatbot is offline — set GEMINI_API_KEY, GROQ_API_KEY, or OPENROUTER_API_KEY in .env.",
     genericError: "Something went wrong — please try again.",
   },
   leaderboard: {

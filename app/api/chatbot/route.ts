@@ -6,6 +6,10 @@
  */
 import { NextResponse } from "next/server"
 
+import {
+  isChatbotProviderId,
+  type ChatbotProviderId,
+} from "@/lib/sohojatra/chatbot-providers"
 import { retrieveAndPrompt, type ChatMessage } from "@/lib/sohojatra/groq"
 import { RightsChatConfigError } from "@/lib/sohojatra/rights-chat-config-error"
 import { rightsLlmComplete, rightsLlmStream } from "@/lib/sohojatra/rights-llm"
@@ -17,6 +21,8 @@ type Body = {
   question?: string
   messages?: ChatMessage[]
   stream?: boolean
+  /** Which backend to call — must be configured on the server. */
+  provider?: string
 }
 
 function normaliseHistory(raw: unknown): ChatMessage[] {
@@ -46,6 +52,18 @@ export async function POST(request: Request) {
   }
 
   const history = normaliseHistory(body.messages)
+
+  let provider: ChatbotProviderId | undefined
+  if (body.provider !== undefined && body.provider !== null && body.provider !== "") {
+    const raw = String(body.provider).trim().toLowerCase()
+    if (!isChatbotProviderId(raw)) {
+      return NextResponse.json(
+        { error: "Invalid provider. Use gemini, groq, or openrouter." },
+        { status: 400 },
+      )
+    }
+    provider = raw
+  }
 
   let prompt: Awaited<ReturnType<typeof retrieveAndPrompt>>
   try {
@@ -95,7 +113,11 @@ export async function POST(request: Request) {
         send("citations", { citations: prompt.citations })
 
         try {
-          for await (const delta of rightsLlmStream(prompt.messages)) {
+          for await (const delta of rightsLlmStream(
+            prompt.messages,
+            {},
+            provider,
+          )) {
             if (streamDone) break
             send("delta", { text: delta })
           }
@@ -131,7 +153,7 @@ export async function POST(request: Request) {
 
   // ── Non-streaming JSON ────────────────────────────────────────────────────
   try {
-    const text = await rightsLlmComplete(prompt.messages)
+    const text = await rightsLlmComplete(prompt.messages, {}, provider)
     return NextResponse.json({
       question,
       answer: {
