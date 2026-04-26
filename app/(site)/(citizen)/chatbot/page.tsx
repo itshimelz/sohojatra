@@ -536,11 +536,11 @@ export default function ChatbotPage() {
                 className="hidden h-5 rounded-full px-2 text-[10px] sm:flex"
               >
                 <Lightning className="mr-1 size-2.5" weight="fill" />
-                RAG · multi-provider
+                RAG · multi-model
               </Badge>
             </div>
             <p className="text-[11px] text-muted-foreground">
-              Bangladesh Constitution · BM25 · pick AI backend below
+              Constitution · model below the input
             </p>
           </div>
         </div>
@@ -555,58 +555,6 @@ export default function ChatbotPage() {
           <span className="hidden sm:inline">New chat</span>
         </Button>
       </header>
-
-      <div className="shrink-0 border-b border-border/40 bg-muted/20 px-4 py-2.5 sm:px-6">
-        <div className="mx-auto flex max-w-2xl flex-col gap-1.5 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-          <Label htmlFor="chatbot-provider" className="text-[11px] text-muted-foreground">
-            AI provider
-          </Label>
-          <Select
-            value={providerId}
-            onValueChange={(v) => {
-              const id = v as ChatbotProviderId
-              setProviderId(id)
-              try {
-                sessionStorage.setItem(PROVIDER_STORAGE_KEY, id)
-              } catch {
-                /* ignore */
-              }
-            }}
-            disabled={providerOptions === undefined}
-          >
-            <SelectTrigger
-              id="chatbot-provider"
-              size="sm"
-              className="h-8 w-full min-w-0 border-border/60 bg-background/90 sm:max-w-xs"
-            >
-              <SelectValue
-                placeholder={
-                  providerOptions === undefined
-                    ? "Loading providers…"
-                    : "Select provider"
-                }
-              />
-            </SelectTrigger>
-            <SelectContent>
-              {(providerOptions ?? []).map((p) => (
-                <SelectItem
-                  key={p.id}
-                  value={p.id}
-                  disabled={!p.configured}
-                  title={
-                    p.configured
-                      ? undefined
-                      : "Not configured on the server (missing API key)"
-                  }
-                >
-                  {p.label}
-                  {!p.configured ? " (unavailable)" : ""}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
 
       {/* ── Message area ───────────────────────────────────────── */}
       <div
@@ -739,45 +687,104 @@ export default function ChatbotPage() {
         </div>
       </div>
 
-      {/* ── Input dock ─────────────────────────────────────────── */}
-      <div className="shrink-0 border-t border-border/50 bg-background/90 px-4 py-4 backdrop-blur-md sm:px-6">
+      {/* ── Input dock (composer + compact model row) ─────────── */}
+      <div className="shrink-0 border-t border-border/50 bg-background/95 px-3 py-3 backdrop-blur-md sm:px-6 sm:py-4">
         <form
           onSubmit={(e) => {
             e.preventDefault()
             void send(input)
           }}
-          className="mx-auto flex max-w-2xl items-end gap-2"
+          className="mx-auto max-w-2xl space-y-2"
         >
-          <Textarea
-            ref={inputRef}
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask about your rights, an Article, or a situation… (English or Bangla)"
-            rows={1}
-            disabled={isStreaming}
-            className="max-h-32 min-h-11 flex-1 resize-none rounded-2xl border-border/60 bg-card/80 py-3 text-sm shadow-sm transition-all focus:border-primary/50 focus:shadow-md"
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault()
-                void send(input)
-              }
-            }}
-          />
-          <Button
-            type="submit"
-            size="icon"
-            disabled={isStreaming || !input.trim()}
-            className="size-11 shrink-0 rounded-2xl shadow-sm transition-all hover:shadow-md"
-          >
-            {isStreaming ? (
-              <Spinner className="size-4 animate-spin" weight="bold" />
-            ) : (
-              <PaperPlaneTilt className="size-4" weight="fill" />
-            )}
-          </Button>
+          <div className="flex min-w-0 items-end gap-2">
+            <Textarea
+              ref={inputRef}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Ask about your rights… (English or Bangla)"
+              rows={1}
+              disabled={isStreaming}
+              className="max-h-32 min-h-11 min-w-0 flex-1 resize-none rounded-2xl border-border/60 bg-card/80 py-2.5 text-sm shadow-sm transition-all focus:border-primary/50 focus:shadow-md sm:py-3"
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault()
+                  void send(input)
+                }
+              }}
+            />
+            <Button
+              type="submit"
+              size="icon"
+              disabled={isStreaming || !input.trim()}
+              className="size-10 shrink-0 rounded-2xl shadow-sm transition-all hover:shadow-md sm:size-11"
+              aria-label="Send message"
+            >
+              {isStreaming ? (
+                <Spinner className="size-4 animate-spin" weight="bold" />
+              ) : (
+                <PaperPlaneTilt className="size-4" weight="fill" />
+              )}
+            </Button>
+          </div>
+          <div className="flex min-w-0 flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+            <div className="flex min-w-0 flex-1 items-center gap-2 sm:max-w-[min(100%,280px)]">
+              <Label
+                htmlFor="chatbot-provider-composer"
+                className="w-11 shrink-0 text-[10px] font-medium tracking-tight text-muted-foreground sm:w-auto sm:text-[11px]"
+              >
+                Model
+              </Label>
+              <Select
+                value={providerId}
+                onValueChange={(v) => {
+                  const id = v as ChatbotProviderId
+                  setProviderId(id)
+                  try {
+                    sessionStorage.setItem(PROVIDER_STORAGE_KEY, id)
+                  } catch {
+                    /* ignore */
+                  }
+                }}
+                disabled={providerOptions === undefined || isStreaming}
+              >
+                <SelectTrigger
+                  id="chatbot-provider-composer"
+                  size="sm"
+                  className="h-7 min-h-7 min-w-0 flex-1 border-border/50 bg-muted/30 px-2 text-xs shadow-none sm:h-8 sm:max-w-[220px] sm:flex-initial sm:text-[13px]"
+                >
+                  <SelectValue
+                    placeholder={
+                      providerOptions === undefined ? "Loading…" : "Model"
+                    }
+                  />
+                </SelectTrigger>
+                <SelectContent align="start" className="min-w-[var(--anchor-width)]">
+                  {(providerOptions ?? []).map((p) => (
+                    <SelectItem
+                      key={p.id}
+                      value={p.id}
+                      disabled={!p.configured}
+                      className="text-xs sm:text-sm"
+                      title={
+                        p.configured
+                          ? undefined
+                          : "Not configured on the server"
+                      }
+                    >
+                      {p.label}
+                      {!p.configured ? " · off" : ""}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <p className="shrink-0 text-[9px] leading-snug text-muted-foreground/70 sm:text-right sm:text-[10px]">
+              Not legal advice
+            </p>
+          </div>
         </form>
-        <p className="mx-auto mt-2 max-w-2xl text-center text-[10px] text-muted-foreground/50">
-          Grounded in the Bangladesh Constitution · Not legal advice · Consult a lawyer for your situation
+        <p className="mx-auto mt-2 max-w-2xl px-0.5 text-center text-[9px] text-muted-foreground/50 sm:text-[10px]">
+          Grounded in the Bangladesh Constitution · consult a lawyer for your situation
         </p>
       </div>
 
