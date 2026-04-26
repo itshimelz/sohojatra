@@ -25,6 +25,23 @@ const OSM_RASTER_STYLE: maplibregl.StyleSpecification = {
   layers: [{ id: "osm", type: "raster", source: "osm", minzoom: 0, maxzoom: 19 }],
 }
 
+/** Red-only heat ramp: transparent → deep red */
+const HEAT_COLOR_STOPS: maplibregl.ExpressionSpecification = [
+  "interpolate",
+  ["linear"],
+  ["heatmap-density"],
+  0,
+  "rgba(220, 38, 38, 0)",
+  0.12,
+  "rgba(248, 113, 113, 0.35)",
+  0.35,
+  "rgba(239, 68, 68, 0.65)",
+  0.6,
+  "rgba(220, 38, 38, 0.88)",
+  1,
+  "rgba(127, 29, 29, 0.95)",
+]
+
 function debounce<T extends (...args: Parameters<T>) => void>(fn: T, ms: number) {
   let t: ReturnType<typeof setTimeout> | undefined
   return (...args: Parameters<T>) => {
@@ -36,10 +53,45 @@ function debounce<T extends (...args: Parameters<T>) => void>(fn: T, ms: number)
   }
 }
 
-export function ConcernHeatmapMap({ labels }: ConcernHeatmapMapProps) {
+function intensityPaint(mult: number): maplibregl.ExpressionSpecification {
+  return [
+    "*",
+    mult,
+    ["interpolate", ["linear"], ["zoom"], 0, 0.85, 12, 1.5, 18, 2.35] as maplibregl.ExpressionSpecification,
+  ] as maplibregl.ExpressionSpecification
+}
+
+function radiusPaint(mult: number): maplibregl.ExpressionSpecification {
+  return [
+    "*",
+    mult,
+    ["interpolate", ["linear"], ["zoom"], 0, 3, 10, 18, 14, 30, 18, 40] as maplibregl.ExpressionSpecification,
+  ] as maplibregl.ExpressionSpecification
+}
+
+export function ConcernHeatmapMap({
+  onStatusChange,
+  labels,
+  filterCategory,
+  filterStatus,
+  intensityMultiplier,
+  radiusMultiplier,
+  heatOpacity,
+  mapHeightClassName,
+  showHeader,
+  resetViewSignal = 0,
+}: ConcernHeatmapMapProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<maplibregl.Map | null>(null)
   const abortRef = useRef<AbortController | null>(null)
+
+  const filterCategoryRef = useRef(filterCategory)
+  const filterStatusRef = useRef(filterStatus)
+  filterCategoryRef.current = filterCategory
+  filterStatusRef.current = filterStatus
+
+  const paintRef = useRef({ intensityMultiplier, radiusMultiplier, heatOpacity })
+  paintRef.current = { intensityMultiplier, radiusMultiplier, heatOpacity }
 
   const [status, setStatus] = useState<"idle" | "loading" | "error">("idle")
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
@@ -61,8 +113,13 @@ export function ConcernHeatmapMap({ labels }: ConcernHeatmapMapProps) {
       east: east.toFixed(5),
       north: north.toFixed(5),
     })
+    const cat = filterCategoryRef.current
+    const st = filterStatusRef.current
+    if (cat) params.set("category", cat)
+    if (st) params.set("status", st)
 
     setStatus("loading")
+    onStatusChange?.("loading")
     setErrorMessage(null)
 
     try {
@@ -75,18 +132,21 @@ export function ConcernHeatmapMap({ labels }: ConcernHeatmapMapProps) {
         src.setData(geojson)
       }
       setStatus("idle")
+      onStatusChange?.("idle")
     } catch (e) {
       if ((e as Error).name === "AbortError") return
       setStatus("error")
+      onStatusChange?.("error")
       setErrorMessage(e instanceof Error ? e.message : labels.error)
     }
-  }, [labels.error])
+  }, [labels.error, onStatusChange])
 
   useEffect(() => {
     const el = containerRef.current
     if (!el) return
 
     const styleUrl = process.env.NEXT_PUBLIC_MAP_STYLE_URL
+    const p = paintRef.current
     const map = new maplibregl.Map({
       container: el,
       style: (styleUrl || OSM_RASTER_STYLE) as string | maplibregl.StyleSpecification,
@@ -115,26 +175,10 @@ export function ConcernHeatmapMap({ labels }: ConcernHeatmapMapProps) {
         maxzoom: 18,
         paint: {
           "heatmap-weight": ["interpolate", ["linear"], ["get", "weight"], 0, 0, 8, 1],
-          "heatmap-intensity": ["interpolate", ["linear"], ["zoom"], 0, 0.8, 12, 1.4, 18, 2.2],
-          "heatmap-color": [
-            "interpolate",
-            ["linear"],
-            ["heatmap-density"],
-            0,
-            "rgba(33,102,172,0)",
-            0.15,
-            "rgba(103,169,207,0.55)",
-            0.35,
-            "rgba(209,229,240,0.75)",
-            0.55,
-            "rgba(253,219,199,0.85)",
-            0.75,
-            "rgba(239,138,98,0.9)",
-            1,
-            "rgba(178,24,43,0.95)",
-          ],
-          "heatmap-radius": ["interpolate", ["linear"], ["zoom"], 0, 3, 10, 18, 14, 28, 18, 36],
-          "heatmap-opacity": ["interpolate", ["linear"], ["zoom"], 7, 0.95, 18, 0.75],
+          "heatmap-intensity": intensityPaint(p.intensityMultiplier),
+          "heatmap-color": HEAT_COLOR_STOPS,
+          "heatmap-radius": radiusPaint(p.radiusMultiplier),
+          "heatmap-opacity": p.heatOpacity,
         },
       })
 
@@ -155,13 +199,58 @@ export function ConcernHeatmapMap({ labels }: ConcernHeatmapMapProps) {
     }
   }, [loadHeatmapForBounds])
 
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map?.isStyleLoaded() || !map.getLayer("concerns-heat-layer")) return
+    const p = paintRef.current
+    map.setPaintProperty("concerns-heat-layer", "heatmap-intensity", intensityPaint(p.intensityMultiplier))
+    map.setPaintProperty("concerns-heat-layer", "heatmap-radius", radiusPaint(p.radiusMultiplier))
+    map.setPaintProperty("concerns-heat-layer", "heatmap-opacity", p.heatOpacity)
+  }, [intensityMultiplier, radiusMultiplier, heatOpacity])
+
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map?.isStyleLoaded()) return
+    void loadHeatmapForBounds(map)
+  }, [filterCategory, filterStatus, loadHeatmapForBounds])
+
+  useEffect(() => {
+    if (resetViewSignal <= 0) return
+    const map = mapRef.current
+    if (!map?.isStyleLoaded()) return
+    map.flyTo({ center: DEFAULT_CENTER, zoom: DEFAULT_ZOOM, essential: true })
+  }, [resetViewSignal])
+
   const retry = () => {
     const map = mapRef.current
     if (map) void loadHeatmapForBounds(map)
   }
 
+  const mapBlock = (
+    <div className="relative">
+      <div ref={containerRef} className={`w-full min-h-[280px] ${mapHeightClassName}`} role="application" />
+
+      {status === "error" && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-background/85 px-4 text-center backdrop-blur-[2px]">
+          <p className="text-sm text-destructive">{errorMessage ?? labels.error}</p>
+          <button
+            type="button"
+            onClick={retry}
+            className="rounded-md border border-input bg-background px-3 py-1.5 text-sm font-medium shadow-sm transition-colors hover:bg-accent"
+          >
+            {labels.retry}
+          </button>
+        </div>
+      )}
+    </div>
+  )
+
+  if (!showHeader) {
+    return mapBlock
+  }
+
   return (
-    <section className="mb-10 overflow-hidden rounded-xl border border-border bg-card shadow-sm" aria-label={labels.title}>
+    <section className="overflow-hidden rounded-xl border border-border bg-card shadow-sm" aria-label={labels.title}>
       <div className="flex flex-col gap-1 border-b border-border/80 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-lg font-semibold tracking-tight">{labels.title}</h2>
@@ -175,22 +264,7 @@ export function ConcernHeatmapMap({ labels }: ConcernHeatmapMapProps) {
         )}
       </div>
 
-      <div className="relative">
-        <div ref={containerRef} className="h-[min(52vh,440px)] w-full min-h-[280px]" role="application" />
-
-        {status === "error" && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-background/85 px-4 text-center backdrop-blur-[2px]">
-            <p className="text-sm text-destructive">{errorMessage ?? labels.error}</p>
-            <button
-              type="button"
-              onClick={retry}
-              className="rounded-md border border-input bg-background px-3 py-1.5 text-sm font-medium shadow-sm transition-colors hover:bg-accent"
-            >
-              {labels.retry}
-            </button>
-          </div>
-        )}
-      </div>
+      {mapBlock}
     </section>
   )
 }

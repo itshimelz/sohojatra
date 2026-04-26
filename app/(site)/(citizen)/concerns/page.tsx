@@ -10,7 +10,6 @@ import { prisma } from "@/lib/prisma"
 import { getServerSession } from "@/lib/auth-session"
 import { getStatusBadgeVariant, getStatusLabel } from "@/lib/concerns/presentation"
 import { Clock, MapPin } from "@phosphor-icons/react/dist/ssr"
-import { ConcernHeatmapMapLazy } from "@/components/concern-heatmap-map-lazy"
 
 export const metadata: Metadata = {
   title: "Citizen Concerns",
@@ -112,16 +111,6 @@ export default async function ConcernsPage({ searchParams }: PageProps) {
           {t.submitNew}
         </Link>
       </div>
-
-      <ConcernHeatmapMapLazy
-        labels={{
-          title: t.heatmapTitle,
-          hint: t.heatmapHint,
-          loading: t.heatmapLoading,
-          error: t.heatmapError,
-          retry: t.heatmapRetry,
-        }}
-      />
 
       <div className="mb-6 flex items-center gap-2">
         <span className="text-sm font-medium text-muted-foreground">{t.sortBy}:</span>

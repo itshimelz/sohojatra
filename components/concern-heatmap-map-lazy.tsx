@@ -12,7 +12,7 @@ const ConcernHeatmapMapInner = dynamic(
 function HeatmapMapSkeleton() {
   return (
     <div
-      className="mb-10 flex h-[min(52vh,440px)] min-h-[280px] w-full animate-pulse items-center justify-center rounded-xl border border-border bg-muted/40"
+      className="flex h-[min(65vh,560px)] min-h-[280px] w-full animate-pulse items-center justify-center rounded-xl border border-border bg-muted/40"
       aria-hidden
     />
   )
