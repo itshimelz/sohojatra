@@ -17,17 +17,17 @@ export function getChatbotProviderOptions(): ChatbotProviderOption[] {
   return [
     {
       id: "gemini",
-      label: "Google Gemini",
+      label: "Gemini",
       configured: Boolean(process.env.GEMINI_API_KEY?.trim()),
     },
     {
       id: "groq",
-      label: "Groq (Llama)",
+      label: "Groq",
       configured: Boolean(process.env.GROQ_API_KEY?.trim()),
     },
     {
       id: "openrouter",
-      label: "OpenRouter (Gemma 4)",
+      label: "OpenRouter",
       configured: Boolean(process.env.OPENROUTER_API_KEY?.trim()),
     },
   ]
