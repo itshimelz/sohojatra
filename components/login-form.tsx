@@ -107,7 +107,7 @@ export function LoginForm({
     setInlineError(null)
     try {
       const normalizedPhone = normalizeBdPhone(phoneNumber)
-      const { data, error } = await authClient.phoneNumber.verify({
+      const { error } = await authClient.phoneNumber.verify({
         phoneNumber: `+880${normalizedPhone}`,
         code: otpResult.data,
       })
@@ -133,7 +133,12 @@ export function LoginForm({
       }
 
       toast.success("Welcome back! You're now signed in.")
-      if ((data?.user as any)?.onboarded) {
+      // Verify response may omit additionalFields — read fresh session for onboarded.
+      const sessionRes = await authClient.getSession()
+      const user = sessionRes.data?.user as { onboarded?: boolean } | undefined
+      const onboarded = Boolean(user?.onboarded)
+      void router.refresh()
+      if (onboarded) {
         void router.push("/concerns")
       } else {
         void router.push("/onboard")

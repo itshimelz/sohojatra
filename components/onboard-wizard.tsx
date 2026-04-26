@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -12,6 +12,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar"
 import { CheckCircle, CaretRight, CaretLeft, CalendarBlank } from "@phosphor-icons/react/dist/ssr"
 import { completeOnboarding } from "@/app/(site)/onboard/actions"
+import { PENDING_ONBOARDING_NAME_KEY } from "@/lib/onboarding-pending-name"
 import { toast } from "sonner"
 
 import { format } from "date-fns"
@@ -32,6 +33,21 @@ export function OnboardWizard({ user }: OnboardWizardProps) {
     dob: "",
     education: "",
   })
+
+  // Signup collects name before OTP; session may not include it on first paint — hydrate from sessionStorage once.
+  useEffect(() => {
+    try {
+      const pending = sessionStorage.getItem(PENDING_ONBOARDING_NAME_KEY)?.trim()
+      if (!pending) return
+      sessionStorage.removeItem(PENDING_ONBOARDING_NAME_KEY)
+      setFormData((prev) => ({
+        ...prev,
+        name: prev.name.trim() ? prev.name : pending,
+      }))
+    } catch {
+      /* ignore */
+    }
+  }, [])
 
   const handleNext = () => setStep((s) => Math.min(s + 1, 3))
   const handlePrev = () => setStep((s) => Math.max(s - 1, 1))
