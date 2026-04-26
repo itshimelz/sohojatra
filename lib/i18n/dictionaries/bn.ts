@@ -227,7 +227,8 @@ export const bn: Dictionary = {
     cited: "উদ্ধৃত:",
     welcome: "বাংলাদেশের সংবিধান অনুযায়ী আপনার অধিকার সম্পর্কে আমাকে জিজ্ঞেস করুন। আমি [আর্টিকেল ৩৩]-এর মতো ইনলাইন সাইটেশনসহ উত্তর দেব।",
     welcomeCitation: "বাংলাদেশের সংবিধান, তৃতীয় ভাগ — মৌলিক অধিকার",
-    offlineError: "চ্যাটবট অফলাইন — .env-এ GEMINI_API_KEY বা GROQ_API_KEY সেট করুন।",
+    offlineError:
+      "চ্যাটবট অফলাইন — .env-এ GEMINI_API_KEY, GROQ_API_KEY বা OPENROUTER_API_KEY সেট করুন।",
     genericError: "কিছু একটা ভুল হয়েছে — অনুগ্রহ করে আবার চেষ্টা করুন।",
   },
   leaderboard: {

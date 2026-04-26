@@ -54,7 +54,7 @@ function requireApiKey(): string {
   const key = process.env.GROQ_API_KEY
   if (!key) {
     throw new RightsChatConfigError(
-      "GROQ_API_KEY is not set. Add it to .env.local to enable the rights chatbot (or set GEMINI_API_KEY to use Google Gemini instead).",
+      "GROQ_API_KEY is not set. Add it to .env.local for the Groq provider (or use Gemini / OpenRouter with their keys).",
     )
   }
   return key
