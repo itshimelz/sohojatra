@@ -197,7 +197,9 @@ export default function ChatbotPage() {
                         ...m,
                         pending: false,
                         error: true,
-                        text: payload.message ?? "The chatbot is offline — check GROQ_API_KEY.",
+                        text:
+                          payload.message ??
+                          "The chatbot is offline — set GEMINI_API_KEY or GROQ_API_KEY in .env.",
                       }
                     : m,
                 ),
@@ -261,11 +263,11 @@ export default function ChatbotPage() {
                 className="hidden h-5 rounded-full px-2 text-[10px] sm:flex"
               >
                 <Lightning className="mr-1 size-2.5" weight="fill" />
-                RAG · Llama 3.3 70B
+                RAG · Gemini / Groq
               </Badge>
             </div>
             <p className="text-[11px] text-muted-foreground">
-              Bangladesh Constitution · BM25 retrieval · Groq
+              Bangladesh Constitution · BM25 · server LLM (env)
             </p>
           </div>
         </div>

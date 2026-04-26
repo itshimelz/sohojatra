@@ -217,14 +217,14 @@ export const en = {
   chatbot: {
     badge: "Constitutional Chatbot",
     title: "Bangla-first rights guidance with citations",
-    description: "Retrieval-augmented answers powered by the Bangladesh Constitution, served through Groq-hosted Llama 3.3 70B.",
+    description: "Retrieval-augmented answers from the Bangladesh Constitution, using Google Gemini or Groq on the server (see env docs).",
     placeholder: "Ask about a right, an Article number, or a situation...",
     thinking: "Thinking...",
     ask: "Ask",
     cited: "Cited:",
     welcome: "Ask me about your rights under the Bangladesh Constitution. I'll answer with inline citations like [Article 33].",
     welcomeCitation: "Constitution of Bangladesh, Part III — Fundamental Rights",
-    offlineError: "The chatbot is offline — check GROQ_API_KEY in .env.",
+    offlineError: "The chatbot is offline — set GEMINI_API_KEY or GROQ_API_KEY in .env.",
     genericError: "Something went wrong — please try again.",
   },
   leaderboard: {

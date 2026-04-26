@@ -6,13 +6,9 @@
  */
 import { NextResponse } from "next/server"
 
-import {
-  GroqConfigError,
-  groqComplete,
-  groqStream,
-  retrieveAndPrompt,
-  type ChatMessage,
-} from "@/lib/sohojatra/groq"
+import { retrieveAndPrompt, type ChatMessage } from "@/lib/sohojatra/groq"
+import { RightsChatConfigError } from "@/lib/sohojatra/rights-chat-config-error"
+import { rightsLlmComplete, rightsLlmStream } from "@/lib/sohojatra/rights-llm"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
@@ -99,18 +95,18 @@ export async function POST(request: Request) {
         send("citations", { citations: prompt.citations })
 
         try {
-          for await (const delta of groqStream(prompt.messages)) {
+          for await (const delta of rightsLlmStream(prompt.messages)) {
             if (streamDone) break
             send("delta", { text: delta })
           }
           send("done", { ok: true })
         } catch (error) {
           const message =
-            error instanceof GroqConfigError
+            error instanceof RightsChatConfigError
               ? error.message
               : error instanceof Error
                 ? error.message
-                : "Groq API error — please try again."
+                : "LLM API error — please try again."
           send("error", { message })
         } finally {
           closeStream()
@@ -135,7 +131,7 @@ export async function POST(request: Request) {
 
   // ── Non-streaming JSON ────────────────────────────────────────────────────
   try {
-    const text = await groqComplete(prompt.messages)
+    const text = await rightsLlmComplete(prompt.messages)
     return NextResponse.json({
       question,
       answer: {
@@ -146,7 +142,7 @@ export async function POST(request: Request) {
       },
     })
   } catch (error) {
-    const status = error instanceof GroqConfigError ? 503 : 500
+    const status = error instanceof RightsChatConfigError ? 503 : 500
     return NextResponse.json(
       { error: error instanceof Error ? error.message : String(error) },
       { status },

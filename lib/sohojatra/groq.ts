@@ -1,4 +1,6 @@
 import { formatCitation, retrieve, type ConstitutionArticle } from "./constitution"
+import type { ChatMessage, LlmChatOptions } from "./llm-chat-types"
+import { RightsChatConfigError } from "./rights-chat-config-error"
 
 const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 
@@ -43,23 +45,16 @@ Rules:
 6. If the question is about something NOT covered by the 21 articles above, clearly say: "This topic is not in the constitutional articles I have loaded (Articles 7, 11, 26–44, 102). For this, consult a legal professional or visit the Bangladesh Supreme Court website."
 7. Never invent article numbers, procedures, or case law not present in <context>.`
 
-export type ChatRole = "user" | "assistant" | "system"
-export type ChatMessage = { role: ChatRole; content: string }
+export type { ChatRole, ChatMessage, LlmChatOptions as GroqChatOptions } from "./llm-chat-types"
 
-export type GroqChatOptions = {
-  model?: string
-  temperature?: number
-  maxTokens?: number
-  topP?: number
-}
-
-export class GroqConfigError extends Error {}
+/** @deprecated Use RightsChatConfigError from ./rights-chat-config-error */
+export { RightsChatConfigError as GroqConfigError } from "./rights-chat-config-error"
 
 function requireApiKey(): string {
   const key = process.env.GROQ_API_KEY
   if (!key) {
-    throw new GroqConfigError(
-      "GROQ_API_KEY is not set. Add it to .env.local to enable the rights chatbot.",
+    throw new RightsChatConfigError(
+      "GROQ_API_KEY is not set. Add it to .env.local to enable the rights chatbot (or set GEMINI_API_KEY to use Google Gemini instead).",
     )
   }
   return key
@@ -95,7 +90,7 @@ export async function retrieveAndPrompt(
 /** One-shot completion for the non-streaming JSON route. */
 export async function groqComplete(
   messages: ChatMessage[],
-  opts: GroqChatOptions = {},
+  opts: LlmChatOptions = {},
 ): Promise<string> {
   const apiKey = requireApiKey()
   const response = await fetch(GROQ_URL, {
@@ -132,7 +127,7 @@ export async function groqComplete(
  */
 export async function* groqStream(
   messages: ChatMessage[],
-  opts: GroqChatOptions = {},
+  opts: LlmChatOptions = {},
 ): AsyncGenerator<string, void, void> {
   const apiKey = requireApiKey()
   const response = await fetch(GROQ_URL, {

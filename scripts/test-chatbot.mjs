@@ -4,7 +4,7 @@
  *
  * 1. Loads .env.local
  * 2. Runs BM25 retrieval over data/bd-constitution.json
- * 3. Calls Groq live (non-streaming + streaming)
+ * 3. Calls Groq or Gemini live (non-streaming + streaming)
  * 4. Prints timings, citations, and the first 400 chars of the reply
  *
  * Usage: node scripts/test-chatbot.mjs
@@ -18,11 +18,20 @@ config({ path: ".env.local" })
 config({ path: ".env" })
 
 const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
-const MODEL = process.env.GROQ_MODEL ?? "llama-3.3-70b-versatile"
-const API_KEY = process.env.GROQ_API_KEY
+const GROQ_MODEL = process.env.GROQ_MODEL ?? "llama-3.3-70b-versatile"
+const GEMINI_BASE =
+  (process.env.GEMINI_API_BASE ?? "https://generativelanguage.googleapis.com/v1beta").replace(
+    /\/$/,
+    "",
+  )
+const GEMINI_MODEL = process.env.GEMINI_MODEL ?? "gemini-2.0-flash"
 
-if (!API_KEY) {
-  console.error("ERROR: GROQ_API_KEY not found in environment.")
+const useGemini = Boolean(process.env.GEMINI_API_KEY?.trim())
+const GROQ_KEY = process.env.GROQ_API_KEY
+const GEMINI_KEY = process.env.GEMINI_API_KEY?.trim()
+
+if (!useGemini && !GROQ_KEY) {
+  console.error("ERROR: Set GEMINI_API_KEY or GROQ_API_KEY in the environment.")
   process.exit(1)
 }
 
@@ -117,14 +126,55 @@ function buildMessages(query, hits) {
   ]
 }
 
+function geminiExtractText(json) {
+  const root = json?.response ?? json
+  const parts = root?.candidates?.[0]?.content?.parts
+  if (!Array.isArray(parts)) return ""
+  return parts.map((p) => (typeof p?.text === "string" ? p.text : "")).join("")
+}
+
+function messagesToGeminiBody(messages) {
+  const systemChunks = []
+  const contents = []
+  for (const m of messages) {
+    if (m.role === "system") systemChunks.push(m.content)
+    else if (m.role === "user") contents.push({ role: "user", parts: [{ text: m.content }] })
+    else if (m.role === "assistant") contents.push({ role: "model", parts: [{ text: m.content }] })
+  }
+  const body = { contents }
+  if (systemChunks.length) {
+    body.systemInstruction = { parts: [{ text: systemChunks.join("\n\n") }] }
+  }
+  return body
+}
+
 async function complete(messages) {
+  if (useGemini) {
+    const url = `${GEMINI_BASE}/models/${encodeURIComponent(GEMINI_MODEL)}:generateContent?key=${encodeURIComponent(GEMINI_KEY)}`
+    const r = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        ...messagesToGeminiBody(messages),
+        generationConfig: { temperature: 0.3, maxOutputTokens: 1024 },
+      }),
+    })
+    if (!r.ok) throw new Error(`${r.status} ${await r.text()}`)
+    const j = await r.json()
+    return geminiExtractText(j)
+  }
   const r = await fetch(GROQ_URL, {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${API_KEY}`,
+      Authorization: `Bearer ${GROQ_KEY}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ model: MODEL, messages, temperature: 0.3, max_tokens: 1024 }),
+    body: JSON.stringify({
+      model: GROQ_MODEL,
+      messages,
+      temperature: 0.3,
+      max_tokens: 1024,
+    }),
   })
   if (!r.ok) throw new Error(`${r.status} ${await r.text()}`)
   const j = await r.json()
@@ -132,18 +182,69 @@ async function complete(messages) {
 }
 
 async function stream(messages) {
+  if (useGemini) {
+    const url = `${GEMINI_BASE}/models/${encodeURIComponent(GEMINI_MODEL)}:streamGenerateContent?alt=sse&key=${encodeURIComponent(GEMINI_KEY)}`
+    const r = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "text/event-stream" },
+      body: JSON.stringify({
+        ...messagesToGeminiBody(messages),
+        generationConfig: { temperature: 0.3, maxOutputTokens: 1024 },
+      }),
+    })
+    if (!r.ok || !r.body) throw new Error(`${r.status} ${await r.text()}`)
+    const reader = r.body.getReader()
+    const dec = new TextDecoder()
+    let buf = "",
+      out = ""
+    while (true) {
+      const { value, done } = await reader.read()
+      if (done) break
+      buf += dec.decode(value, { stream: true })
+      const lines = buf.split("\n")
+      buf = lines.pop() ?? ""
+      for (const line of lines) {
+        const t = line.trim()
+        if (!t.startsWith("data:")) continue
+        const p = t.slice(5).trim()
+        if (!p || p === "[DONE]") continue
+        try {
+          const j = JSON.parse(p)
+          const d = geminiExtractText(j)
+          if (d) {
+            out += d
+            process.stdout.write(d)
+          }
+        } catch {}
+      }
+    }
+    try {
+      await reader.cancel()
+    } catch {}
+    try {
+      reader.releaseLock()
+    } catch {}
+    return out
+  }
   const r = await fetch(GROQ_URL, {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${API_KEY}`,
+      Authorization: `Bearer ${GROQ_KEY}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ model: MODEL, messages, temperature: 0.3, max_tokens: 1024, stream: true }),
+    body: JSON.stringify({
+      model: GROQ_MODEL,
+      messages,
+      temperature: 0.3,
+      max_tokens: 1024,
+      stream: true,
+    }),
   })
   if (!r.ok || !r.body) throw new Error(`${r.status} ${await r.text()}`)
   const reader = r.body.getReader()
   const dec = new TextDecoder()
-  let buf = "", out = ""
+  let buf = "",
+    out = ""
   while (true) {
     const { value, done } = await reader.read()
     if (done) break
@@ -169,7 +270,9 @@ async function stream(messages) {
 }
 
 async function main() {
-  console.log(`Model: ${MODEL}`)
+  console.log(
+    useGemini ? `Provider: Gemini · model: ${GEMINI_MODEL}` : `Provider: Groq · model: ${GROQ_MODEL}`,
+  )
   const articles = await loadArticles()
   console.log(`Loaded ${articles.length} articles.`)
   const idx = buildIndex(articles)

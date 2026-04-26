@@ -21,6 +21,9 @@ export const env = {
   REDIS_PASSWORD: process.env.REDIS_PASSWORD ?? "",
   GROQ_API_KEY: process.env.GROQ_API_KEY ?? "",
   GROQ_MODEL: process.env.GROQ_MODEL ?? "llama-3.3-70b-versatile",
+  /** Google AI Studio / Gemini API key. When set, the rights chatbot uses Gemini instead of Groq. */
+  GEMINI_API_KEY: process.env.GEMINI_API_KEY ?? "",
+  GEMINI_MODEL: process.env.GEMINI_MODEL ?? "gemini-2.0-flash",
   VECTORIZER_API_ID: process.env.VECTORIZER_API_ID ?? "",
   VECTORIZER_API_SECRET: process.env.VECTORIZER_API_SECRET ?? "",
 }
