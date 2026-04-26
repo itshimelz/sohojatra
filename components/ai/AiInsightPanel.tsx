@@ -91,8 +91,18 @@ export function AiInsightPanel({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text, user_id: "client" }),
+        credentials: "same-origin",
       })
-      if (!res.ok) throw new Error("AI service unavailable")
+      if (!res.ok) {
+        let hint = "AI service unavailable"
+        try {
+          const errBody = (await res.json()) as { message?: string }
+          if (errBody?.message) hint = errBody.message
+        } catch {
+          // use default hint
+        }
+        throw new Error(hint)
+      }
       const data = (await res.json()) as AiResult
       setResult(data)
       if (typeof window !== "undefined") {

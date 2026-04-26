@@ -2,14 +2,14 @@
  * POST /api/analyze — Proxy to the Railway AI microservice /analyze endpoint.
  *
  * Forwards {text, user_id} to the FastAPI service and returns
- * {sentiment, urgency, language}.  Falls back to a 503 if the
- * Railway URL is not configured (RAILWAY_AI_URL env var).
+ * {sentiment, urgency, language}. Falls back to 503 if `RAILWAY_AI_URL` is missing.
+ * Public pages may call this route; cache keys use the session user id when present.
  */
 import { NextResponse } from "next/server"
 import { createHash } from "node:crypto"
 import { z } from "zod"
 
-import { requireRole } from "@/lib/api-guard"
+import { optionalSession } from "@/lib/api-guard"
 
 const schema = z.object({
   text: z.string().trim().min(1).max(4096),
@@ -48,14 +48,10 @@ function setCachedAnalyze(key: string, data: unknown) {
 }
 
 export async function POST(request: Request) {
-  const session = await requireRole(request, [
-    "citizen",
-    "expert",
-    "moderator",
-    "admin",
-    "superadmin",
-  ])
-  if (session instanceof Response) return session
+  // Public concern pages call this from the browser; guests must be allowed to
+  // proxy analyze so Render sees traffic. Identity is only used for server cache partitioning.
+  const session = await optionalSession()
+  const userIdForCache = session?.userId ?? "anonymous"
 
   if (!RAILWAY_AI_URL) {
     return NextResponse.json(
@@ -73,7 +69,7 @@ export async function POST(request: Request) {
     )
   }
 
-  const cacheKey = makeCacheKey(session.userId, parsed.data.text)
+  const cacheKey = makeCacheKey(userIdForCache, parsed.data.text)
   const cached = getCachedAnalyze(cacheKey)
   if (cached) {
     return NextResponse.json(cached, {
@@ -87,7 +83,7 @@ export async function POST(request: Request) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(parsed.data),
-      signal: AbortSignal.timeout(15_000),
+      signal: AbortSignal.timeout(45_000),
     })
   } catch {
     return NextResponse.json(
