@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { AnimatePresence, motion } from "framer-motion"
 import {
   Scales,
@@ -13,8 +13,26 @@ import {
 } from "@phosphor-icons/react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
 import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"
+
+type ConstitutionArticlePublic = {
+  number: string
+  title: string
+  part: string
+  text: string
+}
 
 type Message = {
   id: string
@@ -49,23 +67,115 @@ function cleanAnswer(text: string): string {
     .trim()
 }
 
+const ARTICLE_CHIP =
+  "mx-0.5 inline-flex max-w-full cursor-pointer items-center rounded-full bg-primary/15 px-2 py-0.5 text-[11px] font-semibold text-primary ring-1 ring-primary/20 transition-colors hover:bg-primary/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+
+function parseArticleNumberFromCitation(label: string): string | null {
+  const m = /\[Article\s+(\d+[A-Za-z]?)\]/i.exec(label)
+  return m?.[1] ?? null
+}
+
+function ArticlePreviewBody({ article }: { article: ConstitutionArticlePublic }) {
+  return (
+    <div className="space-y-2 text-left">
+      <p className="text-xs font-medium text-foreground">
+        Article {article.number} — {article.title}
+      </p>
+      <p className="text-[11px] text-muted-foreground">{article.part}</p>
+      <p className="max-h-64 overflow-y-auto whitespace-pre-wrap text-xs leading-relaxed text-foreground/95">
+        {article.text}
+      </p>
+    </div>
+  )
+}
+
+/** Desktop: hover popover. Mobile: tap opens parent modal via `onMobileOpen`. */
+function ArticleChip({
+  label,
+  article,
+  useHoverPopover,
+  onMobileOpen,
+}: {
+  label: string
+  article: ConstitutionArticlePublic | null
+  useHoverPopover: boolean
+  onMobileOpen: (a: ConstitutionArticlePublic) => void
+}) {
+  if (!article) {
+    return (
+      <span className={cn(ARTICLE_CHIP, "cursor-default hover:bg-primary/15")} title={label}>
+        {label}
+      </span>
+    )
+  }
+
+  if (useHoverPopover) {
+    return (
+      <Popover>
+        <PopoverTrigger
+          type="button"
+          openOnHover
+          delay={180}
+          closeDelay={120}
+          className={ARTICLE_CHIP}
+        >
+          {label}
+        </PopoverTrigger>
+        <PopoverContent
+          side="top"
+          align="center"
+          sideOffset={6}
+          className="w-[min(28rem,calc(100vw-2rem))] max-w-[min(28rem,calc(100vw-2rem))] gap-0 border-border/60 p-4 shadow-lg"
+        >
+          <ArticlePreviewBody article={article} />
+        </PopoverContent>
+      </Popover>
+    )
+  }
+
+  return (
+    <button
+      type="button"
+      className={ARTICLE_CHIP}
+      onClick={() => onMobileOpen(article)}
+    >
+      {label}
+    </button>
+  )
+}
+
 // Render text with [Article N] as highlighted inline chips
-function RichText({ text }: { text: string }) {
+function RichText({
+  text,
+  articlesByNumber,
+  useHoverPopover,
+  onMobileOpenArticle,
+}: {
+  text: string
+  articlesByNumber: Record<string, ConstitutionArticlePublic> | null
+  useHoverPopover: boolean
+  onMobileOpenArticle: (a: ConstitutionArticlePublic) => void
+}) {
   const parts = text.split(/(\[Article\s+\d+[A-Za-z]?\])/gi)
   return (
     <>
-      {parts.map((part, i) =>
-        /^\[Article\s+\d+[A-Za-z]?\]$/i.test(part) ? (
-          <span
-            key={i}
-            className="mx-0.5 inline-flex items-center rounded-full bg-primary/15 px-2 py-0.5 text-[11px] font-semibold text-primary ring-1 ring-primary/20"
-          >
-            {part}
-          </span>
-        ) : (
-          <span key={i}>{part}</span>
-        ),
-      )}
+      {parts.map((part, i) => {
+        if (!/^\[Article\s+\d+[A-Za-z]?\]$/i.test(part)) {
+          return <span key={i}>{part}</span>
+        }
+        const num = parseArticleNumberFromCitation(part)
+        const article =
+          num && articlesByNumber ? (articlesByNumber[num] ?? null) : null
+        return (
+          <ArticleChip
+            key={`${i}-${part}`}
+            label={part}
+            article={article}
+            useHoverPopover={useHoverPopover}
+            onMobileOpen={onMobileOpenArticle}
+          />
+        )
+      })}
     </>
   )
 }
@@ -84,20 +194,77 @@ function TypingDots() {
   )
 }
 
-function CitationPills({ citations }: { citations: string[] }) {
+function parseArticleNumberFromPill(citation: string): string | null {
+  const m = /^Article\s+(\d+[A-Za-z]?)\s*,/i.exec(citation.trim())
+  return m?.[1] ?? null
+}
+
+function CitationPills({
+  citations,
+  articlesByNumber,
+  useHoverPopover,
+  onMobileOpenArticle,
+}: {
+  citations: string[]
+  articlesByNumber: Record<string, ConstitutionArticlePublic> | null
+  useHoverPopover: boolean
+  onMobileOpenArticle: (a: ConstitutionArticlePublic) => void
+}) {
   if (!citations.length) return null
   return (
     <div className="mt-2 flex flex-wrap gap-1.5">
       {citations.map((c) => {
         const short = c.replace(/ — Constitution of Bangladesh$/, "")
+        const num = parseArticleNumberFromPill(c)
+        const article =
+          num && articlesByNumber ? (articlesByNumber[num] ?? null) : null
+        const pillClass =
+          "inline-flex max-w-full items-center gap-1 rounded-full border border-primary/20 bg-primary/5 px-2.5 py-0.5 text-left text-[10px] font-medium text-primary/75 transition-colors hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+
+        if (!article) {
+          return (
+            <span key={c} className={cn(pillClass, "cursor-default")}>
+              <BookOpen className="size-2.5 shrink-0" weight="bold" />
+              {short}
+            </span>
+          )
+        }
+
+        if (useHoverPopover) {
+          return (
+            <Popover key={c}>
+              <PopoverTrigger
+                type="button"
+                openOnHover
+                delay={180}
+                closeDelay={120}
+                className={cn(pillClass, "cursor-default")}
+              >
+                <BookOpen className="size-2.5 shrink-0" weight="bold" />
+                <span className="min-w-0 break-words">{short}</span>
+              </PopoverTrigger>
+              <PopoverContent
+                side="top"
+                align="start"
+                sideOffset={6}
+                className="w-[min(28rem,calc(100vw-2rem))] max-w-[min(28rem,calc(100vw-2rem))] gap-0 border-border/60 p-4 shadow-lg"
+              >
+                <ArticlePreviewBody article={article} />
+              </PopoverContent>
+            </Popover>
+          )
+        }
+
         return (
-          <span
+          <button
             key={c}
-            className="inline-flex items-center gap-1 rounded-full border border-primary/20 bg-primary/5 px-2.5 py-0.5 text-[10px] font-medium text-primary/75"
+            type="button"
+            className={pillClass}
+            onClick={() => onMobileOpenArticle(article)}
           >
             <BookOpen className="size-2.5 shrink-0" weight="bold" />
-            {short}
-          </span>
+            <span className="min-w-0 break-words">{short}</span>
+          </button>
         )
       })}
     </div>
@@ -108,9 +275,48 @@ export default function ChatbotPage() {
   const [messages, setMessages] = useState<Message[]>([WELCOME])
   const [input, setInput] = useState("")
   const [isStreaming, setIsStreaming] = useState(false)
+  const [articlesByNumber, setArticlesByNumber] = useState<Record<
+    string,
+    ConstitutionArticlePublic
+  > | null>(null)
+  const [modalArticle, setModalArticle] = useState<ConstitutionArticlePublic | null>(
+    null,
+  )
+  const [useHoverPopover, setUseHoverPopover] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const abortRef = useRef<AbortController | null>(null)
+
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 768px)")
+    const apply = () => setUseHoverPopover(mq.matches)
+    apply()
+    mq.addEventListener("change", apply)
+    return () => mq.removeEventListener("change", apply)
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    void (async () => {
+      try {
+        const res = await fetch("/api/constitution/articles")
+        if (!res.ok) return
+        const data = (await res.json()) as {
+          byNumber?: Record<string, ConstitutionArticlePublic>
+        }
+        if (!cancelled && data.byNumber) setArticlesByNumber(data.byNumber)
+      } catch {
+        /* ignore — chips still render without preview */
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  const openArticleModal = useCallback((a: ConstitutionArticlePublic) => {
+    setModalArticle(a)
+  }, [])
 
   useEffect(() => {
     const el = scrollRef.current
@@ -372,7 +578,12 @@ export default function ChatbotPage() {
                     ) : (
                       <p className="whitespace-pre-wrap wrap-break-word">
                         {message.role === "assistant" ? (
-                          <RichText text={message.text} />
+                          <RichText
+                            text={message.text}
+                            articlesByNumber={articlesByNumber}
+                            useHoverPopover={useHoverPopover}
+                            onMobileOpenArticle={openArticleModal}
+                          />
                         ) : (
                           message.text
                         )}
@@ -390,7 +601,12 @@ export default function ChatbotPage() {
                     !message.error &&
                     message.citations &&
                     message.citations.length > 0 && (
-                      <CitationPills citations={message.citations} />
+                      <CitationPills
+                        citations={message.citations}
+                        articlesByNumber={articlesByNumber}
+                        useHoverPopover={useHoverPopover}
+                        onMobileOpenArticle={openArticleModal}
+                      />
                     )}
                 </div>
               </motion.div>
@@ -443,6 +659,27 @@ export default function ChatbotPage() {
           Grounded in the Bangladesh Constitution · Not legal advice · Consult a lawyer for your situation
         </p>
       </div>
+
+      <Dialog open={modalArticle !== null} onOpenChange={(o) => !o && setModalArticle(null)}>
+        <DialogContent
+          className="max-h-[min(85dvh,36rem)] max-w-[calc(100%-1.5rem)] gap-4 overflow-hidden sm:max-w-lg"
+          showCloseButton
+        >
+          {modalArticle && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="pr-8 text-left">
+                  Article {modalArticle.number} — {modalArticle.title}
+                </DialogTitle>
+                <p className="text-left text-xs text-muted-foreground">{modalArticle.part}</p>
+              </DialogHeader>
+              <div className="max-h-[min(55dvh,24rem)] overflow-y-auto whitespace-pre-wrap text-sm leading-relaxed text-foreground/95">
+                {modalArticle.text}
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
