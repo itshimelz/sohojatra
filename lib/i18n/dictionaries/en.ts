@@ -117,6 +117,11 @@ export const en = {
     noResults: "No concerns found.",
     submitNew: "Submit a Concern",
     details: "View Details",
+    heatmapTitle: "Concern heat map",
+    heatmapHint: "Brighter areas show where more reports cluster. Pan or zoom to load data for that view.",
+    heatmapLoading: "Updating map…",
+    heatmapError: "Could not load map data.",
+    heatmapRetry: "Try again",
   },
   submit: {
     title: "Report a Concern",

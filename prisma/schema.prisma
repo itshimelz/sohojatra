@@ -182,6 +182,7 @@ model Concern {
 
   @@index([status, createdAt])
   @@index([category, status])
+  @@index([locationLat, locationLng])
   @@map("concern")
 }
 
