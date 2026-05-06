@@ -21,6 +21,8 @@ export const en = {
     rightsChatbotDesc: "AI-powered constitutional rights guidance",
     projectTracker: "Projects",
     projectTrackerDesc: "Track public project progress",
+    villageCourt: "Village Courts",
+    villageCourtDesc: "Shalish and village court case tracker",
     assemblies: "Assemblies",
     assembliesDesc: "Town halls and civic assembly events",
     reputation: "Reputation",

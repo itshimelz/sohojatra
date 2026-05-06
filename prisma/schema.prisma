@@ -576,3 +576,41 @@ model ResearchDocument {
 
   @@map("research_documents")
 }
+
+model VillageCourt {
+  id           String        @id @default(cuid())
+  name         String
+  upazila      String
+  district     String
+  division     String
+  arbitrators  Json          @default("[]")
+  isActive     Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+  cases        VillageCase[]
+
+  @@index([district, upazila])
+  @@map("village_court")
+}
+
+model VillageCase {
+  id             String       @id @default(cuid())
+  courtId        String
+  court          VillageCourt @relation(fields: [courtId], references: [id], onDelete: Cascade)
+  caseNumber     String       @unique
+  disputeType    String
+  claimantName   String
+  respondentName String
+  description    String
+  filedDate      DateTime
+  hearingDates   Json         @default("[]")
+  status         String       @default("Filed")
+  outcome        String?
+  outcomeSummary String?
+  resolvedDate   DateTime?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@index([courtId, status])
+  @@index([disputeType])
+  @@map("village_case")
+}
