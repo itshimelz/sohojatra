@@ -576,3 +576,31 @@ model ResearchDocument {
 
   @@map("research_documents")
 }
+
+// ── RTI Management ────────────────────────────────────────────────────────────
+
+model RtiRequest {
+  id                   String    @id @default(cuid())
+  userId               String
+  userName             String
+  targetMinistry       String
+  informationRequested String
+  legalBasis           String    @default("Right to Information Act, 2009")
+  status               String    @default("Draft")
+  submittedAt          DateTime?
+  deadline             DateTime?
+  responseText         String?
+  respondedAt          DateTime?
+  appealText           String?
+  appealedAt           DateTime?
+  appealDeadline       DateTime?
+  appealResponseText   String?
+  isPublic             Boolean   @default(false)
+  concernId            String?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  @@index([userId, createdAt])
+  @@index([status, deadline])
+  @@map("rti_request")
+}
