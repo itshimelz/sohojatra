@@ -576,3 +576,71 @@ model ResearchDocument {
 
   @@map("research_documents")
 }
+
+model FloodReport {
+  id            String   @id @default(cuid())
+  reporterId    String?
+  reporterName  String
+  locationLat   Float
+  locationLng   Float
+  division      String
+  district      String
+  upazila       String?
+  depthCm       Int
+  description   String?
+  photos        Json     @default("[]")
+  isVerified    Boolean  @default(false)
+  verifiedBy    String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([district, createdAt])
+  @@index([locationLat, locationLng])
+  @@map("flood_report")
+}
+
+model CycloneShelter {
+  id              String   @id @default(cuid())
+  name            String
+  division        String
+  district        String
+  upazila         String?
+  locationLat     Float
+  locationLng     Float
+  capacity        Int      @default(0)
+  currentOccupied Int      @default(0)
+  contactPhone    String?
+  facilities      Json     @default("[]")
+  isOpen          Boolean  @default(true)
+  lastUpdated     DateTime @default(now())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([district, isOpen])
+  @@index([locationLat, locationLng])
+  @@map("cyclone_shelter")
+}
+
+model EmbankmentReport {
+  id           String   @id @default(cuid())
+  reporterId   String?
+  reporterName String
+  locationLat  Float
+  locationLng  Float
+  division     String
+  district     String
+  upazila      String?
+  damageType   String
+  severity     String   @default("Medium")
+  description  String
+  photos       Json     @default("[]")
+  status       String   @default("Reported")
+  reviewNote   String?
+  reviewedBy   String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([district, severity])
+  @@index([status, createdAt])
+  @@map("embankment_report")
+}

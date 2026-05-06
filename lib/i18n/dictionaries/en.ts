@@ -21,6 +21,8 @@ export const en = {
     rightsChatbotDesc: "AI-powered constitutional rights guidance",
     projectTracker: "Projects",
     projectTrackerDesc: "Track public project progress",
+    climate: "Climate & Disasters",
+    climateDesc: "Flood maps, cyclone shelters, and embankment damage",
     assemblies: "Assemblies",
     assembliesDesc: "Town halls and civic assembly events",
     reputation: "Reputation",

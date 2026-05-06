@@ -13,6 +13,7 @@ import {
   List,
   X,
   ArrowRight,
+  CloudRain,
   type Icon,
 } from "@phosphor-icons/react"
 import {
@@ -71,6 +72,7 @@ function buildNavGroups(nav: Dictionary["nav"]): NavGroup[] {
       label: nav.government,
       items: [
         { href: "/projects", label: nav.projectTracker, desc: nav.projectTrackerDesc, Icon: ChartBar },
+        { href: "/climate", label: nav.climate, desc: nav.climateDesc, Icon: CloudRain },
       ],
     },
     {
