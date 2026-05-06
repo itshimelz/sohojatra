@@ -576,3 +576,17 @@ model ResearchDocument {
 
   @@map("research_documents")
 }
+
+model ImpactPrediction {
+  id               String   @id @default(cuid())
+  concernId        String   @unique
+  predictedDays    Int
+  confidenceScore  Float
+  impactScore      Float
+  riskLevel        String
+  factors          Json
+  predictedAt      DateTime @default(now())
+
+  @@index([riskLevel, impactScore])
+  @@map("impact_prediction")
+}
