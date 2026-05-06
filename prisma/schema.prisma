@@ -576,3 +576,47 @@ model ResearchDocument {
 
   @@map("research_documents")
 }
+
+model ProcurementTender {
+  id                String   @id @default(cuid())
+  title             String
+  ministry          String
+  department        String?
+  contractorName    String?
+  contractorId      String?
+  estimatedValueBdt BigInt
+  awardedValueBdt   BigInt?
+  category          String   @default("General")
+  district          String?
+  status            String   @default("Open")
+  publishedAt       DateTime @default(now())
+  deadlineAt        DateTime?
+  awardedAt         DateTime?
+  sourceUrl         String?
+  redFlagScore      Float    @default(0)
+  redFlags          Json     @default("[]")
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([status, publishedAt])
+  @@index([ministry, status])
+  @@map("procurement_tender")
+}
+
+model ProcurementContractor {
+  id               String   @id @default(cuid())
+  name             String   @unique
+  registrationNo   String?
+  incorporatedYear Int?
+  address          String?
+  contactEmail     String?
+  totalContracts   Int      @default(0)
+  totalValueBdt    BigInt   @default(0)
+  averageScore     Float    @default(0)
+  flagCount        Int      @default(0)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([name])
+  @@map("procurement_contractor")
+}
