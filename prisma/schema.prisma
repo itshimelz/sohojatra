@@ -576,3 +576,40 @@ model ResearchDocument {
 
   @@map("research_documents")
 }
+
+model CharIsland {
+  id           String        @id @default(cuid())
+  name         String
+  district     String
+  division     String
+  population   Int           @default(0)
+  floodRisk    String        @default("Medium")
+  isSeasonallyIsolated Boolean @default(false)
+  boatHoursToUpazila Float?
+  hasElectricity Boolean     @default(false)
+  hasMobileNetwork Boolean   @default(false)
+  createdAt    DateTime      @default(now())
+  concerns     CharConcern[]
+
+  @@map("char_island")
+}
+
+model CharConcern {
+  id           String     @id @default(cuid())
+  charId       String
+  char         CharIsland @relation(fields: [charId], references: [id], onDelete: Cascade)
+  title        String
+  description  String
+  category     String
+  severity     String     @default("Medium")
+  reporterName String
+  reporterId   String?
+  status       String     @default("Open")
+  upvotes      Int        @default(0)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@index([charId, createdAt])
+  @@index([status, severity])
+  @@map("char_concern")
+}
