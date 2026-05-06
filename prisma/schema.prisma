@@ -576,3 +576,21 @@ model ResearchDocument {
 
   @@map("research_documents")
 }
+
+model AuditBlock {
+  id         String   @id @default(cuid())
+  blockIndex Int      @unique
+  hash       String   @unique
+  prevHash   String
+  eventType  String
+  entityType String
+  entityId   String
+  actorId    String?
+  actorName  String?
+  data       Json
+  timestamp  DateTime @default(now())
+
+  @@index([eventType, timestamp])
+  @@index([entityType, entityId])
+  @@map("audit_block")
+}
