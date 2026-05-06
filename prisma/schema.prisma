@@ -576,3 +576,61 @@ model ResearchDocument {
 
   @@map("research_documents")
 }
+
+model BudgetCycle {
+  id               String           @id @default(cuid())
+  title            String
+  description      String
+  fiscalYear       String
+  totalBudgetBdt   BigInt
+  category         String           @default("General")
+  district         String?
+  upazila          String?
+  status           String           @default("Open")
+  proposalDeadline DateTime
+  votingDeadline   DateTime
+  createdBy        String
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  proposals        BudgetProposal[]
+
+  @@index([status, fiscalYear])
+  @@map("budget_cycle")
+}
+
+model BudgetProposal {
+  id             String        @id @default(cuid())
+  cycleId        String
+  title          String
+  description    String
+  costEstimateBdt BigInt
+  category       String
+  authorId       String
+  authorName     String
+  beneficiaries  String?
+  rationale      String?
+  upvotes        Int           @default(0)
+  downvotes      Int           @default(0)
+  status         String        @default("Submitted")
+  adminNotes     String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  cycle          BudgetCycle   @relation(fields: [cycleId], references: [id], onDelete: Cascade)
+  votes          BudgetVote[]
+
+  @@index([cycleId, status])
+  @@map("budget_proposal")
+}
+
+model BudgetVote {
+  id         String         @id @default(cuid())
+  proposalId String
+  userId     String
+  voteType   String
+  createdAt  DateTime       @default(now())
+  proposal   BudgetProposal @relation(fields: [proposalId], references: [id], onDelete: Cascade)
+
+  @@unique([proposalId, userId])
+  @@index([proposalId])
+  @@map("budget_vote")
+}
