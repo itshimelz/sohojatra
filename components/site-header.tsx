@@ -13,6 +13,7 @@ import {
   List,
   X,
   ArrowRight,
+  ChatsCircle,
   type Icon,
 } from "@phosphor-icons/react"
 import {
@@ -78,6 +79,7 @@ function buildNavGroups(nav: Dictionary["nav"]): NavGroup[] {
       label: nav.transparency,
       items: [
         { href: "/dashboard", label: nav.analytics, desc: nav.analyticsDesc, Icon: ChartBar },
+        { href: "/consensus", label: nav.consensus, desc: nav.consensusDesc, Icon: ChatsCircle },
         { href: "/admin", label: nav.adminPanel, desc: nav.adminPanelDesc, Icon: Gear, elevated: true },
       ],
     },

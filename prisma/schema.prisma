@@ -576,3 +576,49 @@ model ResearchDocument {
 
   @@map("research_documents")
 }
+
+model Consultation {
+  id          String                  @id @default(cuid())
+  title       String
+  description String
+  category    String                  @default("General")
+  status      String                  @default("Open")
+  createdBy   String
+  closedAt    DateTime?
+  createdAt   DateTime                @default(now())
+  updatedAt   DateTime                @updatedAt
+  statements  ConsultationStatement[]
+
+  @@index([status, createdAt])
+  @@map("consultation")
+}
+
+model ConsultationStatement {
+  id             String              @id @default(cuid())
+  consultationId String
+  text           String
+  authorId       String?
+  authorName     String
+  agreeCount     Int                 @default(0)
+  disagreeCount  Int                 @default(0)
+  passCount      Int                 @default(0)
+  createdAt      DateTime            @default(now())
+  consultation   Consultation        @relation(fields: [consultationId], references: [id], onDelete: Cascade)
+  votes          ConsultationVote[]
+
+  @@index([consultationId])
+  @@map("consultation_statement")
+}
+
+model ConsultationVote {
+  id          String                @id @default(cuid())
+  statementId String
+  userId      String
+  vote        String
+  createdAt   DateTime              @default(now())
+  statement   ConsultationStatement @relation(fields: [statementId], references: [id], onDelete: Cascade)
+
+  @@unique([statementId, userId])
+  @@index([statementId])
+  @@map("consultation_vote")
+}
