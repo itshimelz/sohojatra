@@ -15,6 +15,8 @@ export const en = {
     voiceForumDesc: "Citizen proposals and debates",
     coGovernance: "Collab",
     coGovernanceDesc: "Joint citizen-government workspace",
+    petitions: "Petitions",
+    petitionsDesc: "Sign petitions that trigger binding government responses",
     researchLab: "Research Lab",
     researchLabDesc: "Open civic problems with grant funding",
     rightsChatbot: "Rights Chatbot",

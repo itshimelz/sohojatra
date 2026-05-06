@@ -17,6 +17,8 @@ export const bn: Dictionary = {
     voiceForumDesc: "নাগরিক প্রস্তাব ও বিতর্ক",
     coGovernance: "সহযোগিতা",
     coGovernanceDesc: "নাগরিক-সরকার যৌথ কর্মক্ষেত্র",
+    petitions: "পিটিশন",
+    petitionsDesc: "সরকারি সাড়া বাধ্যকারী পিটিশন সাইন করুন",
     researchLab: "গবেষণাগার",
     researchLabDesc: "অনুদানসহ উন্মুক্ত নাগরিক সমস্যা",
     rightsChatbot: "অধিকার চ্যাটবট",
