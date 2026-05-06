@@ -576,3 +576,40 @@ model ResearchDocument {
 
   @@map("research_documents")
 }
+
+model GarmentFactory {
+  id              String          @id @default(cuid())
+  factoryCode     String          @unique
+  name            String
+  zone            String
+  district        String
+  complianceScore Float           @default(50)
+  buyerBrands     Json            @default("[]")
+  certifications  Json            @default("[]")
+  workerCount     Int             @default(0)
+  isActive        Boolean         @default(true)
+  createdAt       DateTime        @default(now())
+  reports         WorkerReport[]
+
+  @@index([zone, district])
+  @@map("garment_factory")
+}
+
+model WorkerReport {
+  id           String          @id @default(cuid())
+  factoryId    String?
+  factory      GarmentFactory? @relation(fields: [factoryId], references: [id], onDelete: SetNull)
+  factoryCode  String?
+  issueType    String
+  severity     String          @default("Medium")
+  description  String
+  incidentDate DateTime?
+  isAnonymous  Boolean         @default(true)
+  reporterId   String?
+  status       String          @default("Submitted")
+  createdAt    DateTime        @default(now())
+
+  @@index([factoryId, createdAt])
+  @@index([issueType, severity])
+  @@map("worker_report")
+}
