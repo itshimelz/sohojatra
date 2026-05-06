@@ -21,6 +21,8 @@ export const en = {
     rightsChatbotDesc: "AI-powered constitutional rights guidance",
     projectTracker: "Projects",
     projectTrackerDesc: "Track public project progress",
+    ngoDirectory: "NGOs",
+    ngoDirectoryDesc: "NGO directory and concern adoption",
     assemblies: "Assemblies",
     assembliesDesc: "Town halls and civic assembly events",
     reputation: "Reputation",

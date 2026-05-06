@@ -576,3 +576,44 @@ model ResearchDocument {
 
   @@map("research_documents")
 }
+
+model NgoProfile {
+  id              String   @id @default(cuid())
+  name            String   @unique
+  registrationNo  String?
+  description     String
+  focusAreas      Json     @default("[]")
+  district        String?
+  division        String?
+  website         String?
+  contactEmail    String?
+  contactPhone    String?
+  status          String   @default("Active")
+  verifiedAt      DateTime?
+  totalAdoptions  Int      @default(0)
+  impactScore     Float    @default(0)
+  createdBy       String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  adoptions       NgoConcernAdoption[]
+
+  @@index([status, impactScore])
+  @@map("ngo_profile")
+}
+
+model NgoConcernAdoption {
+  id         String     @id @default(cuid())
+  ngoId      String
+  concernId  String
+  status     String     @default("Active")
+  notes      String?
+  impactNote String?
+  adoptedAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  ngo        NgoProfile @relation(fields: [ngoId], references: [id], onDelete: Cascade)
+
+  @@unique([ngoId, concernId])
+  @@index([ngoId])
+  @@index([concernId])
+  @@map("ngo_concern_adoption")
+}
