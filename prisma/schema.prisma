@@ -576,3 +576,45 @@ model ResearchDocument {
 
   @@map("research_documents")
 }
+
+// ── Petition System ───────────────────────────────────────────────────────────
+
+model Petition {
+  id              String    @id @default(cuid())
+  title           String
+  body            String
+  authorId        String
+  authorName      String
+  targetAuthority String
+  category        String
+  status          String    @default("Active")
+  signatureCount  Int       @default(0)
+  currentTier     Int       @default(0)
+  governmentResponse String?
+  respondedAt     DateTime?
+  expiresAt       DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  signatures PetitionSignature[]
+
+  @@index([status, createdAt])
+  @@index([signatureCount])
+  @@map("petition")
+}
+
+model PetitionSignature {
+  id         String   @id @default(cuid())
+  petitionId String
+  userId     String
+  userName   String
+  district   String?
+  createdAt  DateTime @default(now())
+
+  petition   Petition @relation(fields: [petitionId], references: [id], onDelete: Cascade)
+
+  @@unique([petitionId, userId])
+  @@index([petitionId])
+  @@index([userId])
+  @@map("petition_signature")
+}

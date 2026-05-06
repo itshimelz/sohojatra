@@ -13,6 +13,7 @@ import {
   List,
   X,
   ArrowRight,
+  HandFist,
   type Icon,
 } from "@phosphor-icons/react"
 import {
@@ -64,6 +65,7 @@ function buildNavGroups(nav: Dictionary["nav"]): NavGroup[] {
       items: [
         { href: "/forum", label: nav.voiceForum, desc: nav.voiceForumDesc, Icon: ChatCircle },
         { href: "/collaboration", label: nav.coGovernance, desc: nav.coGovernanceDesc, Icon: Users },
+        { href: "/petitions", label: nav.petitions, desc: nav.petitionsDesc, Icon: HandFist },
       ],
     },
     {
