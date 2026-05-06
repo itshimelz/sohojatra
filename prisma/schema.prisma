@@ -576,3 +576,26 @@ model ResearchDocument {
 
   @@map("research_documents")
 }
+
+// ── Whistleblower Portal ──────────────────────────────────────────────────────
+
+model WhistleblowerReport {
+  id             String   @id @default(cuid())
+  caseToken      String   @unique
+  category       String
+  severity       String   @default("Medium")
+  description    String
+  evidence       String?
+  targetAgency   String
+  targetDivision String?
+  status         String   @default("Received")
+  escalationTier Int      @default(0)
+  reviewNote     String?
+  reviewedBy     String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([caseToken])
+  @@index([status, severity])
+  @@map("whistleblower_report")
+}
