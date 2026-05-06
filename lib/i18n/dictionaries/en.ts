@@ -21,6 +21,8 @@ export const en = {
     rightsChatbotDesc: "AI-powered constitutional rights guidance",
     projectTracker: "Projects",
     projectTrackerDesc: "Track public project progress",
+    charCitizen: "Char Citizens",
+    charCitizenDesc: "River island community reporting",
     assemblies: "Assemblies",
     assembliesDesc: "Town halls and civic assembly events",
     reputation: "Reputation",
