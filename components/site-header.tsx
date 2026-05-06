@@ -13,6 +13,7 @@ import {
   List,
   X,
   ArrowRight,
+  Timer,
   type Icon,
 } from "@phosphor-icons/react"
 import {
@@ -78,6 +79,7 @@ function buildNavGroups(nav: Dictionary["nav"]): NavGroup[] {
       label: nav.transparency,
       items: [
         { href: "/dashboard", label: nav.analytics, desc: nav.analyticsDesc, Icon: ChartBar },
+        { href: "/sla", label: nav.slaTracker, desc: nav.slaTrackerDesc, Icon: Timer },
         { href: "/admin", label: nav.adminPanel, desc: nav.adminPanelDesc, Icon: Gear, elevated: true },
       ],
     },

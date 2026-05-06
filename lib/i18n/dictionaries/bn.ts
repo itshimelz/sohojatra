@@ -35,6 +35,8 @@ export const bn: Dictionary = {
     openDataDesc: "CC BY 4.0 লাইসেন্সের অধীনে নাগরিক ডেটাসেট",
     adminPanel: "অ্যাডমিন",
     adminPanelDesc: "মডারেশন ও সিস্টেম নিয়ন্ত্রণ",
+    slaTracker: "SLA ট্র্যাকার",
+    slaTrackerDesc: "সরকারি প্রতিক্রিয়া জবাবদিহিতা ড্যাশবোর্ড",
   },
   hero: {
     badge: "ঢাকার নাগরিকদের জন্য",

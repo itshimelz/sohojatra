@@ -33,6 +33,8 @@ export const en = {
     openDataDesc: "Download CC BY 4.0 civic datasets",
     adminPanel: "Admin",
     adminPanelDesc: "Moderation and system controls",
+    slaTracker: "SLA Tracker",
+    slaTrackerDesc: "Government response accountability dashboard",
   },
   hero: {
     badge: "For the citizens of Dhaka",

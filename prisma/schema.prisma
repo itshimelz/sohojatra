@@ -576,3 +576,39 @@ model ResearchDocument {
 
   @@map("research_documents")
 }
+
+// ── SLA Tracker ──────────────────────────────────────────────────────────────
+
+model SlaConfig {
+  id           String   @id @default(cuid())
+  category     String   @unique
+  responseDays Int
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("sla_config")
+}
+
+model SlaResponse {
+  id               String    @id @default(cuid())
+  concernId        String    @unique
+  assignedTo       String?
+  assignedName     String?
+  deadline         DateTime
+  respondedAt      DateTime?
+  resolvedAt       DateTime?
+  status           String    @default("Pending")
+  resolutionNote   String?
+  resolutionPhotos Json      @default("[]")
+  citizenRating    Int?
+  citizenComment   String?
+  escalationLevel  Int       @default(0)
+  authority        String?
+  department       String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  @@index([status, deadline])
+  @@index([concernId])
+  @@map("sla_response")
+}
