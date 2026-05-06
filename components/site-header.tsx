@@ -13,6 +13,7 @@ import {
   List,
   X,
   ArrowRight,
+  ShieldCheck,
   type Icon,
 } from "@phosphor-icons/react"
 import {
@@ -78,6 +79,7 @@ function buildNavGroups(nav: Dictionary["nav"]): NavGroup[] {
       label: nav.transparency,
       items: [
         { href: "/dashboard", label: nav.analytics, desc: nav.analyticsDesc, Icon: ChartBar },
+        { href: "/whistleblower", label: nav.whistleblower, desc: nav.whistleblowerDesc, Icon: ShieldCheck },
         { href: "/admin", label: nav.adminPanel, desc: nav.adminPanelDesc, Icon: Gear, elevated: true },
       ],
     },

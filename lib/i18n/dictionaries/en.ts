@@ -33,6 +33,8 @@ export const en = {
     openDataDesc: "Download CC BY 4.0 civic datasets",
     adminPanel: "Admin",
     adminPanelDesc: "Moderation and system controls",
+    whistleblower: "Whistleblower",
+    whistleblowerDesc: "Anonymous secure corruption reporting portal",
   },
   hero: {
     badge: "For the citizens of Dhaka",

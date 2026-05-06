@@ -35,6 +35,8 @@ export const bn: Dictionary = {
     openDataDesc: "CC BY 4.0 লাইসেন্সের অধীনে নাগরিক ডেটাসেট",
     adminPanel: "অ্যাডমিন",
     adminPanelDesc: "মডারেশন ও সিস্টেম নিয়ন্ত্রণ",
+    whistleblower: "হুইসেলব্লোয়ার",
+    whistleblowerDesc: "বেনামে দুর্নীতি রিপোর্ট করুন নিরাপদে",
   },
   hero: {
     badge: "ঢাকার নাগরিকদের জন্য",
