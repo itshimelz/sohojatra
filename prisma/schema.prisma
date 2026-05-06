@@ -576,3 +576,68 @@ model ResearchDocument {
 
   @@map("research_documents")
 }
+
+model ParliamentBill {
+  id               String            @id @default(cuid())
+  billNumber       String            @unique
+  title            String
+  ministry         String
+  category         String            @default("General")
+  status           String            @default("Introduced")
+  introducedDate   DateTime
+  passedDate       DateTime?
+  summary          String
+  plainSummary     String?
+  fullTextUrl      String?
+  tags             Json              @default("[]")
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  mpVotes          MpBillVote[]
+  comments         BillComment[]
+
+  @@index([status, introducedDate])
+  @@map("parliament_bill")
+}
+
+model ParliamentMp {
+  id           String       @id @default(cuid())
+  name         String
+  constituency String
+  party        String
+  division     String?
+  photoUrl     String?
+  isActive     Boolean      @default(true)
+  createdAt    DateTime     @default(now())
+  billVotes    MpBillVote[]
+
+  @@map("parliament_mp")
+}
+
+model MpBillVote {
+  id        String         @id @default(cuid())
+  mpId      String
+  mp        ParliamentMp   @relation(fields: [mpId], references: [id], onDelete: Cascade)
+  billId    String
+  bill      ParliamentBill @relation(fields: [billId], references: [id], onDelete: Cascade)
+  vote      String
+  votedAt   DateTime       @default(now())
+
+  @@unique([mpId, billId])
+  @@index([billId])
+  @@map("mp_bill_vote")
+}
+
+model BillComment {
+  id        String         @id @default(cuid())
+  billId    String
+  bill      ParliamentBill @relation(fields: [billId], references: [id], onDelete: Cascade)
+  authorId  String
+  authorName String
+  clauseRef String?
+  text      String
+  upvotes   Int            @default(0)
+  createdAt DateTime       @default(now())
+
+  @@index([billId, createdAt])
+  @@map("bill_comment")
+}

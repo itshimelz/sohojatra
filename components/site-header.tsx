@@ -13,6 +13,7 @@ import {
   List,
   X,
   ArrowRight,
+  Scroll,
   type Icon,
 } from "@phosphor-icons/react"
 import {
@@ -71,6 +72,7 @@ function buildNavGroups(nav: Dictionary["nav"]): NavGroup[] {
       label: nav.government,
       items: [
         { href: "/projects", label: nav.projectTracker, desc: nav.projectTrackerDesc, Icon: ChartBar },
+        { href: "/parliament", label: nav.parliament, desc: nav.parliamentDesc, Icon: Scroll },
       ],
     },
     {
