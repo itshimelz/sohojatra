@@ -8,6 +8,7 @@ import {
   Warning,
   ChatCircle,
   Users,
+  UsersThree,
   ChartBar,
   Gear,
   List,
@@ -64,6 +65,7 @@ function buildNavGroups(nav: Dictionary["nav"]): NavGroup[] {
       items: [
         { href: "/forum", label: nav.voiceForum, desc: nav.voiceForumDesc, Icon: ChatCircle },
         { href: "/collaboration", label: nav.coGovernance, desc: nav.coGovernanceDesc, Icon: Users },
+        { href: "/mini-publics", label: nav.miniPublics, desc: nav.miniPublicsDesc, Icon: UsersThree },
       ],
     },
     {

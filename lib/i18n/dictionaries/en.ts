@@ -29,6 +29,8 @@ export const en = {
     leaderboardDesc: "Top contributing universities and citizens",
     analytics: "Insights",
     analyticsDesc: "City health snapshot",
+    miniPublics: "Mini-Publics",
+    miniPublicsDesc: "Sortition-based citizen deliberation panels",
     openData: "Open Data",
     openDataDesc: "Download CC BY 4.0 civic datasets",
     adminPanel: "Admin",

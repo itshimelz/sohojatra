@@ -576,3 +576,70 @@ model ResearchDocument {
 
   @@map("research_documents")
 }
+
+model MiniPublic {
+  id              String              @id @default(cuid())
+  title           String
+  concernId       String?
+  topic           String
+  summary         String
+  panelSize       Int                 @default(12)
+  selectionMethod String              @default("sortition")
+  status          String              @default("Forming")
+  recommendation  String?
+  publishedAt     DateTime?
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  members         PanelMember[]
+  rounds          DeliberationRound[]
+
+  @@index([status, createdAt])
+  @@map("mini_public")
+}
+
+model PanelMember {
+  id           String     @id @default(cuid())
+  miniPublicId String
+  miniPublic   MiniPublic @relation(fields: [miniPublicId], references: [id], onDelete: Cascade)
+  citizenName  String
+  citizenId    String?
+  district     String?
+  occupation   String?
+  joinedAt     DateTime   @default(now())
+
+  @@index([miniPublicId])
+  @@map("panel_member")
+}
+
+model DeliberationRound {
+  id           String                  @id @default(cuid())
+  miniPublicId String
+  miniPublic   MiniPublic              @relation(fields: [miniPublicId], references: [id], onDelete: Cascade)
+  roundNumber  Int
+  title        String
+  prompt       String
+  openedAt     DateTime                @default(now())
+  closedAt     DateTime?
+  status       String                  @default("Open")
+  submissions  DeliberationSubmission[]
+
+  @@unique([miniPublicId, roundNumber])
+  @@index([miniPublicId])
+  @@map("deliberation_round")
+}
+
+model DeliberationSubmission {
+  id        String            @id @default(cuid())
+  roundId   String
+  round     DeliberationRound @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  authorName String
+  authorId  String?
+  content   String
+  stance    String            @default("Neutral")
+  upvotes   Int               @default(0)
+  createdAt DateTime          @default(now())
+
+  @@index([roundId, createdAt])
+  @@map("deliberation_submission")
+}

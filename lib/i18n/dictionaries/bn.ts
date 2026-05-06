@@ -31,6 +31,8 @@ export const bn: Dictionary = {
     leaderboardDesc: "শীর্ষ অবদানকারী বিশ্ববিদ্যালয় ও নাগরিক",
     analytics: "ইনসাইটস",
     analyticsDesc: "শহরের অবস্থা এক নজরে",
+    miniPublics: "মিনি-পাবলিকস",
+    miniPublicsDesc: "লটারি-ভিত্তিক নাগরিক বিচার-বিমর্শ প্যানেল",
     openData: "উন্মুক্ত তথ্য",
     openDataDesc: "CC BY 4.0 লাইসেন্সের অধীনে নাগরিক ডেটাসেট",
     adminPanel: "অ্যাডমিন",
