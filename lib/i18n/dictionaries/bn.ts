@@ -23,6 +23,8 @@ export const bn: Dictionary = {
     rightsChatbotDesc: "AI-চালিত সাংবিধানিক অধিকার নির্দেশিকা",
     projectTracker: "প্রকল্প",
     projectTrackerDesc: "সরকারি প্রকল্পের অগ্রগতি দেখুন",
+    participatoryBudget: "বাজেট",
+    participatoryBudgetDesc: "সরকারি ব্যয়ে প্রস্তাব করুন ও ভোট দিন",
     assemblies: "সভা",
     assembliesDesc: "টাউন হল ও নাগরিক সভা",
     reputation: "সুনাম",
